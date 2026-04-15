@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Proposal Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wedding Proposal Generator</h1>
+            <p>Create the perfect marriage proposal</p>
+        </header>
+        
+        <main>
+            <section class="proposal-form">
+                <h2>Personalize Your Proposal</h2>
+                <form id="proposalForm">
+                    <div class="form-group">
+                        <label for="partnerName">Partner's Name:</label>
+                        <input type="text" id="partnerName" name="partnerName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="yourName">Your Name:</label>
+                        <input type="text" id="yourName" name="yourName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="proposalStyle">Proposal Style:</label>
+                        <select id="proposalStyle" name="proposalStyle">
+                            <option value="romantic">Romantic</option>
+                            <option value="funny">Funny</option>
+                            <option value="poetic">Poetic</option>
+                            <option value="simple">Simple & Sweet</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit">Generate Proposal</button>
+                </form>
+            </section>
+            
+            <section class="proposal-display" id="proposalDisplay" style="display: none;">
+                <h2>Your Proposal</h2>
+                <div class="proposal-text" id="proposalText"></div>
+                <button id="regenerateBtn" class="secondary-btn">Regenerate</button>
+            </section>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
