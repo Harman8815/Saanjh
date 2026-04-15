@@ -3,6 +3,26 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import {
+  Home,
+  Calendar,
+  Building,
+  Users,
+  DollarSign,
+  Store,
+  CheckSquare,
+  Image,
+  FileText,
+  Globe,
+  Settings,
+  ChevronRight,
+  ChevronDown,
+  ChevronLeft,
+  Menu,
+  X,
+  Heart,
+  Circle
+} from 'lucide-react';
 
 interface SidebarSubItem {
   label: string;
@@ -11,7 +31,7 @@ interface SidebarSubItem {
 }
 
 interface SidebarItem {
-  icon: string;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   label: string;
   href?: string;
   badge?: string;
@@ -20,12 +40,12 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   {
-    icon: '🏠',
+    icon: Home,
     label: 'Dashboard',
     href: '/dashboard',
   },
   {
-    icon: '📅',
+    icon: Calendar,
     label: 'Timeline',
     href: '/dashboard/timeline',
     subItems: [
@@ -36,7 +56,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '🏪',
+    icon: Building,
     label: 'Venues & Booking',
     href: '/dashboard/venues',
     subItems: [
@@ -47,7 +67,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '👥',
+    icon: Users,
     label: 'Guests',
     href: '/dashboard/guests',
     badge: '12',
@@ -59,7 +79,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '💰',
+    icon: DollarSign,
     label: 'Budget',
     href: '/dashboard/budget',
     subItems: [
@@ -70,7 +90,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '🏪',
+    icon: Store,
     label: 'Vendors',
     href: '/dashboard/vendors',
     badge: '3',
@@ -82,7 +102,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '📋',
+    icon: CheckSquare,
     label: 'Tasks',
     href: '/dashboard/tasks',
     badge: '5',
@@ -94,7 +114,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '🖼️',
+    icon: Image,
     label: 'Gallery',
     href: '/dashboard/gallery',
     subItems: [
@@ -105,7 +125,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '📄',
+    icon: FileText,
     label: 'Documents',
     href: '/dashboard/documents',
     subItems: [
@@ -116,7 +136,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '🌐',
+    icon: Globe,
     label: 'Website',
     href: '/dashboard/website',
     subItems: [
@@ -127,7 +147,7 @@ const sidebarItems: SidebarItem[] = [
     ],
   },
   {
-    icon: '⚙️',
+    icon: Settings,
     label: 'Settings',
     href: '/dashboard/settings',
     subItems: [
@@ -147,6 +167,8 @@ interface DashboardSidebarProps {
 export default function DashboardSidebar({ isCollapsed = false, onToggle }: DashboardSidebarProps) {
   const [activeItem, setActiveItem] = useState('/dashboard');
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const toggleExpanded = (itemLabel: string) => {
     setExpandedItems(prev => 
       prev.includes(itemLabel) 
@@ -155,15 +177,53 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
     );
   };
 
+  const handleItemClick = (item: SidebarItem) => {
+    if (item.subItems) {
+      toggleExpanded(item.label);
+    } else if (item.href) {
+      setActiveItem(item.href);
+      // Close mobile menu after navigation
+      if (isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
-    <motion.div
-      initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
-    >
+    <>
+      {/* Mobile Menu Toggle */}
+      <button
+        onClick={toggleMobileMenu}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-surface border border-white/10 rounded-lg text-text-secondary hover:text-text-primary"
+      >
+        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={toggleMobileMenu}
+        />
+      )}
+
+      {/* Sidebar */}
+      <motion.div
+        initial={{ x: -300 }}
+        animate={{ 
+          x: isMobileMenuOpen ? 0 : (isCollapsed ? -240 : 0)
+        }}
+        transition={{ duration: 0.3 }}
+        className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 ${
+          isCollapsed ? 'w-20' : 'w-64'
+        } ${
+          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-0'
+        } lg:translate-x-0`}
+      >
       {/* Sidebar Header */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center justify-between">
@@ -183,9 +243,10 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
           </div>
           <button
             onClick={onToggle}
-            className="text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+            className="hidden lg:flex text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            <span className="text-xl">{isCollapsed ? '→' : '←'}</span>
+            {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
         </div>
       </div>
@@ -207,17 +268,14 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
                     ? 'bg-primary text-white'
                     : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                 }`}
-                onClick={() => {
-                  if (item.href) {
-                    setActiveItem(item.href);
-                  } else {
-                    toggleExpanded(item.label);
-                  }
-                }}
+                onClick={() => handleItemClick(item)}
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">
-                  {item.icon}
-                </span>
+                <item.icon 
+                  size={20} 
+                  className={`group-hover:scale-110 transition-transform ${
+                    activeItem === item.href ? 'text-white' : 'text-text-secondary'
+                  }`} 
+                />
                 {!isCollapsed && (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -233,9 +291,12 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
                         </span>
                       )}
                       {item.subItems && (
-                        <span className="text-xs transition-transform duration-200">
-                          {expandedItems.includes(item.label) ? '▼' : '▶'}
-                        </span>
+                        <ChevronDown 
+                          size={14} 
+                          className={`transition-transform duration-200 text-current ${
+                            expandedItems.includes(item.label) ? 'rotate-180' : ''
+                          }`} 
+                        />
                       )}
                     </div>
                   </motion.div>
@@ -259,7 +320,12 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
                           ? 'bg-white/10 text-primary'
                           : 'text-text-muted hover:text-text-secondary hover:bg-white/5'
                       }`}
-                      onClick={() => setActiveItem(subItem.href)}
+                      onClick={() => {
+                        setActiveItem(subItem.href);
+                        if (isMobileMenuOpen) {
+                          setIsMobileMenuOpen(false);
+                        }
+                      }}
                     >
                       <span className="w-2 h-2 bg-primary/50 rounded-full"></span>
                       <span className="flex-1">{subItem.label}</span>
@@ -287,12 +353,13 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
             className="text-center"
           >
             <div className="w-12 h-12 bg-gradient-to-r from-gold to-bronze rounded-full mx-auto mb-3 flex items-center justify-center">
-              <span className="text-white text-lg">👰</span>
+              <Heart size={20} className="text-white" />
             </div>
             <p className="text-text-secondary text-sm">Happy Planning!</p>
           </motion.div>
         )}
       </div>
     </motion.div>
+    </>
   );
 }
