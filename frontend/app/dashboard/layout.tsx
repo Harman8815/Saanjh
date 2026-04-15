@@ -59,7 +59,9 @@ export default function DashboardLayout({
       
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 overflow-x-hidden ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
-        <div className="container mx-auto px-4 py-8">
+        <div className={`container mx-auto px-4 py-8 transition-all duration-300 ${
+          isSidebarCollapsed ? 'max-w-full' : 'max-w-[calc(100vw-16rem)]'
+        }`}>
           {/* Breadcrumbs and Back Button */}
           {pathname !== '/dashboard' && (
             <div className="flex items-center justify-between mb-6">
