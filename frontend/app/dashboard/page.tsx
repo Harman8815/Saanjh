@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
-import DashboardSidebar from '../../components/DashboardSidebar';
-import DashboardSearch from '../../components/DashboardSearch';
+import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
+import DashboardSearch from '../../components/dashboard/DashboardSearch';
+import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 
 // TODO: Create comprehensive wedding dashboard
 // TODO: Add wedding timeline and progress tracking
@@ -20,6 +21,16 @@ export default function DashboardPage() {
   const { user, wedding, setCurrentPage } = useAppStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading data
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000); // 2 second loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // TODO: Fetch dashboard data and analytics
   // TODO: Load wedding progress and timeline
@@ -29,12 +40,16 @@ export default function DashboardPage() {
   // TODO: Get upcoming tasks and deadlines
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <DashboardSidebar 
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
+    <>
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="min-h-screen bg-background flex">
+          {/* Sidebar */}
+          <DashboardSidebar 
+            isCollapsed={isSidebarCollapsed}
+            onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          />
       
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
@@ -311,9 +326,11 @@ export default function DashboardPage() {
       </div>
 
       {/* TODO: Add quick add modal */}
-      {/* TODO: Implement task management */}
-      {/* TODO: Add expense tracking */}
-      {/* TODO: Create calendar integration */}
-    </div>
+          {/* TODO: Implement task management */}
+          {/* TODO: Add expense tracking */}
+          {/* TODO: Create calendar integration */}
+        </div>
+      )}
+    </>
   );
 }
