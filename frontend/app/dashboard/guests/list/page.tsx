@@ -1,0 +1,333 @@
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+interface Guest {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  table: string;
+  side: 'Bride' | 'Groom';
+  plusOne: boolean;
+  rsvpStatus: 'confirmed' | 'pending' | 'declined' | 'tentative';
+  mealPreference?: string;
+  address?: string;
+  notes?: string;
+}
+
+export default function GuestListPage() {
+  const [guests, setGuests] = useState<Guest[]>([
+    { 
+      id: 1, 
+      name: 'Emily Johnson', 
+      email: 'emily@email.com', 
+      phone: '+1-555-0123', 
+      table: 'A1', 
+      side: 'Bride', 
+      plusOne: true,
+      rsvpStatus: 'confirmed',
+      mealPreference: 'vegetarian',
+      address: '123 Main St, City, State 12345',
+      notes: 'Bridesmaid - needs special dietary accommodations'
+    },
+    { 
+      id: 2, 
+      name: 'Michael Smith', 
+      email: 'michael@email.com', 
+      phone: '+1-555-0456', 
+      table: 'A2', 
+      side: 'Groom', 
+      plusOne: false,
+      rsvpStatus: 'pending',
+      mealPreference: 'none',
+      address: '456 Oak Ave, City, State 67890'
+    },
+    { 
+      id: 3, 
+      name: 'Jessica Davis', 
+      email: 'jessica@email.com', 
+      phone: '+1-555-0789', 
+      table: 'A3', 
+      side: 'Bride', 
+      plusOne: false,
+      rsvpStatus: 'declined',
+      mealPreference: 'gluten-free',
+      address: '789 Pine St, City, State 54321'
+    },
+    { 
+      id: 4, 
+      name: 'Robert Wilson', 
+      email: 'robert@email.com', 
+      phone: '+1-555-0321', 
+      table: 'B1', 
+      side: 'Groom', 
+      plusOne: false,
+      rsvpStatus: 'tentative',
+      mealPreference: 'vegan',
+      address: '321 Elm St, City, State 98765'
+    }
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTable, setSelectedTable] = useState('all');
+  const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
+  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+
+  // Filter guests based on search and table assignment
+  const filteredGuests = guests.filter((guest: Guest) => {
+    const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guest.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guest.phone.includes(searchQuery);
+    const matchesTable = selectedTable === 'all' || guest.table === selectedTable;
+    return matchesSearch && matchesTable;
+  });
+
+  // Calculate statistics
+  const stats = {
+    total: guests.length,
+    confirmed: guests.filter(g => g.rsvpStatus === 'confirmed').length,
+    pending: guests.filter(g => g.rsvpStatus === 'pending').length,
+    declined: guests.filter(g => g.rsvpStatus === 'declined').length,
+    tentative: guests.filter(g => g.rsvpStatus === 'tentative').length
+  };
+
+  const handleAddGuest = () => {
+    setEditingGuest({
+      id: guests.length + 1,
+      name: '',
+      email: '',
+      phone: '',
+      table: 'A1',
+      side: 'Bride',
+      plusOne: false,
+      rsvpStatus: 'pending',
+      mealPreference: '',
+      address: '',
+      notes: ''
+    });
+    setShowAddGuestModal(true);
+  };
+
+  const handleEditGuest = (guest: Guest) => {
+    setEditingGuest(guest);
+    setShowAddGuestModal(true);
+  };
+
+  const handleSaveGuest = (guest: Guest) => {
+    if (editingGuest) {
+      setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
+    } else {
+      setGuests([...guests, guest]);
+    }
+    setEditingGuest(null);
+    setShowAddGuestModal(false);
+  };
+
+  const handleDeleteGuest = (guestId: number) => {
+    setGuests(guests.filter(g => g.id !== guestId));
+    if (editingGuest?.id === guestId) {
+      setEditingGuest(null);
+      setShowAddGuestModal(false);
+    }
+  };
+
+  const handleToggleGuestSelection = (guestId: number) => {
+    setSelectedGuests(prev => 
+      prev.includes(guestId) 
+        ? prev.filter(id => id !== guestId)
+        : [...prev, guestId]
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-text-primary mb-4">
+            <span className="text-glow">Guest List Manager</span>
+          </h1>
+          <p className="text-xl text-text-muted max-w-3xl mx-auto">
+            Organize and manage your wedding guest list efficiently
+          </p>
+        </motion.div>
+
+        {/* Stats and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Import/Export */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="glass-card p-6"
+          >
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Import/Export</h3>
+            <div className="flex gap-3">
+              <button className="flex-1 btn-secondary">
+                📥 Import CSV
+              </button>
+              <button className="flex-1 btn-secondary">
+                📤 Export CSV
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="glass-card p-6"
+          >
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Search Guests</h3>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, or phone..."
+              className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary"
+            />
+          </motion.div>
+
+          {/* Table Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="glass-card p-6"
+          >
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Table Assignment</h3>
+            <div className="flex gap-2">
+              {['all', 'A1', 'A2', 'A3', 'B1'].map((table) => (
+                <button
+                  key={table}
+                  onClick={() => setSelectedTable(table)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedTable === table
+                      ? 'bg-primary text-white'
+                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  {table === 'all' ? 'All Tables' : `Table ${table.slice(1)}`}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Guest List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="glass-card p-8"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-text-primary">
+              Guest List ({filteredGuests.length})
+            </h2>
+            <div className="flex gap-3">
+              <button className="btn-secondary">
+                Add Guest
+              </button>
+              <button className="btn-secondary">
+                Bulk Edit
+              </button>
+            </div>
+          </div>
+
+          {/* Guest Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/20">
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredGuests.map((guest, index) => (
+                  <motion.tr
+                    key={guest.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="border-b border-white/10 hover:bg-white/5"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            {guest.name.charAt(0)}
+                          </span>
+                        </div>
+                        <span className="text-text-primary">{guest.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-text-muted">{guest.email}</td>
+                    <td className="px-6 py-4 text-text-muted">{guest.phone}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
+                        {guest.table}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {guest.side}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {guest.plusOne && (
+                        <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
+                          +1
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="btn-secondary btn-sm">
+                          Edit
+                        </button>
+                        <button className="btn-secondary btn-sm">
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-6 gap-2">
+            <button className="btn-secondary">Previous</button>
+            <span className="text-text-muted">Page 1 of 1</span>
+            <button className="btn-secondary">Next</button>
+          </div>
+        </motion.div>
+
+        {/* TODO: Add seating chart integration */}
+        {/* TODO: Add meal preference management */}
+        {/* TODO: Add RSVP tracking */}
+        {/* TODO: Add guest grouping */}
+        {/* TODO: Add address management */}
+      </div>
+    </div>
+  );
+}

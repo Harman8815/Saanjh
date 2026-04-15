@@ -1,9 +1,13 @@
+'use client';
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { usePathname } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LayoutWrapper from "../components/LayoutWrapper";
+import { metadata } from "./metadata";
 // import CustomCursor from '../components/CustomCursor'; // Commented out - using default cursor
 
 const geistSans = Geist({
@@ -16,16 +20,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Perfect Proposal - AI-Powered Wedding Proposal Generator",
-  description: "Create unforgettable wedding proposals with our AI-powered generator. Make your special moment truly magical and personalized.",
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+  const isDashboardPage = pathname.startsWith('/dashboard');
+
   return (
     <html
       lang="en"
@@ -34,7 +38,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
         <LayoutWrapper>
-          <Navbar />
+          {(isHomePage || isDashboardPage) && <Navbar />}
           {children}
           <Footer />
         </LayoutWrapper>
