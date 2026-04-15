@@ -215,7 +215,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
       <motion.div
         initial={{ x: -300 }}
         animate={{ 
-          x: isMobileMenuOpen ? 0 : (isCollapsed ? -240 : 0)
+          x: isMobileMenuOpen ? 0 : (isCollapsed ? -220 : 0)
         }}
         transition={{ duration: 0.3 }}
         className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 overflow-y-auto ${
