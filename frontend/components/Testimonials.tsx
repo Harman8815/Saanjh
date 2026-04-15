@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import LuxuryWeddingCard from './LuxuryWeddingCard';
 
 export default function Testimonials() {
   const testimonials = [
@@ -91,35 +92,23 @@ export default function Testimonials() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <motion.div
+            <LuxuryWeddingCard
               key={testimonial.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="glass-card p-8 group cursor-pointer"
-            >
-              <div className="flex items-center mb-6">
-                <div className="text-4xl mr-4">{testimonial.image}</div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-text-primary mb-2">{testimonial.name}</h3>
-                  <p className="text-sm text-text-muted">{testimonial.location}</p>
-                </div>
-              </div>
-              
-              <div className="flex mb-4">
-                {renderStars(testimonial.rating)}
-              </div>
-              
-              <p className="text-text-secondary mb-6 italic leading-relaxed">
-                "{testimonial.comment}"
-              </p>
-              
-              <p className="text-sm text-text-muted text-right">
-                {testimonial.date}
-              </p>
-            </motion.div>
+              coupleNames={testimonial.name}
+              subtitle={testimonial.location}
+              description={`"${testimonial.comment}"`}
+              icon={testimonial.image}
+              date={testimonial.date}
+              primaryAction={{
+                text: "Read Full Story",
+                href: "/testimonials"
+              }}
+              secondaryAction={{
+                text: "Share Story",
+                href: "/share"
+              }}
+              tags={["Happy Couple", "Success Story"]}
+            />
           ))}
         </div>
         

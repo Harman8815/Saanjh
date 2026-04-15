@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import TraditionalWeddingCard from './TraditionalWeddingCard';
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -10,40 +11,26 @@ export default function Pricing() {
     {
       name: 'Starter',
       price: { monthly: 9, yearly: 7 },
-      description: 'Perfect for simple, intimate proposals',
+      description: 'Perfect for simple, intimate weddings',
       features: [
-        'Basic AI proposal ideas',
-        '3 proposal suggestions',
-        'Simple speech generator',
+        'Basic venue search',
+        'Digital wedding cards',
         'Email support',
         '7-day access'
-      ],
-      notIncluded: [
-        'Vendor recommendations',
-        'Custom location suggestions',
-        'Priority support',
-        'Unlimited revisions'
       ],
       popular: false,
       buttonText: 'Get Started'
     },
     {
-      name: 'Romantic',
+      name: 'Premium',
       price: { monthly: 29, yearly: 23 },
-      description: 'Our most popular choice for memorable proposals',
+      description: 'Our most popular choice for memorable weddings',
       features: [
-        'Advanced AI proposal ideas',
-        'Unlimited proposal suggestions',
-        'Personalized speech generator',
+        'Advanced venue search',
+        'Unlimited wedding cards',
         'Vendor recommendations',
-        'Location suggestions',
         'Priority email support',
         '30-day access'
-      ],
-      notIncluded: [
-        '1-on-1 consultation',
-        'Photography coordination',
-        'Unlimited access'
       ],
       popular: true,
       buttonText: 'Most Popular'
@@ -51,19 +38,17 @@ export default function Pricing() {
     {
       name: 'Ultimate',
       price: { monthly: 79, yearly: 59 },
-      description: 'For the ultimate, once-in-a-lifetime proposal',
+      description: 'For the ultimate, once-in-a-lifetime wedding',
       features: [
-        'Premium AI proposal ideas',
+        'Premium venue search',
         'Unlimited everything',
         '1-on-1 consultation',
-        'Photography coordination',
         'Vendor management',
         'Custom location scouting',
         'Phone & video support',
         'Unlimited access',
-        'Proposal day assistance'
+        'Wedding day assistance'
       ],
-      notIncluded: [],
       popular: false,
       buttonText: 'Go Premium'
     }
@@ -123,64 +108,25 @@ export default function Pricing() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
-            <div
+            <TraditionalWeddingCard
               key={index}
-              className={`relative glass-card overflow-hidden hover:border-primary/20 ${
-                plan.popular ? 'ring-2 ring-primary transform scale-105' : ''
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-highlight text-white text-center py-2 text-sm font-semibold">
-                  Most Popular Choice
-                </div>
-              )}
-              
-              <div className="p-8 pt-12">
-                <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
-                <p className="text-text-secondary mb-6 leading-relaxed">{plan.description}</p>
-                
-                <div className="mb-6">
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-text-primary">
-                      ${calculatePrice(plan)}
-                    </span>
-                    <span className="text-text-muted ml-2">/{billingCycle === 'monthly' ? 'month' : 'month (billed yearly)'}</span>
-                  </div>
-                  {billingCycle === 'yearly' && (
-                    <div className="text-gold text-sm mt-1">
-                      Save {calculateSavings(plan)}% with yearly billing
-                    </div>
-                  )}
-                </div>
-                
-                <button
-                  className={`btn-primary w-full mb-8 ${
-                    plan.popular
-                      ? 'bg-gradient-to-r from-primary to-highlight hover:from-primary-dark hover:to-highlight-dark'
-                      : 'bg-white/10 text-text-primary hover:bg-white/20'
-                  }`}
-                >
-                  {plan.buttonText}
-                </button>
-                
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-text-primary mb-3">What's included:</h4>
-                  {plan.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start">
-                      <div className="w-2 h-2 rounded-full bg-gold/20 mr-3 mt-0.5" />
-                      <span className="text-text-secondary text-sm">{feature}</span>
-                    </div>
-                  ))}
-                  
-                  {plan.notIncluded.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start opacity-50">
-                      <div className="w-2 h-2 rounded-full bg-text-muted/20 mr-3 mt-0.5" />
-                      <span className="text-text-muted text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+              title={plan.name}
+              description={plan.description}
+              icon={plan.name === 'Starter' ? '💐' : plan.name === 'Premium' ? '💒' : '👰'}
+              features={plan.features}
+              isSelected={plan.popular}
+              onClick={() => console.log(`Selected ${plan.name} plan`)}
+              primaryAction={{
+                text: plan.buttonText,
+                onClick: () => console.log(`${plan.name} plan selected`)
+              }}
+              secondaryAction={
+                plan.popular ? {
+                  text: "View Details",
+                  onClick: () => console.log(`View ${plan.name} details`)
+                } : undefined
+              }
+            />
           ))}
         </div>
         

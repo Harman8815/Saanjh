@@ -8,6 +8,7 @@ import Newsletter from '../components/Newsletter';
 import FAQ from '../components/FAQ';
 import Pricing from '../components/Pricing';
 import ContactForm from '../components/ContactForm';
+import LuxuryWeddingCard from '../components/LuxuryWeddingCard';
 
 export default function Home() {
   const { setCurrentPage } = useAppStore();
@@ -166,25 +167,21 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {coreFeatures.map((feature, index) => (
-              <motion.div
+              <LuxuryWeddingCard
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: feature.delay }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="glass-card p-8 text-center group cursor-pointer"
-              >
-                <div className="text-5xl mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-text-secondary leading-relaxed">
-                  {feature.description}
-                </p>
-              </motion.div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                primaryAction={{
+                  text: "Learn More",
+                  href: "/features"
+                }}
+                secondaryAction={{
+                  text: "View Demo",
+                  href: "/demo"
+                }}
+                tags={["Wedding", "Premium"]}
+              />
             ))}
           </div>
         </div>
@@ -210,25 +207,21 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {planningFeatures.map((feature, index) => (
-              <motion.div
+              <LuxuryWeddingCard
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: feature.delay }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="glass-card p-8 text-center group cursor-pointer"
-              >
-                <div className="text-5xl mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-text-secondary leading-relaxed">
-                  {feature.description}
-                </p>
-              </motion.div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                primaryAction={{
+                  text: "Start Planning",
+                  href: "/planning"
+                }}
+                secondaryAction={{
+                  text: "View Guide",
+                  href: "/guide"
+                }}
+                tags={["Planning", "Smart Tools"]}
+              />
             ))}
           </div>
         </div>
@@ -254,25 +247,21 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {customizationFeatures.map((feature, index) => (
-              <motion.div
+              <LuxuryWeddingCard
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: feature.delay }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="glass-card p-8 text-center group cursor-pointer"
-              >
-                <div className="text-5xl mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-text-secondary leading-relaxed">
-                  {feature.description}
-                </p>
-              </motion.div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                primaryAction={{
+                  text: "Customize Now",
+                  href: "/customize"
+                }}
+                secondaryAction={{
+                  text: "View Templates",
+                  href: "/templates"
+                }}
+                tags={["Custom", "Personalization"]}
+              />
             ))}
           </div>
         </div>
