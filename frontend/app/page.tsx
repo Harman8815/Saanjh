@@ -1,4 +1,9 @@
 import Link from 'next/link';
+import Testimonials from '../components/Testimonials';
+import Newsletter from '../components/Newsletter';
+import FAQ from '../components/FAQ';
+import Pricing from '../components/Pricing';
+import ContactForm from '../components/ContactForm';
 
 export default function Home() {
   return (
@@ -79,7 +84,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* Pricing Section */}
+      <Pricing />
+
+      {/* FAQ Section */}
+      <FAQ />
+
+      {/* Newsletter Section */}
+      <Newsletter />
+
+      {/* Contact Form Section */}
+      <ContactForm />
+
+      {/* Final CTA Section */}
       <section className="py-20 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -88,12 +108,20 @@ export default function Home() {
           <p className="text-xl mb-8 opacity-90">
             Join thousands of couples who have created magical proposals with our help.
           </p>
-          <Link
-            href="/generator"
-            className="bg-white text-pink-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
-          >
-            Get Started Now
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/generator"
+              className="bg-white text-pink-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              Get Started Now
+            </Link>
+            <Link
+              href="#contact"
+              className="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-pink-600 transition-colors"
+            >
+              Talk to Expert
+            </Link>
+          </div>
         </div>
       </section>
     </div>
