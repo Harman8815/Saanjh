@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { usePathname } from "next/navigation";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import LayoutWrapper from "../components/LayoutWrapper";
+import Navbar from "../components/common/Navbar";
+import Footer from "../components/common/Footer";
+import LayoutWrapper from "../components/common/LayoutWrapper";
 import { metadata } from "./metadata";
-// import CustomCursor from '../components/CustomCursor'; // Commented out - using default cursor
+// import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +39,7 @@ export default function RootLayout({
         <LayoutWrapper>
           {isHomePage && <Navbar />}
           {children}
-          <Footer />
+          {isHomePage && <Footer />}
         </LayoutWrapper>
       </body>
     </html>
