@@ -1,0 +1,2372 @@
+[
+  {
+    "id": "mnzu3we329zr8h3vw7y",
+    "text": "Create comprehensive wedding dashboard",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we3c0ktbu215oa",
+    "text": "Add wedding timeline and progress tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we3gfzbr62fpid",
+    "text": "Implement budget management and tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we36j1ql7mixjv",
+    "text": "Add guest list management and RSVP tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we3q5na0924nu",
+    "text": "Create vendor management and communication",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we3yj6p9z3jfl",
+    "text": "Add task management and checklists",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we37c76a8b9tjx",
+    "text": "Implement calendar integration and scheduling",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we343yq2109vrd",
+    "text": "Add document storage and organization",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we3zt36nyrgi6",
+    "text": "Create analytics and insights dashboard",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 13,
+    "dateCreated": "2026-04-15T09:14:50.427Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we3t48iveigoy",
+    "text": "Fetch dashboard data and analytics",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we42gtauhngilt",
+    "text": "Load wedding progress and timeline",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 19,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4rli3927vba8",
+    "text": "Get budget and expense data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we44t57a7kxmxe",
+    "text": "Load guest list and RSVP data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 21,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4skksxq1d1eq",
+    "text": "Fetch vendor information and communications",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 22,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4wnnqhu72y4m",
+    "text": "Get upcoming tasks and deadlines",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 23,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we46hkcmanwnwu",
+    "text": "Add dashboard header with user info",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 28,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we49fasv9ll94v",
+    "text": "Add wedding overview cards",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 55,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we451tun9tw667",
+    "text": "Add wedding timeline",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 133,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4j4uj39ogddp",
+    "text": "Add recent activity",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 157,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4mh475dqxp5j",
+    "text": "Add upcoming tasks",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 183,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we47k89ck5ez8k",
+    "text": "Add budget overview",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 215,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4jk8lumxgeo",
+    "text": "Add vendor status",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 244,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4jxp5x5jp96",
+    "text": "Add quick actions",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 264,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we44it70kjryp",
+    "text": "Add wedding website link",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 290,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4hxojkq6hz7s",
+    "text": "Add quick add modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 318,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4rdyain2xhms",
+    "text": "Implement task management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 319,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we48c8iywegxgh",
+    "text": "Add expense tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 320,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4vx29u88crak",
+    "text": "Create calendar integration",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\dashboard\\page.tsx",
+    "line": 321,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4ibd835e30c",
+    "text": "Create comprehensive pricing and subscription plans page",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4mu4wahyjuam",
+    "text": "Add tier comparison features",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4cmmpubde474",
+    "text": "Implement subscription upgrade/downgrade functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4o1shm4usibn",
+    "text": "Add payment processing integration",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we403j4y9d8xmll",
+    "text": "Create trial and promotional offers",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we40l7eqfm8o0i",
+    "text": "Add enterprise/custom plans",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4rdztm0zuzq9",
+    "text": "Implement billing management and history",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we47t2xgbf9jp3",
+    "text": "Add usage analytics and limits",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we43rgs0273cwd",
+    "text": "Fetch pricing plans and user subscription",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 17,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4hhvk66ymhln",
+    "text": "Load billing history and usage data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we4ktvdaq2pie",
+    "text": "Get promotional offers and trials",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 19,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we40868xhmgqj3w",
+    "text": "Implement plan comparison logic",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4myloidyasi",
+    "text": "Add pricing header",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 94,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we417iwr6o0bmc",
+    "text": "Add billing toggle",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 109,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4h1l3v09thhs",
+    "text": "Add pricing cards",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 126,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we41ohu4g30n7h",
+    "text": "Add feature comparison table",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 188,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4ro01tqn1xrg",
+    "text": "Add FAQ section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 236,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4ykqqpzgdisk",
+    "text": "Add money-back guarantee",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 277,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4mmsvbzj1g1",
+    "text": "Add payment processing modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 301,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we444utue20re8",
+    "text": "Implement plan upgrade/downgrade",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 302,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4jpbzagkz9vb",
+    "text": "Add billing management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 303,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we4ncc5dwihnsk",
+    "text": "Create enterprise plan inquiry",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\pricing\\page.tsx",
+    "line": 304,
+    "dateCreated": "2026-04-15T09:14:50.428Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we46xw0aezn6cj",
+    "text": "Create user profile management page",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5mtgt7d0ghnb",
+    "text": "Add personal information editing",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5kwbo3kvtfu",
+    "text": "Implement wedding details management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5cubtomqsf0v",
+    "text": "Add partner information management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we57fygodfernq",
+    "text": "Create account settings and preferences",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5vhgtyji4kqk",
+    "text": "Add subscription management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5hs30qu7uby9",
+    "text": "Implement privacy settings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5015877m9q1r6l",
+    "text": "Add notification preferences",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5yt05nr1duhk",
+    "text": "Create account deletion option",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 13,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we54glmc30r0n6",
+    "text": "Fetch user profile data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we54pbuo52ygf6",
+    "text": "Load wedding details",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 19,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we55j6gystw7op",
+    "text": "Get subscription information",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5gbtj4f8irf8",
+    "text": "Load user preferences and settings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 21,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we568w4fic3q0l",
+    "text": "Add form validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 63,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5shb6n25k9rs",
+    "text": "Add form validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 74,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5jjlnk448fy",
+    "text": "Add email validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 87,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5bt26c6ajqm",
+    "text": "Add phone validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 99,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we56p0phxca94o",
+    "text": "Add form validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 134,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5z1syx49aar",
+    "text": "Add date validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 147,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5tsgc1g9skxs",
+    "text": "Add number validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 159,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ggk88mdv35f",
+    "text": "Add venue validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 173,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5jgwu6eua5lk",
+    "text": "Add budget validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 186,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we50f4iwoer1iqr",
+    "text": "Add form validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 221,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5naeqynd2rw",
+    "text": "Add form validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 232,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5s8qbo759j1",
+    "text": "Add email validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 245,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5vgfvv0bagb",
+    "text": "Add phone validation and update",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 257,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ykn3wlli7x",
+    "text": "Add personal information section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 43,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ecjob6atxlr",
+    "text": "Add wedding details section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 114,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5syyhleomese",
+    "text": "Add partner information section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 201,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5senyc2zf1sb",
+    "text": "Add account settings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 275,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we55qt8xsj4b8u",
+    "text": "Add subscription management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 301,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we56bb9mpqukn",
+    "text": "Add notification preferences",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 326,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we53hwpv7rm6t6",
+    "text": "Add privacy settings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 356,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5zdwkgqfbk6r",
+    "text": "Add account actions",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 382,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we58l8ww2pogrh",
+    "text": "Add password change modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 411,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we55tod1vw1n08",
+    "text": "Implement 2FA setup",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 412,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we53sq2v6g79k4",
+    "text": "Add data export functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 413,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we50dulvswlyn88",
+    "text": "Create account deactivation flow",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\profile\\page.tsx",
+    "line": 414,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5m9z8s4ye0yj",
+    "text": "Implement vendor marketplace with profiles, search, and filtering",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5pey0fkbeyv",
+    "text": "Add vendor categories (photographers, florists, caterers, etc.)",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ffrrn4e1rfq",
+    "text": "Create vendor detail pages with portfolios",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5j0gu6gq2blp",
+    "text": "Implement vendor booking and messaging system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5c54bwchajle",
+    "text": "Add vendor reviews and ratings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5u62mjslhm0i",
+    "text": "Create vendor comparison features",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we55vmb9gkw1yl",
+    "text": "Add vendor availability calendar",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we53tx1rz9mvyc",
+    "text": "Implement vendor search by location and services",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ayy4syoi0ck",
+    "text": "Fetch vendors from API",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 17,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we58j6vpndup6x",
+    "text": "Implement search and filter state",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5q8yuucra4a",
+    "text": "Add vendor categories management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 19,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we5ag8kimnufe",
+    "text": "Create vendor card components with portfolios",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.429Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we5liem1vuku5",
+    "text": "Add category filtering functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 60,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6fj7d5i02k9b",
+    "text": "Add search functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 79,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we68vdk76jjnab",
+    "text": "Add vendor search header with category filters",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 33,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6n3zmc13ck6i",
+    "text": "Implement vendor categories filter",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 49,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we693chgp92ksl",
+    "text": "Implement vendor search bar and filters",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 71,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6ijmrkst3gxi",
+    "text": "Implement vendor listings grid",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 94,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we63btmijautwg",
+    "text": "Add pagination component",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 124,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we604ehjuem9ams",
+    "text": "Add vendor comparison sidebar",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 132,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6n6kc1pl47e",
+    "text": "Implement vendor messaging system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 133,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we68snrlb3u2p2",
+    "text": "Add vendor booking flow",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\page.tsx",
+    "line": 134,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we60jhae7nidgpj",
+    "text": "Create detailed vendor profile page with portfolio gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6b9w1dws0gw9",
+    "text": "Add vendor services and packages",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6qb4kmh8a6ek",
+    "text": "Implement vendor availability calendar",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6xuez0j14ttm",
+    "text": "Add vendor reviews and testimonials",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6u20xcn4pmp",
+    "text": "Create vendor inquiry and booking system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6s7jefe8l9d",
+    "text": "Add vendor messaging/chat functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6nrsj2rq0lbi",
+    "text": "Implement vendor comparison feature",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6zi9hlif8h4f",
+    "text": "Add vendor social media integration",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 13,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6gjjecau7eqa",
+    "text": "Create vendor portfolio with video support",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 14,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6y74bnqf2xa",
+    "text": "Fetch vendor details by ID",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 21,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6t7vrmg9z3q",
+    "text": "Load vendor portfolio images and videos",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 22,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6vp4i6rqrxtd",
+    "text": "Get vendor availability and pricing",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 23,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6hq73c0l361",
+    "text": "Fetch vendor reviews and testimonials",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 24,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "testing"
+  },
+  {
+    "id": "mnzu3we6sppwa5gxrj",
+    "text": "Load vendor services and packages",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 25,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6lt6syr0a5c",
+    "text": "Add form validation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 183,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we69uso1201ndl",
+    "text": "Add email validation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 194,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6pb125wxzqy",
+    "text": "Add date picker",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 204,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6pq4adxkc4j",
+    "text": "Add message validation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 215,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we65ei956um5h6",
+    "text": "Implement inquiry submission",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 221,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6plr7dx2ja1",
+    "text": "Add vendor hero section with profile image",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 29,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6vmxdafh1j4a",
+    "text": "Add vendor details section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 40,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6tajxkqttya",
+    "text": "Add vendor services",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 67,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6lxcxk984oca",
+    "text": "Add vendor about section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 80,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6uzpll2cz8vk",
+    "text": "Add vendor portfolio gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 91,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we667b43mk4vr2",
+    "text": "Add vendor packages and pricing",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 110,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6fvbq81txo2q",
+    "text": "Add vendor reviews",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 135,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6lcg8mijrmya",
+    "text": "Add booking/inquiry form",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 164,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we61x8bs3vbgw6",
+    "text": "Add vendor contact info",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 228,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we671naht1jfis",
+    "text": "Add vendor availability",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 246,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6xatrivlc21k",
+    "text": "Add similar vendors",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 263,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6z0yuf92qtz",
+    "text": "Add vendor chat/messaging modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 292,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6b10aznaxap5",
+    "text": "Implement vendor booking flow",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 293,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6le47je9xl3",
+    "text": "Add vendor comparison feature",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\vendors\\[id]\\page.tsx",
+    "line": 294,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6ykrpjjrmc4m",
+    "text": "Implement venue booking system with listings, details, and booking flow",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6f8g6a9mth1",
+    "text": "Add venue search and filtering functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we66nadbewx9vi",
+    "text": "Create venue detail pages with image galleries",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we6oppp3rw94db",
+    "text": "Implement booking calendar and availability system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6j2emy1rpid",
+    "text": "Add venue comparison features",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.430Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we6qtf0pfuvfso",
+    "text": "Integrate with payment processing for venue deposits",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7yl54tiqbvvm",
+    "text": "Fetch venues from API",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 15,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we73xgtg6q4d0a",
+    "text": "Implement search and filter state",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 16,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7lpzfxu6it59",
+    "text": "Add pagination for venue listings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 17,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7sxfpctxz4l",
+    "text": "Create venue card components with hover effects",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7edc71pxmpw",
+    "text": "Add venue search header with filters",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 22,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we78f5y233hlkt",
+    "text": "Implement venue search bar and filters",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 38,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we75q0sfu0m46r",
+    "text": "Implement venue listings grid",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 48,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we71vejckyx07b",
+    "text": "Add pagination component",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 72,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7ob0axjp9xza",
+    "text": "Add venue detail modal/sidebar",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 80,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7dbctacomj0c",
+    "text": "Implement booking flow",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 81,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7s9vnpjr6bd",
+    "text": "Add venue comparison feature",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\page.tsx",
+    "line": 82,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7cq7ycrvgw4p",
+    "text": "Create detailed venue page with image gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7irqbjx29tlr",
+    "text": "Add venue availability calendar",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7osxxxdizmaf",
+    "text": "Implement booking form with date selection",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7zluk2ka2apc",
+    "text": "Add venue reviews and ratings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we708q07jzc0fvq",
+    "text": "Create venue comparison feature",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7vdsshkrdph",
+    "text": "Add venue contact and inquiry system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7jiyy0nf4eb",
+    "text": "Implement virtual tour integration",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7xpd1ya1b2j",
+    "text": "Add venue package options and pricing",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 13,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7arx52f3nf4h",
+    "text": "Fetch venue details by ID",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7srhz3t7lsfg",
+    "text": "Load venue images and gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 21,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7a8qiqzvwsvl",
+    "text": "Get venue availability data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 22,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we703hn7ea9qidl",
+    "text": "Fetch venue reviews and ratings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 23,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we71hfcqwiv7es",
+    "text": "Add date picker with availability checking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 146,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7s4w34ga8mc",
+    "text": "Add guest count validation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 157,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7enbbq2fj69n",
+    "text": "Implement booking submission",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 163,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we71umo4o79ahu",
+    "text": "Add venue hero section with image gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 27,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7r5fagh52id",
+    "text": "Add venue details section",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 38,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we746w5q8v8tw4",
+    "text": "Add venue features and amenities",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 57,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7cpda95ocm3",
+    "text": "Add venue description and details",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 70,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7juqowzgcf5d",
+    "text": "Add venue gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 81,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7gp4nm40ur2e",
+    "text": "Add venue reviews",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 100,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7vn1u7dc70tm",
+    "text": "Add booking form",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 128,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7cim1fn8824",
+    "text": "Add venue contact info",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 170,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7ctaa924rhdj",
+    "text": "Add similar venues",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 188,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7mggjo6d2uqo",
+    "text": "Add venue inquiry modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 216,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7n641bjnpjq",
+    "text": "Implement virtual tour modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 217,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7ltefrnp48i",
+    "text": "Add venue comparison feature",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\venues\\[id]\\page.tsx",
+    "line": 218,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7b9tqht6d5fg",
+    "text": "Implement digital wedding card creation and customization",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 5,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7xb7rk49f07",
+    "text": "Add card templates and design options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7fvzi8xlx8g",
+    "text": "Create card preview and editing functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we713fr62u6tvs",
+    "text": "Implement shareable card links and QR codes",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7xlzxenx5v6q",
+    "text": "Add card personalization with photos and text",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7ddxmeerak6s",
+    "text": "Create card sending and RSVP tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we76lmgnysdl4f",
+    "text": "Add card analytics and engagement tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7awjqugwdym",
+    "text": "Implement card export and printing options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we71v1f2v3xu4e",
+    "text": "Fetch wedding card templates",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 17,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we79u2ld07c05",
+    "text": "Load user's saved cards",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 18,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we7mh05pnnevv",
+    "text": "Implement card creation state",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 19,
+    "dateCreated": "2026-04-15T09:14:50.431Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we7o1yram2hfet",
+    "text": "Add card customization options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 20,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we922pyo0yms18",
+    "text": "Add wedding cards header with creation options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 33,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9ise6xh6sho",
+    "text": "Add card creation options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 52,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9pctf51nhkmj",
+    "text": "Add card template gallery",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 96,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9jfbrz18xs5",
+    "text": "Add user's saved cards",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 121,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9njzz2c3182",
+    "text": "Add card features and benefits",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 151,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we91ni1ek49l6x",
+    "text": "Add card creation modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 187,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9rp8ndjlgz9",
+    "text": "Implement card customization interface",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 188,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we98bcejuaytuf",
+    "text": "Add card sharing and QR code generation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 189,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9iwpwbl6xggc",
+    "text": "Create RSVP management system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\page.tsx",
+    "line": 190,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9vt45bl9bm1c",
+    "text": "Create wedding card customization and editing interface",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 6,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we91z3dlpe2hps",
+    "text": "Add card template selection and personalization",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 7,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9mjbqlj5ovkl",
+    "text": "Implement photo upload and editing functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 8,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9utr6uoz5di9",
+    "text": "Add text customization with font options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 9,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we97etweil5do9",
+    "text": "Create card preview and real-time updates",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 10,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9wwb27pka5l",
+    "text": "Add card sharing and QR code generation",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 11,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9wmhzn8gljp",
+    "text": "Implement RSVP management and tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 12,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9rmp6je2bn9",
+    "text": "Add guest list management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 13,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9dnsk4bw5xnm",
+    "text": "Create card analytics and engagement tracking",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 14,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9pgzge8u8tu",
+    "text": "Fetch wedding card details by ID",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 21,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9fb76ujzdhso",
+    "text": "Load card template and customization data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 22,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9g2beh5cnrx",
+    "text": "Get guest list and RSVP data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 23,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9i7vsnba76e",
+    "text": "Load card analytics and engagement data",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 24,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  },
+  {
+    "id": "mnzu3we9axntz4jnw1o",
+    "text": "Add text editing functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 74,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9rg7ki982wsb",
+    "text": "Add text editing functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 80,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we93baub07wfj2",
+    "text": "Add color picker",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 108,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we95vg12nancdg",
+    "text": "Add card preview and editing interface",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 32,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9hvjqqs7yxek",
+    "text": "Add card preview",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 43,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9pk3jb7j9xa7",
+    "text": "Add card customization options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 50,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we997tmqs719e",
+    "text": "Add guest list management",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 122,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we96kjrjhd3btm",
+    "text": "Add guest list table",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 142,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9gpv0ktgyzm",
+    "text": "Add card sharing options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 175,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9eh7w4oe3mvv",
+    "text": "Add card analytics",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 223,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9penwiomt6t",
+    "text": "Add card settings",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 253,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we96uxfpwyp1zm",
+    "text": "Add export options",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 279,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9qdifz8ujq8q",
+    "text": "Add photo upload modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 305,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9j6zmfw8c4eq",
+    "text": "Implement guest import functionality",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 306,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we9lj5x7oq27fl",
+    "text": "Add RSVP reminder system",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 307,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "feature"
+  },
+  {
+    "id": "mnzu3we909ldmwxkejcx",
+    "text": "Create card preview modal",
+    "isCompleted": false,
+    "source": "codebase",
+    "file": "d:\\CODING\\project\\TODO Projects\\Wedding Proposal generator\\frontend\\app\\wedding-cards\\[id]\\page.tsx",
+    "line": 308,
+    "dateCreated": "2026-04-15T09:14:50.433Z",
+    "category": "general"
+  }
+]

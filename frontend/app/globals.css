@@ -199,10 +199,176 @@ body {
 /* Utility Classes */
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
 .bg-surface { background: var(--surface); }
 .bg-card { background: var(--card); }
 .bg-gradient-primary { background: var(--gradient-primary); }
 .bg-gradient-secondary { background: var(--gradient-secondary); }
+.bg-gradient-accent { background: var(--gradient-accent); }
+.bg-gradient-rainbow { background: var(--gradient-rainbow); }
+
+/* Custom Cursor Styles */
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  z-index: 9999;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.cursor-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid white;
+  pointer-events: none;
+}
+
+.cursor-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: rgba(255, 20, 147, 0.2);
+  pointer-events: none;
+  animation: cursor-glow 2s ease-in-out infinite;
+}
+
+@keyframes cursor-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Interactive Element Enhancements */
+.magnetic-element {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.proximity-element {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tilt-element {
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.parallax-element {
+  will-change: transform;
+  transition: transform 0.1s ease-out;
+}
+
+/* Ripple Effect Styles */
+.ripple-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+
+.ripple-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 20, 147, 0.1);
+}
+
+/* Hover Indicator Styles */
+.hover-indicator {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Enhanced Interactive States */
+.element-hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-glow);
+  border-color: var(--primary);
+}
+
+.element-pull {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.element-tilt {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.element-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Performance Optimizations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.smooth-transform {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Accessibility for custom cursor */
+.cursor-accessible {
+  cursor: none;
+}
+
+/* Hide default cursor on all interactive elements */
+.cursor-accessible button,
+.cursor-accessible a,
+.cursor-accessible input,
+.cursor-accessible textarea,
+.cursor-accessible select,
+.cursor-accessible .interactive-card,
+.cursor-accessible .glass-card,
+.cursor-accessible [role="button"],
+.cursor-accessible [tabindex]:not([tabindex="-1"]),
+.cursor-accessible * {
+  cursor: none !important;
+}
+
+/* Global cursor hiding for custom cursor */
+* {
+  cursor: none !important;
+}
+
+/* Fallback for when custom cursor is disabled */
+@media (hover: none) {
+  * {
+    cursor: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-dot,
+  .cursor-ring,
+  .cursor-glow {
+    animation: none;
+    transition: none;
+  }
+  
+  .magnetic-element,
+  .proximity-element,
+  .tilt-element {
+    transition: none;
+  }
+}
 
 /* Responsive Typography */
 @media (max-width: 768px) {
