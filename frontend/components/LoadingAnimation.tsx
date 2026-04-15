@@ -58,13 +58,10 @@ export default function LoadingAnimation({
     initial: { scale: 0, rotate: 0 },
     animate: { 
       scale: [1, 1.2, 1], 
-      rotate: [0, 10, -10, 0],
-      transition: { 
-        duration: 2, 
-        repeat: Infinity, 
-        ease: "easeInOut" 
-      } 
-    }
+      rotate: [0, 15, -15, 0],
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const }
+    },
+    exit: { opacity: 0, transition: { duration: 0.8 } }
   };
 
   const floatingElements = [

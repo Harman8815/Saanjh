@@ -16,70 +16,94 @@ export default function Home() {
     setCurrentPage(page);
   };
 
-  const features = [
+  const coreFeatures = [
     {
-      icon: '🤖',
-      title: 'AI-Powered',
-      description: 'Smart algorithms that understand your relationship and create personalized proposals.',
+      icon: '🏰',
+      title: 'Venue Booking',
+      description: 'Discover and book the perfect venue for your dream wedding with detailed information and availability.',
       delay: 0.1
     },
     {
-      icon: '✨',
-      title: 'Unique Ideas',
-      description: 'Get creative and romantic proposal ideas tailored to your partner\'s preferences.',
+      icon: '💳',
+      title: 'Digital Wedding Cards',
+      description: 'Create beautiful, shareable digital wedding cards with customization and personal touches.',
       delay: 0.2
     },
     {
-      icon: '📝',
-      title: 'Perfect Wording',
-      description: 'Heartfelt speeches and messages that express your love beautifully.',
+      icon: '🛍️',
+      title: 'Vendor Marketplace',
+      description: 'Connect with trusted vendors - photographers, florists, caterers, and more.',
       delay: 0.3
     }
   ];
 
-  const floatingElements = [
-    { emoji: '💐', delay: 0, duration: 4, x: 10, y: 20 },
-    { emoji: '💍', delay: 0.5, duration: 3.5, x: 85, y: 30 },
-    { emoji: '🌹', delay: 1, duration: 3, x: 25, y: 70 },
-    { emoji: '💕', delay: 1.5, duration: 4.5, x: 80, y: 80 },
-    { emoji: '🎀', delay: 2, duration: 3.2, x: 15, y: 40 },
-    { emoji: '🌸', delay: 2.5, duration: 3.8, x: 90, y: 60 },
+  const planningFeatures = [
+    {
+      icon: '📅',
+      title: 'Timeline Planner',
+      description: 'Organize your wedding journey with an intuitive drag-and-drop timeline.',
+      delay: 0.1
+    },
+    {
+      icon: '💰',
+      title: 'Budget Tracker',
+      description: 'Manage expenses, track spending, and visualize your wedding budget.',
+      delay: 0.2
+    },
+    {
+      icon: '👥',
+      title: 'Guest List Manager',
+      description: 'Import, organize, and manage your guest list with RSVP tracking.',
+      delay: 0.3
+    }
+  ];
+
+  const customizationFeatures = [
+    {
+      icon: '💌',
+      title: 'Invitation Templates',
+      description: 'Choose from elegant templates or design custom invitations.',
+      delay: 0.1
+    },
+    {
+      icon: '�',
+      title: 'Couple Story Builder',
+      description: 'Share your love story with timeline, photos, and personal messages.',
+      delay: 0.2
+    },
+    {
+      icon: '🎵',
+      title: 'Music Integration',
+      description: 'Create playlists and set the perfect soundtrack for your celebration.',
+      delay: 0.3
+    }
+  ];
+
+  const ambientBlobs = [
+    { type: 'blob-1', delay: 0, duration: 8, x: 10, y: 20 },
+    { type: 'blob-2', delay: 2, duration: 10, x: 85, y: 30 },
+    { type: 'blob-3', delay: 4, duration: 12, x: 25, y: 70 },
   ];
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="flex-1 relative overflow-hidden">
+      <section className="min-h-[85vh] relative overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-surface to-card">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-highlight/10 animate-pulse" />
+        <div className="absolute inset-0">
+          {/* Ambient Blobs */}
+          {ambientBlobs.map((blob, index) => (
+            <div
+              key={index}
+              className={`ambient-blob blob-${blob.type}`}
+              style={{
+                left: `${blob.x}%`,
+                top: `${blob.y}%`,
+                animationDelay: `${blob.delay}s`
+              }}
+            />
+          ))}
         </div>
-        
-        {/* Floating Elements */}
-        {floatingElements.map((element, index) => (
-          <motion.div
-            key={index}
-            className="absolute text-4xl md:text-6xl opacity-30 pointer-events-none"
-            style={{ 
-              left: `${element.x}%`, 
-              top: `${element.y}%`,
-              transform: 'translate(-50%, -50%)'
-            }}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, 15, -15, 0],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{
-              duration: element.duration,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: element.delay
-            }}
-          >
-            {element.emoji}
-          </motion.div>
-        ))}
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="text-center">
@@ -88,12 +112,12 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-6">
-                Create the Perfect
-                <span className="block text-gradient animate-glow">Wedding Experience</span>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-text-primary mb-8 leading-tight">
+                <span className="block text-glow">Your Perfect Wedding</span>
+                <span className="block text-2xl md:text-3xl text-text-secondary font-light mt-2">Elegantly Planned, Beautifully Executed</span>
               </h1>
-              <p className="text-xl md:text-2xl text-text-secondary mb-12 max-w-4xl mx-auto leading-relaxed">
-                Let AI help you craft the most romantic and personalized wedding journey that will create unforgettable memories.
+              <p className="text-lg md:text-xl text-text-muted mb-16 max-w-3xl mx-auto leading-relaxed">
+                Transform your wedding dreams into reality with our intelligent planning platform. From venue booking to vendor coordination, we handle every detail with precision and care.
               </p>
             </motion.div>
             
@@ -104,44 +128,44 @@ export default function Home() {
               className="flex flex-col sm:flex-row gap-6 justify-center"
             >
               <Link
-                href="/generator"
-                onClick={() => handleNavClick('generator')}
+                href="/venues"
+                onClick={() => handleNavClick('venues')}
                 className="btn-primary text-lg px-8 py-4"
               >
-                Start Creating 💕
+                Start Planning
               </Link>
               <Link
-                href="/gallery"
-                onClick={() => handleNavClick('gallery')}
+                href="/wedding-cards"
+                onClick={() => handleNavClick('wedding-cards')}
                 className="btn-secondary text-lg px-8 py-4"
               >
-                View Gallery
+                Explore Features
               </Link>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-surface">
+      {/* Core Features Section */}
+      <section className="py-24 bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-              Why Choose Perfect Wedding?
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <span className="text-glow">Core Wedding Features</span>
             </h2>
-            <p className="text-xl text-text-secondary max-w-3xl mx-auto">
-              We combine cutting-edge AI with romantic expertise to create unforgettable moments.
+            <p className="text-xl text-text-muted max-w-4xl mx-auto leading-relaxed">
+              Everything you need to plan the perfect wedding, all in one intelligent platform.
             </p>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
+            {coreFeatures.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
@@ -151,13 +175,97 @@ export default function Home() {
                 whileHover={{ y: -5, scale: 1.02 }}
                 className="glass-card p-8 text-center group cursor-pointer"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="text-5xl mb-6 group-hover:animate-glow"
-                >
+                <div className="text-5xl mb-6">
                   {feature.icon}
-                </motion.div>
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-text-secondary leading-relaxed">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Planning & Management Section */}
+      <section className="py-24 bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <span className="text-glow-secondary">Smart Planning Tools</span>
+            </h2>
+            <p className="text-xl text-text-muted max-w-4xl mx-auto leading-relaxed">
+              Organize every detail with our intelligent planning and management suite.
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {planningFeatures.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: feature.delay }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="glass-card p-8 text-center group cursor-pointer"
+              >
+                <div className="text-5xl mb-6">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-text-secondary leading-relaxed">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Customization & Experience Section */}
+      <section className="py-24 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <span className="text-glow">Personalization & Experience</span>
+            </h2>
+            <p className="text-xl text-text-muted max-w-4xl mx-auto leading-relaxed">
+              Make your wedding uniquely yours with customization and experience features.
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {customizationFeatures.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: feature.delay }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="glass-card p-8 text-center group cursor-pointer"
+              >
+                <div className="text-5xl mb-6">
+                  {feature.icon}
+                </div>
                 <h3 className="text-xl font-semibold text-text-primary mb-4">
                   {feature.title}
                 </h3>
@@ -209,7 +317,7 @@ export default function Home() {
               <Link
                 href="/generator"
                 onClick={() => handleNavClick('generator')}
-                className="bg-white text-primary px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-xl hover:shadow-2xl"
+                className="bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-xl hover:shadow-2xl"
               >
                 Get Started Now
               </Link>

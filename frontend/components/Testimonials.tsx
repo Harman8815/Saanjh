@@ -1,3 +1,8 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+
 export default function Testimonials() {
   const testimonials = [
     {
@@ -58,71 +63,96 @@ export default function Testimonials() {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+      <span key={i} className={i < rating ? 'text-gold' : 'text-text-muted'}>
         ⭐
       </span>
     ));
   };
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-24 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Love Stories We've Helped Create
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join thousands of happy couples who started their forever with our help
-          </p>
+        <div className="text-center mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="mb-8"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <span className="text-glow">Love Stories We've Helped Create</span>
+            </h2>
+            <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
+              Join thousands of happy couples who started their forever with our intelligent wedding platform
+            </p>
+          </motion.div>
         </div>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials.map((testimonial) => (
-            <div
+          {testimonials.map((testimonial, index) => (
+            <motion.div
               key={testimonial.id}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="glass-card p-8 group cursor-pointer"
             >
-              <div className="flex items-center mb-4">
+              <div className="flex items-center mb-6">
                 <div className="text-4xl mr-4">{testimonial.image}</div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{testimonial.name}</h3>
-                  <p className="text-sm text-gray-500">{testimonial.location}</p>
+                  <h3 className="text-xl font-semibold text-text-primary mb-2">{testimonial.name}</h3>
+                  <p className="text-sm text-text-muted">{testimonial.location}</p>
                 </div>
               </div>
               
-              <div className="flex mb-3">
+              <div className="flex mb-4">
                 {renderStars(testimonial.rating)}
               </div>
               
-              <p className="text-gray-700 mb-4 italic">
+              <p className="text-text-secondary mb-6 italic leading-relaxed">
                 "{testimonial.comment}"
               </p>
               
-              <p className="text-sm text-gray-500 text-right">
+              <p className="text-sm text-text-muted text-right">
                 {testimonial.date}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
-
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Ready to Create Your Perfect Proposal Story?
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          viewport={{ once: true }}
+          className="mt-20 text-center"
+        >
+          <div className="glass-card p-8 max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-text-primary mb-6">
+              <span className="text-glow-secondary">Ready to Create Your Perfect Story?</span>
             </h3>
-            <p className="text-lg text-gray-700 mb-6">
-              Join over 10,000+ couples who have created unforgettable moments with Perfect Proposal
+            <p className="text-lg text-text-muted mb-8 leading-relaxed">
+              Join thousands of couples who have created unforgettable moments with our intelligent wedding platform
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link
+                href="/wedding-cards"
+                className="btn-primary"
+              >
                 Start Your Story
-              </button>
-              <button className="bg-white text-pink-600 border-2 border-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-pink-50 transition-colors">
+              </Link>
+              <Link
+                href="/testimonials"
+                className="btn-secondary"
+              >
                 Read More Stories
-              </button>
+              </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

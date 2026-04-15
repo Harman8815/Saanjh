@@ -44,20 +44,20 @@ export default function ContactForm() {
 
   if (isSubmitted) {
     return (
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-surface">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-12">
-            <div className="text-6xl mb-6">🎉</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Thank You for Reaching Out!
+          <div className="glass-card p-12">
+            <div className="text-6xl mb-6">💌</div>
+            <h2 className="text-3xl font-bold text-text-primary mb-4">
+              <span className="text-glow">Thank You for Reaching Out!</span>
             </h2>
-            <p className="text-xl text-gray-700 mb-8">
+            <p className="text-xl text-text-muted mb-8 leading-relaxed">
               We've received your message and will get back to you within 24 hours. 
-              We're excited to help you create the perfect proposal!
+              We're excited to help you create the perfect wedding!
             </p>
             <button
               onClick={() => setIsSubmitted(false)}
-              className="bg-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors"
+              className="btn-primary"
             >
               Send Another Message
             </button>
@@ -68,14 +68,14 @@ export default function ContactForm() {
   }
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-24 bg-surface">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Let's Create Your Perfect Proposal
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+            <span className="text-glow">Let's Create Your Perfect Wedding</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Have questions? Need personalized advice? We're here to help make your dream proposal a reality.
+          <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
+            Have questions? Need personalized advice? We're here to help make your dream wedding a reality.
           </p>
         </div>
 
@@ -83,65 +83,65 @@ export default function ContactForm() {
           {/* Contact Info */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h3>
+              <h3 className="text-2xl font-bold text-text-primary mb-6">Get in Touch</h3>
               
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <div className="text-pink-600 mr-4 text-xl">📧</div>
+                  <div className="text-gold mr-4 text-xl">📧</div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Email Us</h4>
-                    <p className="text-gray-600">hello@perfectproposal.com</p>
-                    <p className="text-sm text-gray-500">We respond within 24 hours</p>
+                    <h4 className="font-semibold text-text-primary">Email Us</h4>
+                    <p className="text-text-secondary">hello@perfectwedding.com</p>
+                    <p className="text-sm text-text-muted">We respond within 24 hours</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="text-pink-600 mr-4 text-xl">💬</div>
+                  <div className="text-bronze mr-4 text-xl">💬</div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Live Chat</h4>
-                    <p className="text-gray-600">Available Mon-Fri, 9 AM - 6 PM EST</p>
-                    <button className="text-pink-600 hover:text-pink-700 text-sm font-medium">
+                    <h4 className="font-semibold text-text-primary">Live Chat</h4>
+                    <p className="text-text-secondary">Available Mon-Fri, 9 AM - 6 PM EST</p>
+                    <button className="text-gold hover:text-primary text-sm font-medium">
                       Start Chat →
                     </button>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className="text-pink-600 mr-4 text-xl">📱</div>
+                  <div className="text-champagne mr-4 text-xl">📱</div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Call Us</h4>
-                    <p className="text-gray-600">1-800-PROPOSE</p>
-                    <p className="text-sm text-gray-500">Free consultation available</p>
+                    <h4 className="font-semibold text-text-primary">Call Us</h4>
+                    <p className="text-text-secondary">1-800-WEDDING</p>
+                    <p className="text-sm text-text-muted">Free consultation available</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Quick Response Times</h4>
-              <ul className="space-y-2 text-sm text-gray-700">
+            <div className="glass-card p-6">
+              <h4 className="font-semibold text-text-primary mb-3">Quick Response Times</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
                 <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Email: Within 24 hours
+                  <div className="w-2 h-2 rounded-full bg-gold/20 mr-2" />
+                  <span>Email: Within 24 hours</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Live Chat: Instant during business hours
+                  <div className="w-2 h-2 rounded-full bg-bronze/20 mr-2" />
+                  <span>Live Chat: Instant during business hours</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Phone: Immediate during business hours
+                  <div className="w-2 h-2 rounded-full bg-champagne/20 mr-2" />
+                  <span>Phone: Immediate during business hours</span>
                 </li>
               </ul>
             </div>
           </div>
 
           {/* Contact Form */}
-          <div className="bg-gray-50 rounded-2xl p-8">
+          <div className="glass-card p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
                     Your Name *
                   </label>
                   <input
@@ -151,13 +151,13 @@ export default function ContactForm() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-3 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="John Doe"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
                     Email Address *
                   </label>
                   <input
@@ -167,7 +167,7 @@ export default function ContactForm() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-3 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -175,7 +175,7 @@ export default function ContactForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-2">
                     Phone Number
                   </label>
                   <input
@@ -184,13 +184,13 @@ export default function ContactForm() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-3 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="(555) 123-4567"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="subject" className="block text-sm font-medium text-text-primary mb-2">
                     Subject *
                   </label>
                   <select
@@ -199,11 +199,11 @@ export default function ContactForm() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-3 glass-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a topic</option>
                     <option value="general">General Question</option>
-                    <option value="proposal-help">Proposal Help</option>
+                    <option value="proposal-help">Wedding Help</option>
                     <option value="pricing">Pricing Inquiry</option>
                     <option value="technical">Technical Support</option>
                     <option value="partnership">Partnership</option>
@@ -214,8 +214,8 @@ export default function ContactForm() {
               {formData.subject === 'proposal-help' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="proposalDate" className="block text-sm font-medium text-gray-700 mb-2">
-                      Planned Proposal Date
+                    <label htmlFor="proposalDate" className="block text-sm font-medium text-text-primary mb-2">
+                      Planned Wedding Date
                     </label>
                     <input
                       type="date"
@@ -223,12 +223,12 @@ export default function ContactForm() {
                       name="proposalDate"
                       value={formData.proposalDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full px-4 py-3 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="budget" className="block text-sm font-medium text-text-primary mb-2">
                       Estimated Budget
                     </label>
                     <select
@@ -236,7 +236,7 @@ export default function ContactForm() {
                       name="budget"
                       value={formData.budget}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="w-full px-4 py-3 glass-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Select budget range</option>
                       <option value="under-500">Under $500</option>
@@ -250,7 +250,7 @@ export default function ContactForm() {
               )}
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="message" className="block text-sm font-medium text-text-primary mb-2">
                   Message *
                 </label>
                 <textarea
@@ -260,15 +260,15 @@ export default function ContactForm() {
                   onChange={handleChange}
                   required
                   rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Tell us about your proposal plans or questions..."
+                  className="w-full px-4 py-3 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Tell us about your wedding plans or questions..."
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-pink-700 hover:to-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full"
               >
                 {isSubmitting ? 'Sending Message...' : 'Send Message'}
               </button>

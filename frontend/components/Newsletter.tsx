@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
@@ -20,63 +21,83 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
-      <div className="max-w-4xl mx-auto px-4 text-center">
-        <div className="mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Get Romantic Proposal Tips & Ideas
-          </h2>
-          <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Join our newsletter for exclusive proposal ideas, relationship advice, and special offers delivered to your inbox.
-          </p>
+    <section className="py-24 bg-surface">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="mb-8"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <span className="text-glow">Romantic Insights</span> & Exclusive Ideas
+            </h2>
+            <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
+              Join our newsletter for curated proposal ideas, relationship guidance, and special offers delivered to your inbox.
+            </p>
+          </motion.div>
         </div>
-
+        
         {!isSubscribed ? (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-6 max-w-md mx-auto">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               required
-              className="flex-1 px-6 py-3 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-pink-300"
+              className="flex-1 px-6 py-4 glass-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-white text-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary"
             >
-              {isLoading ? 'Subscribing...' : 'Subscribe'}
+              {isLoading ? 'Subscribing...' : 'Subscribe Now'}
             </button>
           </form>
         ) : (
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
-            <div className="text-4xl mb-4">🎉</div>
-            <h3 className="text-xl font-semibold mb-2">Welcome to the Family!</h3>
-            <p className="opacity-90">
-              Thank you for subscribing! Check your email for a welcome message and exclusive tips.
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="glass-card p-8 max-w-md mx-auto text-center"
+          >
+            <div className="text-6xl mb-6">💌</div>
+            <h3 className="text-2xl font-semibold text-text-primary mb-4">Welcome to the Family!</h3>
+            <p className="text-text-muted leading-relaxed">
+              Thank you for subscribing! Check your email for exclusive wedding insights and special offers.
             </p>
-          </div>
+          </motion.div>
         )}
-
-        <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm opacity-75">
-          <div className="flex items-center gap-2">
-            <span>✓</span>
-            <span>Weekly proposal ideas</span>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
+          className="mt-16 flex flex-wrap justify-center gap-8 text-text-muted"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-gold/20" />
+            <span>Weekly wedding insights</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span>✓</span>
-            <span>Relationship tips</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-bronze/20" />
+            <span>Relationship guidance</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span>✓</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-champagne/20" />
             <span>Exclusive offers</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span>✓</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-dusty-rose/20" />
             <span>No spam, unsubscribe anytime</span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

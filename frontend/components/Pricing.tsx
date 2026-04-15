@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -82,24 +83,24 @@ export default function Pricing() {
   };
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-24 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Choose Your Perfect Plan
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+            <span className="text-glow">Choose Your Perfect Wedding Plan</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Flexible pricing options to create your dream proposal
+          <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed mb-8">
+            Flexible pricing options to create your dream wedding experience
           </p>
-
+          
           {/* Billing Toggle */}
-          <div className="inline-flex items-center bg-white rounded-full p-1 shadow-md">
+          <div className="inline-flex items-center glass-card p-1">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                 billingCycle === 'monthly'
-                  ? 'bg-pink-600 text-white'
-                  : 'text-gray-700 hover:text-gray-900'
+                  ? 'bg-primary text-white'
+                  : 'text-text-muted hover:text-text-primary'
               }`}
             >
               Monthly
@@ -108,73 +109,73 @@ export default function Pricing() {
               onClick={() => setBillingCycle('yearly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-colors relative ${
                 billingCycle === 'yearly'
-                  ? 'bg-pink-600 text-white'
-                  : 'text-gray-700 hover:text-gray-900'
+                  ? 'bg-primary text-white'
+                  : 'text-text-muted hover:text-text-primary'
               }`}
             >
               Yearly
-              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="absolute -top-2 -right-2 bg-gold text-white text-xs px-2 py-1 rounded-full">
                 Save 20%
               </span>
             </button>
           </div>
         </div>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow ${
-                plan.popular ? 'ring-2 ring-pink-500 transform scale-105' : ''
+              className={`relative glass-card overflow-hidden hover:border-primary/20 ${
+                plan.popular ? 'ring-2 ring-primary transform scale-105' : ''
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-2 text-sm font-semibold">
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-highlight text-white text-center py-2 text-sm font-semibold">
                   Most Popular Choice
                 </div>
               )}
-
+              
               <div className="p-8 pt-12">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
-
+                <h3 className="text-2xl font-bold text-text-primary mb-2">{plan.name}</h3>
+                <p className="text-text-secondary mb-6 leading-relaxed">{plan.description}</p>
+                
                 <div className="mb-6">
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-gray-900">
+                    <span className="text-4xl font-bold text-text-primary">
                       ${calculatePrice(plan)}
                     </span>
-                    <span className="text-gray-500 ml-2">/{billingCycle === 'monthly' ? 'month' : 'month (billed yearly)'}</span>
+                    <span className="text-text-muted ml-2">/{billingCycle === 'monthly' ? 'month' : 'month (billed yearly)'}</span>
                   </div>
                   {billingCycle === 'yearly' && (
-                    <div className="text-green-600 text-sm mt-1">
+                    <div className="text-gold text-sm mt-1">
                       Save {calculateSavings(plan)}% with yearly billing
                     </div>
                   )}
                 </div>
-
+                
                 <button
-                  className={`w-full py-3 px-6 rounded-full font-semibold transition-colors mb-8 ${
+                  className={`btn-primary w-full mb-8 ${
                     plan.popular
-                      ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-primary to-highlight hover:from-primary-dark hover:to-highlight-dark'
+                      : 'bg-white/10 text-text-primary hover:bg-white/20'
                   }`}
                 >
                   {plan.buttonText}
                 </button>
-
+                
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900 mb-3">What's included:</h4>
+                  <h4 className="font-semibold text-text-primary mb-3">What's included:</h4>
                   {plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-start">
-                      <span className="text-green-500 mr-3 mt-0.5">✓</span>
-                      <span className="text-gray-700 text-sm">{feature}</span>
+                      <div className="w-2 h-2 rounded-full bg-gold/20 mr-3 mt-0.5" />
+                      <span className="text-text-secondary text-sm">{feature}</span>
                     </div>
                   ))}
                   
                   {plan.notIncluded.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-start opacity-50">
-                      <span className="text-gray-400 mr-3 mt-0.5">○</span>
-                      <span className="text-gray-500 text-sm">{feature}</span>
+                      <div className="w-2 h-2 rounded-full bg-text-muted/20 mr-3 mt-0.5" />
+                      <span className="text-text-muted text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -182,20 +183,20 @@ export default function Pricing() {
             </div>
           ))}
         </div>
-
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              30-Day Money-Back Guarantee
+        
+        <div className="mt-20 text-center">
+          <div className="glass-card p-8">
+            <h3 className="text-2xl font-bold text-text-primary mb-6">
+              <span className="text-glow-secondary">30-Day Satisfaction Guarantee</span>
             </h3>
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-text-muted mb-8 leading-relaxed">
               Not satisfied? Get a full refund within 30 days, no questions asked.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <button className="btn-primary">
                 Start Free Trial
               </button>
-              <button className="bg-white text-pink-600 border-2 border-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-pink-50 transition-colors">
+              <button className="btn-secondary">
                 Compare Plans
               </button>
             </div>

@@ -4,7 +4,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LayoutWrapper from "../components/LayoutWrapper";
-// import CustomCursor from '../components/CustomCursor'; // Temporarily commented for development
+// import CustomCursor from '../components/CustomCursor'; // Commented out - using default cursor
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +32,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* <CustomCursor /> */} {/* Temporarily commented for development */}
+        {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
         <LayoutWrapper>
           <Navbar />
           {children}

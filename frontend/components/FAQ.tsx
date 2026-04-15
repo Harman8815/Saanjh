@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function FAQ() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -45,33 +47,33 @@ export default function FAQ() {
   };
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-24 bg-surface">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Frequently Asked Questions
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+            <span className="text-glow">Frequently Asked Questions</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Everything you need to know about creating the perfect proposal
+          <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
+            Everything you need to know about creating the perfect Wedding Experience
           </p>
         </div>
-
+        
         <div className="space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-pink-300 transition-colors"
+              className="glass-card overflow-hidden hover:border-primary/20 transition-colors"
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-inset"
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
               >
-                <h3 className="text-lg font-semibold text-gray-900 pr-4">
+                <h3 className="text-lg font-semibold text-text-primary pr-4">
                   {faq.question}
                 </h3>
                 <div className="flex-shrink-0">
                   <svg
-                    className={`w-6 h-6 text-gray-500 transform transition-transform ${
+                    className={`w-6 h-6 text-text-muted transform transition-transform ${
                       activeIndex === index ? 'rotate-180' : ''
                     }`}
                     fill="none"
@@ -90,8 +92,8 @@ export default function FAQ() {
               
               {activeIndex === index && (
                 <div className="px-6 pb-4">
-                  <div className="border-t border-gray-200 pt-4">
-                    <p className="text-gray-700 leading-relaxed">
+                  <div className="border-t border-white/10 pt-4">
+                    <p className="text-text-secondary leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
@@ -100,23 +102,37 @@ export default function FAQ() {
             </div>
           ))}
         </div>
-
-        <div className="mt-12 text-center bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Still have questions?
-          </h3>
-          <p className="text-lg text-gray-700 mb-6">
-            Our support team is here to help you create the perfect proposal
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors">
-              Contact Support
-            </button>
-            <button className="bg-white text-pink-600 border-2 border-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-pink-50 transition-colors">
-              Live Chat
-            </button>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          viewport={{ once: true }}
+          className="mt-20 text-center"
+        >
+          <div className="glass-card p-8">
+            <h3 className="text-2xl font-bold text-text-primary mb-6">
+              <span className="text-glow-secondary">Still Have Questions?</span>
+            </h3>
+            <p className="text-lg text-text-muted mb-8 leading-relaxed">
+              Our support team is here to help you create the Perfect Wedding Experience
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link
+                href="/contact"
+                className="btn-primary"
+              >
+                Contact Support
+              </Link>
+              <Link
+                href="/contact"
+                className="btn-secondary"
+              >
+                Live Chat
+              </Link>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
