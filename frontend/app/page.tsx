@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
-import Testimonials from '../components/Testimonials';
-import Newsletter from '../components/Newsletter';
-import FAQ from '../components/FAQ';
-import Pricing from '../components/Pricing';
-import ContactForm from '../components/ContactForm';
-import LuxuryWeddingCard from '../components/ui-cards/LuxuryWeddingCard';
-import LuxuryWeddingCard from '../components/LuxuryWeddingCard';
+import Testimonials from '../components/home/Testimonials';
+import Newsletter from '../components/home/Newsletter';
+import FAQ from '../components/home/FAQ';
+import Pricing from '../components/home/Pricing';
+import ContactForm from '../components/common/ContactForm';
+import LuxuryWeddingCard from '../components/ui/LuxuryWeddingCard';
 
 export default function Home() {
   const { setCurrentPage } = useAppStore();

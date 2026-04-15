@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import LuxuryWeddingCard from './LuxuryWeddingCard';
+import LuxuryWeddingCard from '../ui/LuxuryWeddingCard';
 
 export default function Testimonials() {
   const testimonials = [
