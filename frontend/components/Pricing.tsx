@@ -79,7 +79,7 @@ export default function Pricing() {
           </p>
           
           {/* Billing Toggle */}
-          <div className="inline-flex items-center glass-card p-1">
+          <div className="inline-flex items-center glass-card p-1 relative">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -92,14 +92,14 @@ export default function Pricing() {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors relative ${
+              className={`px-8 py-2 rounded-full text-sm font-medium transition-colors relative ${
                 billingCycle === 'yearly'
                   ? 'bg-primary text-white'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
               Yearly
-              <span className="absolute -top-2 -right-2 bg-gold text-white text-xs px-2 py-1 rounded-full">
+              <span className="absolute -top-3 -right-3 bg-gold text-white text-xs px-3 py-1 rounded-full shadow-lg">
                 Save 20%
               </span>
             </button>
