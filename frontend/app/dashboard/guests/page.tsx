@@ -51,22 +51,21 @@ export default function RSVPManagementPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-text-primary mb-4">
-            <span className="text-glow">RSVP Management</span>
-          </h1>
-          <p className="text-xl text-text-muted max-w-3xl mx-auto">
-            Track and manage your wedding guest responses
-          </p>
-        </motion.div>
+        <>
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-text-primary mb-4">
+              <span className="text-glow">RSVP Management</span>
+            </h1>
+            <p className="text-xl text-text-muted max-w-3xl mx-auto">
+              Track and manage your wedding guest responses
+            </p>
+          </motion.div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -187,7 +186,6 @@ export default function RSVPManagementPage() {
         {/* TODO: Add export functionality */}
         {/* TODO: Add seating chart integration */}
         {/* TODO: Add meal preference management */}
-      </div>
-    </div>
+        </>
   );
 }
