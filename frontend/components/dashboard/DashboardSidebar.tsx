@@ -218,7 +218,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
           x: isMobileMenuOpen ? 0 : (isCollapsed ? -240 : 0)
         }}
         transition={{ duration: 0.3 }}
-        className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 ${
+        className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 overflow-y-auto ${
           isCollapsed ? 'w-20' : 'w-64'
         } ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-0'
