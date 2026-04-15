@@ -45,33 +45,7 @@ export default function DashboardPage() {
           placeholder="Search dashboard, tasks, guests, vendors..."
         />
         
-        {/* Dashboard Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8 mt-8"
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-text-primary mb-2">
-                Welcome back, {user?.name || 'User'}!
-              </h1>
-              <p className="text-text-secondary">
-                {wedding?.coupleName ? `${wedding.coupleName}'s Wedding Dashboard` : 'Your Wedding Planning Dashboard'}
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <button className="btn-secondary">
-                Settings
-              </button>
-              <button className="btn-primary">
-                Quick Add
-              </button>
-            </div>
-          </div>
-        </motion.div>
-
+        
         {/* TODO: Add wedding overview cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <motion.div
