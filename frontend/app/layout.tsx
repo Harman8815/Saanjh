@@ -28,7 +28,6 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
-  const isDashboardPage = pathname.startsWith('/dashboard');
 
   return (
     <html
@@ -38,7 +37,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
         <LayoutWrapper>
-          {(isHomePage || isDashboardPage) && <Navbar />}
+          {isHomePage && <Navbar />}
           {children}
           <Footer />
         </LayoutWrapper>

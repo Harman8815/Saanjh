@@ -8,6 +8,7 @@ import Newsletter from '../components/Newsletter';
 import FAQ from '../components/FAQ';
 import Pricing from '../components/Pricing';
 import ContactForm from '../components/ContactForm';
+import LuxuryWeddingCard from '../components/ui-cards/LuxuryWeddingCard';
 import LuxuryWeddingCard from '../components/LuxuryWeddingCard';
 
 export default function Home() {
