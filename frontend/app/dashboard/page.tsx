@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import DashboardSidebar from '../../components/DashboardSidebar';
+import DashboardSearch from '../../components/DashboardSearch';
 
 // TODO: Create comprehensive wedding dashboard
 // TODO: Add wedding timeline and progress tracking
@@ -15,6 +18,8 @@ import { useAppStore } from '../../store/useAppStore';
 
 export default function DashboardPage() {
   const { user, wedding, setCurrentPage } = useAppStore();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // TODO: Fetch dashboard data and analytics
   // TODO: Load wedding progress and timeline
@@ -24,14 +29,28 @@ export default function DashboardPage() {
   // TODO: Get upcoming tasks and deadlines
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* TODO: Add dashboard header with user info */}
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <DashboardSidebar 
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+      
+      {/* Main Content */}
+      <div className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
+        <div className="container mx-auto px-4 py-8">
+        {/* Search Bar */}
+        <DashboardSearch 
+          onSearch={setSearchQuery}
+          placeholder="Search dashboard, tasks, guests, vendors..."
+        />
+        
+        {/* Dashboard Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-8"
+          className="mb-8 mt-8"
         >
           <div className="flex justify-between items-center">
             <div>
@@ -313,6 +332,7 @@ export default function DashboardPage() {
               </div>
             </motion.div>
           </div>
+        </div>
         </div>
       </div>
 
