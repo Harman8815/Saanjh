@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users } from 'lucide-react';
+import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info } from 'lucide-react';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
@@ -83,6 +83,8 @@ export default function GuestListPage() {
   const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+  const [groupKeyword, setGroupKeyword] = useState('');
+  const [groupByKeyword, setGroupByKeyword] = useState(false);
 
   // Filter guests based on search and table assignment
   const filteredGuests = guests.filter((guest: Guest) => {
@@ -92,6 +94,42 @@ export default function GuestListPage() {
     const matchesTable = selectedTable === 'all' || guest.table === selectedTable;
     return matchesSearch && matchesTable;
   });
+
+  // Group guests by keyword
+  const getGroupedGuests = () => {
+    if (!groupByKeyword || !groupKeyword.trim()) {
+      return { 'All Guests': filteredGuests };
+    }
+
+    const keyword = groupKeyword.toLowerCase().trim();
+    const groups: { [key: string]: Guest[] } = {
+      [`Matches "${groupKeyword}"`]: [],
+      'Others': []
+    };
+
+    filteredGuests.forEach(guest => {
+      const matchesKeyword = 
+        guest.name.toLowerCase().includes(keyword) ||
+        guest.email.toLowerCase().includes(keyword) ||
+        (guest.address && guest.address.toLowerCase().includes(keyword)) ||
+        (guest.notes && guest.notes.toLowerCase().includes(keyword));
+      
+      if (matchesKeyword) {
+        groups[`Matches "${groupKeyword}"`].push(guest);
+      } else {
+        groups['Others'].push(guest);
+      }
+    });
+
+    // Remove empty groups
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) {
+        delete groups[key];
+      }
+    });
+
+    return groups;
+  };
 
   // Calculate statistics
   const stats = {
@@ -258,6 +296,57 @@ export default function GuestListPage() {
               ))}
             </div>
           </motion.div>
+
+          {/* Guest Grouping */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-text-primary">Guest Grouping</h3>
+              <div className="relative group">
+                <Info size={16} className="text-text-muted cursor-help" />
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-surface border border-white/20 rounded-lg text-sm text-text-secondary opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <div className="font-semibold mb-2">Examples of grouping keywords:</div>
+                  <ul className="space-y-1">
+                    <li>• Family name: "Smith", "Johnson"</li>
+                    <li>• Location: "New York", "California"</li>
+                    <li>• Relationship: "friend", "colleague"</li>
+                    <li>• Custom group: "college", "work"</li>
+                  </ul>
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-surface border-r border-t border-white/20"></div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={groupKeyword}
+                  onChange={(e) => setGroupKeyword(e.target.value)}
+                  placeholder="Enter grouping keyword..."
+                  className="flex-1 px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary"
+                />
+                <button
+                  onClick={() => setGroupByKeyword(!groupByKeyword)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    groupByKeyword && groupKeyword.trim()
+                      ? 'bg-primary text-white'
+                      : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                  }`}
+                >
+                  {groupByKeyword ? 'Grouped' : 'Group'}
+                </button>
+              </div>
+              {groupByKeyword && groupKeyword.trim() && (
+                <div className="text-sm text-text-muted">
+                  Grouping by keyword: <span className="text-primary font-medium">"{groupKeyword}"</span>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
 
         {/* Guest List */}
@@ -323,33 +412,43 @@ export default function GuestListPage() {
           </div>
 
           {/* Guest Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/20">
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">
-                    <button
-                      onClick={handleSelectAll}
-                      className="flex items-center gap-2 hover:text-primary transition-colors"
-                    >
-                      {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
-                        <CheckSquare size={18} />
-                      ) : (
-                        <Square size={18} />
-                      )}
-                    </button>
-                  </th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
-                  <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredGuests.map((guest, index) => (
+          <div className="space-y-6">
+            {Object.entries(getGroupedGuests()).map(([groupName, groupGuests], groupIndex) => (
+              <div key={groupName}>
+                {Object.keys(getGroupedGuests()).length > 1 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      {groupName} ({groupGuests.length})
+                    </h3>
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/20">
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                          <button
+                            onClick={handleSelectAll}
+                            className="flex items-center gap-2 hover:text-primary transition-colors"
+                          >
+                            {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
+                              <CheckSquare size={18} />
+                            ) : (
+                              <Square size={18} />
+                            )}
+                          </button>
+                        </th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
+                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {groupGuests.map((guest, index) => (
                   <motion.tr
                     key={guest.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -426,8 +525,11 @@ export default function GuestListPage() {
                     </td>
                   </motion.tr>
                 ))}
-              </tbody>
-            </table>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Pagination */}
