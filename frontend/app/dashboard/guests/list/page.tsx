@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info } from 'lucide-react';
+import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info, Grid, List, ChevronRight, X, GitBranch } from 'lucide-react';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
@@ -85,6 +85,9 @@ export default function GuestListPage() {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [groupKeyword, setGroupKeyword] = useState('');
   const [groupByKeyword, setGroupByKeyword] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'card' | 'graph'>('table');
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [showGraphModal, setShowGraphModal] = useState(false);
 
   // Filter guests based on search and table assignment
   const filteredGuests = guests.filter((guest: Guest) => {
@@ -408,129 +411,201 @@ export default function GuestListPage() {
                   <><CheckSquare size={16} className="mr-2" />Select All</>
                 )}
               </button>
+              <button
+                onClick={() => {
+                  if (viewMode === 'graph') {
+                    setShowGraphModal(true);
+                  } else {
+                    setViewMode('graph');
+                  }
+                }}
+                className={`btn-secondary ${
+                  viewMode === 'graph' ? 'bg-primary text-white' : ''
+                }`}
+              >
+                <GitBranch size={16} className="mr-2" />
+                Graph View
+              </button>
+              <button
+                onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
+                className="btn-secondary"
+              >
+                {viewMode === 'table' ? (
+                  <><Grid size={16} className="mr-2" />Card View</>
+                ) : (
+                  <><List size={16} className="mr-2" />Table View</>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Guest Table */}
-          <div className="space-y-6">
-            {Object.entries(getGroupedGuests()).map(([groupName, groupGuests], groupIndex) => (
-              <div key={groupName}>
-                {Object.keys(getGroupedGuests()).length > 1 && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">
-                      {groupName} ({groupGuests.length})
-                    </h3>
-                  </div>
-                )}
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-white/20">
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">
-                          <button
-                            onClick={handleSelectAll}
-                            className="flex items-center gap-2 hover:text-primary transition-colors"
+          {/* Guest Display */}
+          {viewMode === 'table' ? (
+            <div className="space-y-6">
+              {Object.entries(getGroupedGuests()).map(([groupName, groupGuests], groupIndex) => (
+                <div key={groupName}>
+                  {Object.keys(getGroupedGuests()).length > 1 && (
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-text-primary">
+                        {groupName} ({groupGuests.length})
+                      </h3>
+                    </div>
+                  )}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-white/20">
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={handleSelectAll}
+                              className="flex items-center gap-2 hover:text-primary transition-colors"
+                            >
+                              {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
+                                <CheckSquare size={18} />
+                              ) : (
+                                <Square size={18} />
+                              )}
+                            </button>
+                          </th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groupGuests.map((guest, index) => (
+                          <motion.tr
+                            key={guest.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            className={`border-b border-white/10 hover:bg-white/5 ${
+                              selectedGuests.includes(guest.id) ? 'bg-primary/10' : ''
+                            }`}
                           >
-                            {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
-                              <CheckSquare size={18} />
-                            ) : (
-                              <Square size={18} />
-                            )}
-                          </button>
-                        </th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
-                        <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {groupGuests.map((guest, index) => (
-                  <motion.tr
-                    key={guest.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className={`border-b border-white/10 hover:bg-white/5 ${
-                      selectedGuests.includes(guest.id) ? 'bg-primary/10' : ''
-                    }`}
-                  >
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleToggleGuestSelection(guest.id)}
-                        className="flex items-center gap-2 hover:text-primary transition-colors"
-                      >
-                        {selectedGuests.includes(guest.id) ? (
-                          <CheckSquare size={18} className="text-primary" />
-                        ) : (
-                          <Square size={18} className="text-text-muted" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleToggleGuestSelection(guest.id)}
+                                className="flex items-center gap-2 hover:text-primary transition-colors"
+                              >
+                                {selectedGuests.includes(guest.id) ? (
+                                  <CheckSquare size={18} className="text-primary" />
+                                ) : (
+                                  <Square size={18} className="text-text-muted" />
+                                )}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                  <span className="text-white text-sm font-bold">
+                                    {guest.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <span className="text-text-primary">{guest.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-text-muted">{guest.email}</td>
+                            <td className="px-6 py-4 text-text-muted">{guest.phone}</td>
+                            <td className="px-6 py-4">
+                              <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
+                                {guest.table}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-3 py-1 rounded-full text-sm ${
+                                guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                              }`}>
+                                {guest.side}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              {guest.plusOne && (
+                                <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
+                                  +1
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleEditGuest(guest)}
+                                  className="btn-secondary btn-sm"
+                                >
+                                  <Edit2 size={14} className="mr-1" />
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
+                                      handleDeleteGuest(guest.id);
+                                    }
+                                  }}
+                                  className="btn-secondary btn-sm text-red-400 hover:text-red-300"
+                                >
+                                  <Trash2 size={14} className="mr-1" />
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Card View */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(getGroupedGuests()).map(([groupName, groupGuests]) => (
+                <motion.div
+                  key={groupName}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="glass-card p-6 cursor-pointer hover:bg-white/5 transition-colors"
+                  onClick={() => setExpandedCard(groupName)}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      {groupName}
+                    </h3>
+                    <ChevronRight size={20} className="text-text-muted" />
+                  </div>
+                  <div className="text-2xl font-bold text-primary mb-2">
+                    {groupGuests.length}
+                  </div>
+                  <div className="text-sm text-text-muted mb-4">
+                    {groupGuests.length === 1 ? 'member' : 'members'}
+                  </div>
+                  <div className="space-y-2">
+                    {groupGuests.slice(0, 5).map((guest) => (
+                      <div key={guest.id} className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">
                             {guest.name.charAt(0)}
                           </span>
                         </div>
-                        <span className="text-text-primary">{guest.name}</span>
+                        <span className="text-sm text-text-primary">{guest.name}</span>
+                        <span className="text-xs text-text-muted">{guest.table}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-text-muted">{guest.email}</td>
-                    <td className="px-6 py-4 text-text-muted">{guest.phone}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
-                        {guest.table}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
-                      }`}>
-                        {guest.side}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {guest.plusOne && (
-                        <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
-                          +1
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleEditGuest(guest)}
-                          className="btn-secondary btn-sm"
-                        >
-                          <Edit2 size={14} className="mr-1" />
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
-                              handleDeleteGuest(guest.id);
-                            }
-                          }}
-                          className="btn-secondary btn-sm text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 size={14} className="mr-1" />
-                          Delete
-                        </button>
+                    ))}
+                    {groupGuests.length > 5 && (
+                      <div className="text-sm text-primary font-medium">
+                        +{groupGuests.length - 5} more...
                       </div>
-                    </td>
-                  </motion.tr>
-                ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
-          </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           <div className="flex justify-center mt-6 gap-2">
@@ -556,6 +631,299 @@ export default function GuestListPage() {
         }}
         onAddGuest={handleSaveGuest}
       />
+
+      {/* Graph Modal */}
+      {showGraphModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowGraphModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-surface border border-white/20 rounded-xl p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-primary">
+                Guest Relationship Graph
+              </h2>
+              <button
+                onClick={() => setShowGraphModal(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-text-muted" />
+              </button>
+            </div>
+            
+            <div className="space-y-8">
+              {/* Bride Side */}
+              <div className="glass-card p-6">
+                <h3 className="text-xl font-semibold text-pink-400 mb-6 flex items-center gap-2">
+                  <div className="w-4 h-4 bg-pink-400 rounded-full"></div>
+                  Bride Side
+                </h3>
+                <div className="space-y-4">
+                  {(() => {
+                    const brideGuests = filteredGuests.filter(g => g.side === 'Bride');
+                    const groupedBrides = groupByKeyword && groupKeyword.trim() 
+                      ? getGroupedGuests() 
+                      : { 'All Guests': brideGuests };
+                    
+                    return Object.entries(groupedBrides).map(([groupName, groupGuests]) => {
+                      if (groupGuests.length === 0 || !groupGuests.some(g => g.side === 'Bride')) return null;
+                      const brideGroupGuests = groupGuests.filter(g => g.side === 'Bride');
+                      
+                      return (
+                        <div key={groupName} className="border-l-4 border-pink-400 pl-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
+                            <h4 className="text-lg font-medium text-text-primary">
+                              {groupName} ({brideGroupGuests.length})
+                            </h4>
+                          </div>
+                          <div className="ml-6 space-y-2">
+                            {brideGroupGuests.map((guest, index) => (
+                              <motion.div
+                                key={guest.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                className="flex items-center gap-3 p-3 bg-pink-500/10 rounded-lg border border-pink-500/20"
+                              >
+                                <div className="w-8 h-8 bg-pink-400 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-sm font-bold">
+                                    {guest.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-text-primary">{guest.name}</div>
+                                  <div className="text-sm text-text-muted">{guest.table} • {guest.email}</div>
+                                </div>
+                                {guest.plusOne && (
+                                  <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
+                                    +1
+                                  </span>
+                                )}
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+              
+              {/* Groom Side */}
+              <div className="glass-card p-6">
+                <h3 className="text-xl font-semibold text-blue-400 mb-6 flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
+                  Groom Side
+                </h3>
+                <div className="space-y-4">
+                  {(() => {
+                    const groomGuests = filteredGuests.filter(g => g.side === 'Groom');
+                    const groupedGrooms = groupByKeyword && groupKeyword.trim() 
+                      ? getGroupedGuests() 
+                      : { 'All Guests': groomGuests };
+                    
+                    return Object.entries(groupedGrooms).map(([groupName, groupGuests]) => {
+                      if (groupGuests.length === 0 || !groupGuests.some(g => g.side === 'Groom')) return null;
+                      const groomGroupGuests = groupGuests.filter(g => g.side === 'Groom');
+                      
+                      return (
+                        <div key={groupName} className="border-l-4 border-blue-400 pl-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                            <h4 className="text-lg font-medium text-text-primary">
+                              {groupName} ({groomGroupGuests.length})
+                            </h4>
+                          </div>
+                          <div className="ml-6 space-y-2">
+                            {groomGroupGuests.map((guest, index) => (
+                              <motion.div
+                                key={guest.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20"
+                              >
+                                <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-sm font-bold">
+                                    {guest.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-text-primary">{guest.name}</div>
+                                  <div className="text-sm text-text-muted">{guest.table} • {guest.email}</div>
+                                </div>
+                                {guest.plusOne && (
+                                  <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
+                                    +1
+                                  </span>
+                                )}
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              <div className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-pink-400">
+                  {filteredGuests.filter(g => g.side === 'Bride').length}
+                </div>
+                <div className="text-sm text-text-muted">Bride Side Guests</div>
+              </div>
+              <div className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-blue-400">
+                  {filteredGuests.filter(g => g.side === 'Groom').length}
+                </div>
+                <div className="text-sm text-text-muted">Groom Side Guests</div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      
+      {/* Expanded Card Modal */}
+      {expandedCard && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setExpandedCard(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-surface border border-white/20 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-primary">
+                {expandedCard}
+              </h2>
+              <button
+                onClick={() => setExpandedCard(null)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-text-muted" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {getGroupedGuests()[expandedCard]?.map((guest) => (
+                <motion.div
+                  key={guest.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="glass-card p-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">
+                          {guest.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-text-primary">
+                          {guest.name}
+                        </h3>
+                        <div className="text-sm text-text-muted space-y-1">
+                          <div>{guest.email}</div>
+                          <div>{guest.phone}</div>
+                          {guest.whatsapp && <div>WhatsApp: {guest.whatsapp}</div>}
+                          {guest.address && <div>{guest.address}</div>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-2">
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
+                          {guest.table}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                          guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                        }`}>
+                          {guest.side}
+                        </span>
+                      </div>
+                      {guest.plusOne && (
+                        <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
+                          +1
+                        </span>
+                      )}
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            handleEditGuest(guest);
+                            setExpandedCard(null);
+                          }}
+                          className="btn-secondary btn-sm"
+                        >
+                          <Edit2 size={14} className="mr-1" />
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
+                              handleDeleteGuest(guest.id);
+                              setExpandedCard(null);
+                            }
+                          }}
+                          className="btn-secondary btn-sm text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 size={14} className="mr-1" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {guest.mealPreference && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <span className="text-sm text-text-muted">Meal Preference: </span>
+                      <span className="text-sm text-text-primary">{guest.mealPreference}</span>
+                    </div>
+                  )}
+                  
+                  {guest.notes && (
+                    <div className="mt-2">
+                      <span className="text-sm text-text-muted">Notes: </span>
+                      <span className="text-sm text-text-primary">{guest.notes}</span>
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      guest.rsvpStatus === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                      guest.rsvpStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-red-500/20 text-red-400'
+                    }`}>
+                      RSVP: {guest.rsvpStatus}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
