@@ -179,7 +179,17 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
 
   const handleItemClick = (item: SidebarItem) => {
     if (item.subItems) {
-      toggleExpanded(item.label);
+      // Expand submenu if not already expanded, otherwise collapse it
+      if (!expandedItems.includes(item.label)) {
+        toggleExpanded(item.label);
+      } else {
+        // If submenu is already expanded, clicking should collapse it
+        setExpandedItems(prev => 
+          prev.includes(item.label) 
+            ? prev.filter(i => i !== item.label)
+            : [...prev, item.label]
+        );
+      }
     } else if (item.href) {
       setActiveItem(item.href);
       // Close mobile menu after navigation
@@ -189,20 +199,19 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
     }
   };
 
+  const handleSidebarClick = (e: React.MouseEvent) => {
+    // If sidebar is collapsed and click is not on an icon or button, expand it
+    if (isCollapsed && !(e.target as HTMLElement).closest('button, svg')) {
+      onToggle?.();
+    }
+  };
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
     <>
-      {/* Mobile Menu Toggle */}
-      <button
-        onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-surface border border-white/10 rounded-lg text-text-secondary hover:text-text-primary"
-      >
-        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
-
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -215,15 +224,15 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
       <motion.div
         initial={{ x: -300 }}
         animate={{ 
-          x: isMobileMenuOpen ? 0 : (isCollapsed ? -220 : 0)
+          x: isMobileMenuOpen ? 0 : 0
         }}
         transition={{ duration: 0.3 }}
-        className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 overflow-y-auto ${
+        onClick={handleSidebarClick}
+        className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 overflow-y-auto overflow-x-hidden ${
           isCollapsed ? 'w-20' : 'w-64'
         } ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-0'
-        } lg:translate-x-0`}
-      >
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}>
       {/* Sidebar Header */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center justify-between">
@@ -241,13 +250,26 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
               </motion.div>
             )}
           </div>
-          <button
-            onClick={onToggle}
-            className="hidden lg:flex text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={toggleMobileMenu}
+              className="lg:hidden text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+              title={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            {/* Desktop Collapse Toggle - Only show when expanded */}
+            {!isCollapsed && (
+              <button
+                onClick={onToggle}
+                className="hidden lg:flex text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
