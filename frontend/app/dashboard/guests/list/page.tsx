@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info, Grid, List, ChevronRight, X, GitBranch, Filter } from 'lucide-react';
+import { X, GitBranch, Grid, List, Edit2, Trash2, Users, UserPlus, CheckSquare, Square } from 'lucide-react';
+import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
@@ -704,29 +705,6 @@ export default function GuestListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Object.entries(getGroupedGuests()).map(([groupName, groupGuests]) => (
                 <motion.div
-                  key={groupName}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="glass-card p-6 cursor-pointer hover:bg-white/5 transition-colors"
-                  onClick={() => setExpandedCard(groupName)}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">
-                      {groupName}
-                    </h3>
-                    <ChevronRight size={20} className="text-text-muted" />
-                  </div>
-                  <div className="text-2xl font-bold text-primary mb-2">
-                    {groupGuests.length}
-                  </div>
-                  <div className="text-sm text-text-muted mb-4">
-                    {groupGuests.length === 1 ? 'member' : 'members'}
-                  </div>
-                  <div className="space-y-2">
-                    {groupGuests.slice(0, 5).map((guest) => (
-                      <div key={guest.id} className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-bold">
                             {guest.name.charAt(0)}
                           </span>
@@ -842,138 +820,7 @@ export default function GuestListPage() {
             
             {/* Content */}
             <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-8">
-              {/* Bride Side */}
-              <div className="glass-card p-6">
-                <h3 className="text-xl font-semibold text-pink-400 mb-6 flex items-center gap-2">
-                  <div className="w-4 h-4 bg-pink-400 rounded-full"></div>
-                  Bride Side
-                </h3>
-                <div className="space-y-4">
-                  {(() => {
-                    const brideGuests = filteredGuests.filter(g => g.side === 'Bride');
-                    const groupedBrides = groupByKeyword && groupKeyword.trim() 
-                      ? getGroupedGuests() 
-                      : { 'All Guests': brideGuests };
-                    
-                    return Object.entries(groupedBrides).map(([groupName, groupGuests]) => {
-                      if (groupGuests.length === 0 || !groupGuests.some(g => g.side === 'Bride')) return null;
-                      const brideGroupGuests = groupGuests.filter(g => g.side === 'Bride');
-                      
-                      return (
-                        <div key={groupName} className="border-l-4 border-pink-400 pl-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
-                            <h4 className="text-lg font-medium text-text-primary">
-                              {groupName} ({brideGroupGuests.length})
-                            </h4>
-                          </div>
-                          <div className="ml-6 space-y-2">
-                            {brideGroupGuests.map((guest, index) => (
-                              <motion.div
-                                key={guest.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                className="flex items-center gap-3 p-3 bg-pink-500/10 rounded-lg border border-pink-500/20"
-                              >
-                                <div className="w-8 h-8 bg-pink-400 rounded-full flex items-center justify-center">
-                                  <span className="text-white text-sm font-bold">
-                                    {guest.name.charAt(0)}
-                                  </span>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-text-primary">{guest.name}</div>
-                                  <div className="text-sm text-text-muted">{guest.table} • {guest.email}</div>
-                                </div>
-                                {guest.plusOne && (
-                                  <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
-                                    +1
-                                  </span>
-                                )}
-                              </motion.div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-              
-              {/* Groom Side */}
-              <div className="glass-card p-6">
-                <h3 className="text-xl font-semibold text-blue-400 mb-6 flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-                  Groom Side
-                </h3>
-                <div className="space-y-4">
-                  {(() => {
-                    const groomGuests = filteredGuests.filter(g => g.side === 'Groom');
-                    const groupedGrooms = groupByKeyword && groupKeyword.trim() 
-                      ? getGroupedGuests() 
-                      : { 'All Guests': groomGuests };
-                    
-                    return Object.entries(groupedGrooms).map(([groupName, groupGuests]) => {
-                      if (groupGuests.length === 0 || !groupGuests.some(g => g.side === 'Groom')) return null;
-                      const groomGroupGuests = groupGuests.filter(g => g.side === 'Groom');
-                      
-                      return (
-                        <div key={groupName} className="border-l-4 border-blue-400 pl-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                            <h4 className="text-lg font-medium text-text-primary">
-                              {groupName} ({groomGroupGuests.length})
-                            </h4>
-                          </div>
-                          <div className="ml-6 space-y-2">
-                            {groomGroupGuests.map((guest, index) => (
-                              <motion.div
-                                key={guest.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20"
-                              >
-                                <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
-                                  <span className="text-white text-sm font-bold">
-                                    {guest.name.charAt(0)}
-                                  </span>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-text-primary">{guest.name}</div>
-                                  <div className="text-sm text-text-muted">{guest.table} • {guest.email}</div>
-                                </div>
-                                {guest.plusOne && (
-                                  <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
-                                    +1
-                                  </span>
-                                )}
-                              </motion.div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            </div>
-            
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              <div className="glass-card p-4 text-center">
-                <div className="text-2xl font-bold text-pink-400">
-                  {filteredGuests.filter(g => g.side === 'Bride').length}
-                </div>
-                <div className="text-sm text-text-muted">Bride Side Guests</div>
-              </div>
-              <div className="glass-card p-4 text-center">
-                <div className="text-2xl font-bold text-blue-400">
-                  {filteredGuests.filter(g => g.side === 'Groom').length}
-                </div>
-                <div className="text-sm text-text-muted">Groom Side Guests</div>
-              </div>
+              <GuestRelationshipGraph />
             </div>
             </div>
           </motion.div>
