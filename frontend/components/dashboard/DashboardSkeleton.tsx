@@ -12,14 +12,9 @@ export default function DashboardSkeleton() {
       <SidebarSkeleton />
       
       {/* Main Content */}
-      <div className="flex-1 ml-64 transition-all duration-300 overflow-x-hidden">
+      <div className="flex-1 transition-all duration-300 overflow-x-hidden">
         <div className="container mx-auto px-4 py-8">
-          {/* Search Bar Skeleton */}
-          <div className="mb-8">
-            <SearchSkeleton />
-          </div>
-          
-          {/* Stats Cards Skeleton */}
+          {/* Wedding Overview Cards Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="glass-card p-6">

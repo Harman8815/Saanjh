@@ -9,7 +9,7 @@ export default function SearchSkeleton() {
       {/* Main Search Bar */}
       <div className="relative">
         <Skeleton 
-          height={64} 
+          height={76} 
           baseColor="#374151" 
           highlightColor="#4b5563" 
           borderRadius={16} 
