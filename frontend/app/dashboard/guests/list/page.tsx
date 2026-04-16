@@ -824,10 +824,11 @@ export default function GuestListPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-surface border border-white/20 rounded-xl p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-surface border border-white/20 rounded-xl max-w-6xl w-full max-h-[45vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-2xl font-bold text-text-primary">
                 Guest Relationship Graph
               </h2>
@@ -839,7 +840,9 @@ export default function GuestListPage() {
               </button>
             </div>
             
-            <div className="space-y-8">
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-8">
               {/* Bride Side */}
               <div className="glass-card p-6">
                 <h3 className="text-xl font-semibold text-pink-400 mb-6 flex items-center gap-2">
@@ -972,6 +975,7 @@ export default function GuestListPage() {
                 <div className="text-sm text-text-muted">Groom Side Guests</div>
               </div>
             </div>
+            </div>
           </motion.div>
         </motion.div>
       )}
@@ -989,10 +993,11 @@ export default function GuestListPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-surface border border-white/20 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className="bg-surface border border-white/20 rounded-xl max-w-2xl w-full max-h-[45vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-2xl font-bold text-text-primary">
                 Filter Guests
               </h2>
@@ -1004,91 +1009,104 @@ export default function GuestListPage() {
               </button>
             </div>
             
-            <div className="space-y-6">
-              {/* RSVP Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  RSVP Status
-                </label>
-                <select
-                  value={filters.rsvpStatus}
-                  onChange={(e) => handleFilterChange('rsvpStatus', e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">All Status</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="pending">Pending</option>
-                  <option value="declined">Declined</option>
-                </select>
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Status & Assignment</h3>
+                
+                {/* RSVP Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    RSVP Status
+                  </label>
+                  <select
+                    value={filters.rsvpStatus}
+                    onChange={(e) => handleFilterChange('rsvpStatus', e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="pending">Pending</option>
+                    <option value="declined">Declined</option>
+                  </select>
+                </div>
+                
+                {/* Side Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Side
+                  </label>
+                  <select
+                    value={filters.side}
+                    onChange={(e) => handleFilterChange('side', e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="all">All Sides</option>
+                    <option value="Bride">Bride</option>
+                    <option value="Groom">Groom</option>
+                  </select>
+                </div>
+                
+                {/* Table Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Table Assignment
+                  </label>
+                  <select
+                    value={filters.table}
+                    onChange={(e) => handleFilterChange('table', e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="all">All Tables</option>
+                    <option value="A1">Table A1</option>
+                    <option value="A2">Table A2</option>
+                    <option value="A3">Table A3</option>
+                    <option value="B1">Table B1</option>
+                  </select>
+                </div>
               </div>
               
-              {/* Side Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Side
-                </label>
-                <select
-                  value={filters.side}
-                  onChange={(e) => handleFilterChange('side', e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">All Sides</option>
-                  <option value="Bride">Bride</option>
-                  <option value="Groom">Groom</option>
-                </select>
+              {/* Right Column */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Additional Filters</h3>
+                
+                {/* Plus One Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Plus One
+                  </label>
+                  <select
+                    value={filters.plusOne}
+                    onChange={(e) => handleFilterChange('plusOne', e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="all">All Guests</option>
+                    <option value="yes">With Plus One</option>
+                    <option value="no">Without Plus One</option>
+                  </select>
+                </div>
+                
+                {/* Meal Preference Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Meal Preference
+                  </label>
+                  <input
+                    type="text"
+                    value={filters.mealPreference === 'all' ? '' : filters.mealPreference}
+                    onChange={(e) => handleFilterChange('mealPreference', e.target.value || 'all')}
+                    placeholder="Enter meal preference..."
+                    className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
               </div>
-              
-              {/* Table Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Table Assignment
-                </label>
-                <select
-                  value={filters.table}
-                  onChange={(e) => handleFilterChange('table', e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">All Tables</option>
-                  <option value="A1">Table A1</option>
-                  <option value="A2">Table A2</option>
-                  <option value="A3">Table A3</option>
-                  <option value="B1">Table B1</option>
-                </select>
-              </div>
-              
-              {/* Plus One Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Plus One
-                </label>
-                <select
-                  value={filters.plusOne}
-                  onChange={(e) => handleFilterChange('plusOne', e.target.value)}
-                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">All Guests</option>
-                  <option value="yes">With Plus One</option>
-                  <option value="no">Without Plus One</option>
-                </select>
-              </div>
-              
-              {/* Meal Preference Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Meal Preference
-                </label>
-                <input
-                  type="text"
-                  value={filters.mealPreference === 'all' ? '' : filters.mealPreference}
-                  onChange={(e) => handleFilterChange('mealPreference', e.target.value || 'all')}
-                  placeholder="Enter meal preference..."
-                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+            </div>
             </div>
             
             {/* Filter Actions */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-6 border-t border-white/10 mt-6">
               <button
                 type="button"
                 onClick={clearFilters}
@@ -1120,10 +1138,11 @@ export default function GuestListPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-surface border border-white/20 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+            className="bg-surface border border-white/20 rounded-xl max-w-2xl w-full max-h-[45vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-2xl font-bold text-text-primary">
                 {expandedCard}
               </h2>
@@ -1135,7 +1154,9 @@ export default function GuestListPage() {
               </button>
             </div>
             
-            <div className="space-y-4">
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
               {getGroupedGuests()[expandedCard]?.map((guest) => (
                 <motion.div
                   key={guest.id}
@@ -1230,6 +1251,7 @@ export default function GuestListPage() {
                   </div>
                 </motion.div>
               ))}
+            </div>
             </div>
           </motion.div>
         </motion.div>
