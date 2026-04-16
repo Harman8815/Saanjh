@@ -2,20 +2,23 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Edit2, Trash2, UserPlus } from 'lucide-react';
+import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
   id: number;
   name: string;
   email: string;
   phone: string;
-  table: string;
-  side: 'Bride' | 'Groom';
+  whatsapp?: string;
+  table?: string;
+  side?: 'Bride' | 'Groom';
   plusOne: boolean;
-  rsvpStatus: 'confirmed' | 'pending' | 'declined' | 'tentative';
+  rsvpStatus: 'confirmed' | 'pending' | 'declined';
   mealPreference?: string;
   address?: string;
   notes?: string;
+  gender?: 'male' | 'female';
 }
 
 export default function GuestListPage() {
@@ -25,6 +28,7 @@ export default function GuestListPage() {
       name: 'Emily Johnson', 
       email: 'emily@email.com', 
       phone: '+1-555-0123', 
+      whatsapp: '+1-555-0123',
       table: 'A1', 
       side: 'Bride', 
       plusOne: true,
@@ -38,6 +42,7 @@ export default function GuestListPage() {
       name: 'Michael Smith', 
       email: 'michael@email.com', 
       phone: '+1-555-0456', 
+      whatsapp: '',
       table: 'A2', 
       side: 'Groom', 
       plusOne: false,
@@ -50,6 +55,7 @@ export default function GuestListPage() {
       name: 'Jessica Davis', 
       email: 'jessica@email.com', 
       phone: '+1-555-0789', 
+      whatsapp: '',
       table: 'A3', 
       side: 'Bride', 
       plusOne: false,
@@ -62,10 +68,11 @@ export default function GuestListPage() {
       name: 'Robert Wilson', 
       email: 'robert@email.com', 
       phone: '+1-555-0321', 
+      whatsapp: '',
       table: 'B1', 
       side: 'Groom', 
       plusOne: false,
-      rsvpStatus: 'tentative',
+      rsvpStatus: 'pending',
       mealPreference: 'vegan',
       address: '321 Elm St, City, State 98765'
     }
@@ -92,7 +99,7 @@ export default function GuestListPage() {
     confirmed: guests.filter(g => g.rsvpStatus === 'confirmed').length,
     pending: guests.filter(g => g.rsvpStatus === 'pending').length,
     declined: guests.filter(g => g.rsvpStatus === 'declined').length,
-    tentative: guests.filter(g => g.rsvpStatus === 'tentative').length
+    tentative: 0
   };
 
   const handleAddGuest = () => {
@@ -101,6 +108,7 @@ export default function GuestListPage() {
       name: '',
       email: '',
       phone: '',
+      whatsapp: '',
       table: 'A1',
       side: 'Bride',
       plusOne: false,
@@ -117,14 +125,14 @@ export default function GuestListPage() {
     setShowAddGuestModal(true);
   };
 
-  const handleSaveGuest = (guest: Guest) => {
+  const handleSaveGuest = (guest: Omit<Guest, 'id'>) => {
     if (editingGuest) {
-      setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
+      setGuests(guests.map(g => g.id === editingGuest.id ? { ...guest, id: editingGuest.id } : g));
     } else {
-      setGuests([...guests, guest]);
+      setGuests([...guests, { ...guest, id: guests.length + 1 }]);
     }
-    setEditingGuest(null);
     setShowAddGuestModal(false);
+    setEditingGuest(null);
   };
 
   const handleDeleteGuest = (guestId: number) => {
@@ -331,6 +339,16 @@ export default function GuestListPage() {
         {/* TODO: Add guest grouping */}
         {/* TODO: Add address management */}
       </div>
+      
+      {/* Add Guest Modal */}
+      <AddGuestModal
+        isOpen={showAddGuestModal}
+        onClose={() => {
+          setShowAddGuestModal(false);
+          setEditingGuest(null);
+        }}
+        onAddGuest={handleSaveGuest}
+      />
     </div>
   );
 }

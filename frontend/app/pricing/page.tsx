@@ -157,7 +157,7 @@ export default function PricingPage() {
 
               <div className="mb-8">
                 <h4 className="text-lg font-semibold text-text-primary mb-4">
-                  What's included:
+                  What&apos;s included:
                 </h4>
                 <ul className="space-y-3">
                   {plan.features.map((feature, i) => (
