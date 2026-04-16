@@ -50,13 +50,13 @@ export default function DashboardPage() {
               className="glass-card p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-text-primary">Days Until Wedding</h3>
-                <span className="text-2xl">Wedding</span>
+                <h3 className="heading-data text-data-lg text-text-primary">Days Until Wedding</h3>
+                <span className="text-emotional-2xl text-primary">Wedding</span>
               </div>
-              <div className="text-3xl font-bold text-primary mb-2">
+              <div className="text-data-3xl font-bold text-primary mb-2">
                 TODO: Days
               </div>
-              <p className="text-text-secondary text-sm">
+              <p className="body-data text-data-sm text-text-secondary">
                 {wedding?.weddingDate || 'No date set'}
               </p>
             </motion.div>
@@ -68,13 +68,13 @@ export default function DashboardPage() {
               className="glass-card p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-text-primary">Budget Used</h3>
-                <span className="text-2xl">Budget</span>
+                <h3 className="heading-data text-data-lg text-text-primary">Budget Used</h3>
+                <span className="text-emotional-2xl text-primary">Budget</span>
               </div>
-              <div className="text-3xl font-bold text-primary mb-2">
+              <div className="text-data-3xl font-bold text-primary mb-2">
                 TODO: %
               </div>
-              <p className="text-text-secondary text-sm">
+              <p className="body-data text-data-sm text-text-secondary">
                 ${wedding?.budget || 0} total budget
               </p>
             </motion.div>
@@ -86,13 +86,13 @@ export default function DashboardPage() {
               className="glass-card p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-text-primary">Guest RSVPs</h3>
-                <span className="text-2xl">Guests</span>
+                <h3 className="heading-data text-data-lg text-text-primary">Guest RSVPs</h3>
+                <span className="text-emotional-2xl text-primary">Guests</span>
               </div>
-              <div className="text-3xl font-bold text-primary mb-2">
+              <div className="text-data-3xl font-bold text-primary mb-2">
                 TODO: Count
               </div>
-              <p className="text-text-secondary text-sm">
+              <p className="body-data text-data-sm text-text-secondary">
                 {wedding?.guestCount || 0} invited
               </p>
             </motion.div>

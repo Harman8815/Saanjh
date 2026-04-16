@@ -45,10 +45,10 @@ export default function BudgetTrackerPage() {
           transition={{ duration: 0.8 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-text-primary mb-4">
+          <h1 className="heading-data text-data-4xl text-text-primary mb-4">
             <span className="text-glow">Budget Tracker</span>
           </h1>
-          <p className="text-xl text-text-muted max-w-3xl mx-auto">
+          <p className="body-data text-data-xl text-text-muted max-w-3xl mx-auto">
             Manage your wedding expenses and track your spending
           </p>
         </motion.div>
@@ -62,16 +62,16 @@ export default function BudgetTrackerPage() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <h3 className="text-text-muted mb-2">Total Budget</h3>
-              <p className="text-3xl font-bold text-primary">${budget.total.toLocaleString()}</p>
+              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Total Budget</h3>
+              <p className="text-data-3xl font-bold text-primary">${budget.total.toLocaleString()}</p>
             </div>
             <div className="text-center">
-              <h3 className="text-text-muted mb-2">Spent</h3>
-              <p className="text-3xl font-bold text-warning">${budget.spent.toLocaleString()}</p>
+              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Spent</h3>
+              <p className="text-data-3xl font-bold text-warning">${budget.spent.toLocaleString()}</p>
             </div>
             <div className="text-center">
-              <h3 className="text-text-muted mb-2">Remaining</h3>
-              <p className="text-3xl font-bold text-success">${budget.remaining.toLocaleString()}</p>
+              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Remaining</h3>
+              <p className="text-data-3xl font-bold text-success">${budget.remaining.toLocaleString()}</p>
             </div>
           </div>
 

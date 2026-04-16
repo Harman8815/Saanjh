@@ -1,7 +1,7 @@
 'use client';
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { usePathname } from "next/navigation";
 import Navbar from "../components/common/Navbar";
@@ -10,14 +10,25 @@ import LayoutWrapper from "../components/common/LayoutWrapper";
 import { metadata } from "./metadata";
 // import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Primary font for data-heavy sections - clean, modern, highly readable
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Secondary font for wedding/emotional content - elegant, romantic, expressive
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Neutral fallback font for UI elements - simple, consistent
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 
@@ -32,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}

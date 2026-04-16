@@ -2,17 +2,25 @@
 
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import SidebarSkeleton from './SidebarSkeleton';
+import SearchSkeleton from './SearchSkeleton';
 
 export default function DashboardSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Search Bar Skeleton */}
-      <div className="mb-8">
-        <Skeleton height={48} baseColor="#374151" highlightColor="#4b5563" borderRadius={12} />
-      </div>
+    <div className="min-h-screen bg-background flex overflow-x-hidden">
+      {/* Sidebar Skeleton */}
+      <SidebarSkeleton />
       
-      {/* Stats Cards Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Main Content */}
+      <div className="flex-1 ml-64 transition-all duration-300 overflow-x-hidden">
+        <div className="container mx-auto px-4 py-8">
+          {/* Search Bar Skeleton */}
+          <div className="mb-8">
+            <SearchSkeleton />
+          </div>
+          
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
@@ -136,5 +144,6 @@ export default function DashboardSkeleton() {
           </div>
         </div>
       </div>
+    </div>
   );
 }

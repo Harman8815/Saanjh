@@ -53,10 +53,10 @@ export default function WeddingCardsPage() {
           transition={{ duration: 0.8 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-text-primary mb-4">
+          <h1 className="heading-emotional text-emotional-4xl text-text-primary mb-4">
             <span className="text-glow">Digital Wedding Cards</span>
           </h1>
-          <p className="text-xl text-text-muted max-w-3xl mx-auto">
+          <p className="body-emotional text-emotional-xl text-text-muted max-w-3xl mx-auto">
             Create beautiful, shareable wedding invitations for your special day
           </p>
         </motion.div>
@@ -68,7 +68,7 @@ export default function WeddingCardsPage() {
           transition={{ duration: 0.8, delay: 0.1 }}
           className="glass-card p-6 mb-8"
         >
-          <h2 className="text-2xl font-semibold text-text-primary mb-6">Choose Template</h2>
+          <h2 className="heading-emotional text-emotional-2xl text-text-primary mb-6">Choose Template</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {templates.map((template, index) => (
               <motion.div
