@@ -702,26 +702,95 @@ export default function GuestListPage() {
             </div>
           ) : (
             /* Card View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3 lg:gap-6">
               {Object.entries(getGroupedGuests()).map(([groupName, groupGuests]) => (
                 <motion.div
-                          <span className="text-white text-xs font-bold">
-                            {guest.name.charAt(0)}
-                          </span>
-                        </div>
-                        <span className="text-sm text-text-primary">{guest.name}</span>
-                        <span className="text-xs text-text-muted">{guest.table}</span>
-                      </div>
-                    ))}
-                    {groupGuests.length > 5 && (
-                      <div className="text-sm text-primary font-medium">
-                        +{groupGuests.length - 5} more...
-                      </div>
-                    )}
+                  key={groupName}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="glass-card p-4 sm:p-3 lg:p-6 hover:shadow-lg transition-all duration-300"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                      {groupName}
+                      <span className="text-sm text-text-muted ml-2">({groupGuests.length})</span>
+                    </h3>
+                    <button
+                      onClick={() => setExpandedCard(expandedCard === groupName ? null : groupName)}
+                      className="text-text-muted hover:text-text-primary transition-colors p-1 rounded-lg hover:bg-white/5"
+                      title={expandedCard === groupName ? "Collapse" : "Expand"}
+                    >
+                      {expandedCard === groupName ? <ChevronRight size={16} /> : <ChevronRight size={16} />}
+                    </button>
                   </div>
+
+                  {/* Guest Cards Grid - Responsive */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                    {groupGuests.slice(0, expandedCard === groupName ? 6 : 5).map((guest, index) => (
+                      <motion.div
+                        key={guest.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className="bg-surface border border-white/20 rounded-lg p-3 hover:shadow-md transition-all duration-200 cursor-pointer"
+                        onClick={() => {
+                          handleEditGuest(guest);
+                          setExpandedCard(null);
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-bold">
+                              {guest.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-text-primary truncate">{guest.name}</div>
+                            <div className="text-sm text-text-muted truncate">{guest.table}</div>
+                            <div className="text-xs text-text-muted truncate">
+                              {guest.email}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {guest.plusOne && (
+                            <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
+                              +1
+                            </span>
+                          )}
+                          <button 
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
+                                handleDeleteGuest(guest.id);
+                              }
+                            }}
+                            className="text-text-muted hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10"
+                            title="Delete guest"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Show More/Less Button */}
+                  {groupGuests.length > (expandedCard === groupName ? 6 : 5) && (
+                    <div className="mt-4 text-center">
+                      <button
+                        onClick={() => setExpandedCard(expandedCard === groupName ? null : groupName)}
+                        className="text-primary hover:text-primary/80 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
+                      >
+                        {expandedCard === groupName ? 'Show Less' : `Show ${groupGuests.length - (expandedCard === groupName ? 6 : 5)} More`}
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
+          </div>
           )}
 
           {/* Pagination */}
