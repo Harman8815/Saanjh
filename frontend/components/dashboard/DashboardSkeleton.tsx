@@ -5,45 +5,27 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 export default function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar Skeleton */}
-      <div className="w-64 bg-surface border-r border-white/10 p-4">
-        <div className="mb-8">
-          <Skeleton height={32} width={140} baseColor="#374151" highlightColor="#4b5563" />
-        </div>
-        
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="flex items-center gap-3 p-3">
-              <Skeleton circle width={20} height={20} baseColor="#374151" highlightColor="#4b5563" />
-              <Skeleton width={100} height={16} baseColor="#374151" highlightColor="#4b5563" />
-            </div>
-          ))}
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Search Bar Skeleton */}
+      <div className="mb-8">
+        <Skeleton height={48} baseColor="#374151" highlightColor="#4b5563" borderRadius={12} />
       </div>
       
-      {/* Main Content Skeleton */}
-      <div className="flex-1 p-8">
-        {/* Search Bar Skeleton */}
-        <div className="mb-8">
-          <Skeleton height={48} baseColor="#374151" highlightColor="#4b5563" borderRadius={12} />
-        </div>
-        
-        {/* Stats Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="glass-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Skeleton height={20} width={120} baseColor="#374151" highlightColor="#4b5563" />
-                <Skeleton circle width={32} height={32} baseColor="#374151" highlightColor="#4b5563" />
-              </div>
-              <Skeleton height={36} width={80} baseColor="#374151" highlightColor="#4b5563" />
-              <Skeleton height={16} width={100} baseColor="#374151" highlightColor="#4b5563" className="mt-2" />
+      {/* Stats Cards Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton height={20} width={120} baseColor="#374151" highlightColor="#4b5563" />
+              <Skeleton circle width={32} height={32} baseColor="#374151" highlightColor="#4b5563" />
             </div>
-          ))}
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Skeleton height={36} width={80} baseColor="#374151" highlightColor="#4b5563" />
+            <Skeleton height={16} width={100} baseColor="#374151" highlightColor="#4b5563" className="mt-2" />
+          </div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content Area Skeleton */}
           <div className="lg:col-span-2 space-y-8">
             {/* Timeline Skeleton */}
@@ -154,6 +136,5 @@ export default function DashboardSkeleton() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
