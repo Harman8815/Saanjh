@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Users, Check, Clock, X } from 'lucide-react';
 
 export default function RSVPManagementPage() {
   const [selectedTab, setSelectedTab] = useState('list');
@@ -70,10 +71,10 @@ export default function RSVPManagementPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Guests', value: stats.total, icon: '👥', color: 'primary' },
-            { label: 'Confirmed', value: stats.confirmed, icon: '✅', color: 'green' },
-            { label: 'Pending', value: stats.pending, icon: '⏳', color: 'yellow' },
-            { label: 'Declined', value: stats.declined, icon: '❌', color: 'red' }
+            { label: 'Total Guests', value: stats.total, icon: <Users size={24} />, color: 'primary' },
+            { label: 'Confirmed', value: stats.confirmed, icon: <Check size={24} />, color: 'green' },
+            { label: 'Pending', value: stats.pending, icon: <Clock size={24} />, color: 'yellow' },
+            { label: 'Declined', value: stats.declined, icon: <X size={24} />, color: 'red' }
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -83,7 +84,7 @@ export default function RSVPManagementPage() {
               className="glass-card p-6"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">{stat.icon}</span>
+                <div className="text-2xl">{stat.icon}</div>
                 <span className={`text-3xl font-bold text-${stat.color}`}>
                   {stat.value}
                 </span>

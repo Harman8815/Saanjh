@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Download, Upload } from 'lucide-react';
 
 interface Guest {
   id: number;
@@ -172,10 +173,12 @@ export default function GuestListPage() {
             <h3 className="text-lg font-semibold text-text-primary mb-4">Import/Export</h3>
             <div className="flex gap-3">
               <button className="flex-1 btn-secondary">
-                📥 Import CSV
+                <Download size={16} className="mr-2" />
+                Import CSV
               </button>
               <button className="flex-1 btn-secondary">
-                📤 Export CSV
+                <Upload size={16} className="mr-2" />
+                Export CSV
               </button>
             </div>
           </motion.div>

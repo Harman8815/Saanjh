@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
 
 export default function WeddingPackagesPage() {
   const [selectedPackage, setSelectedPackage] = useState(1);
@@ -154,7 +155,7 @@ export default function WeddingPackagesPage() {
                   {pkg.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
+                        <Check size={12} className="text-white" />
                       </div>
                       <span className="text-text-primary">{feature}</span>
                     </div>

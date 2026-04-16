@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Store } from 'lucide-react';
 
 export default function VenueBookingPage() {
   const [selectedVenue, setSelectedVenue] = useState<any>(null);
@@ -117,7 +118,7 @@ export default function VenueBookingPage() {
             >
               {/* Venue Image */}
               <div className="w-full h-48 bg-surface rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-4xl text-text-muted">🏪</span>
+                <Store size={48} className="text-text-muted" />
               </div>
 
               {/* Venue Details */}

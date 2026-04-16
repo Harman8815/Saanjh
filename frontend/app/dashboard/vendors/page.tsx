@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Store, Star } from 'lucide-react';
 
 export default function VendorsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -134,7 +135,7 @@ export default function VendorsPage() {
             >
               {/* Vendor Image */}
               <div className="w-full h-48 bg-surface rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-4xl text-text-muted">🏪</span>
+                <Store size={48} className="text-text-muted" />
               </div>
 
               {/* Vendor Info */}
@@ -142,7 +143,7 @@ export default function VendorsPage() {
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-semibold text-text-primary">{vendor.name}</h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-gold">★</span>
+                    <Star size={16} className="text-gold fill-current" />
                     <span className="text-text-primary">{vendor.rating}</span>
                   </div>
                 </div>

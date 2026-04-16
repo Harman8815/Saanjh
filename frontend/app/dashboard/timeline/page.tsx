@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Target, CheckSquare, Calendar, Star, MapPin } from 'lucide-react';
 
 export default function TimelinePage() {
   const [selectedEvent, setSelectedEvent] = useState(1);
@@ -71,9 +72,9 @@ export default function TimelinePage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'milestone': return '🎯';
-      case 'planning': return '📋';
-      default: return '📅';
+      case 'milestone': return <Target size={24} />;
+      case 'planning': return <CheckSquare size={24} />;
+      default: return <Calendar size={24} />;
     }
   };
 
@@ -117,7 +118,7 @@ export default function TimelinePage() {
                       ? 'bg-primary ring-4 ring-primary/30'
                       : 'bg-surface'
                   }`}>
-                    <span className="text-2xl">{getCategoryIcon(event.category)}</span>
+                    <div className="text-2xl">{getCategoryIcon(event.category)}</div>
                   </div>
                   {index < timelineEvents.length - 1 && (
                     <div className="absolute top-16 left-8 w-0.5 h-8 bg-gradient-to-b from-primary to-secondary"></div>
@@ -145,13 +146,13 @@ export default function TimelinePage() {
                         </span>
                       </div>
                     </div>
-                    <div className="text-gold">★</div>
+                    <div className="text-gold"><Star size={20} /></div>
                   </div>
                   
                   <p className="text-text-muted mb-4">{event.description}</p>
                   
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="text-muted">📍 {event.location}</span>
+                    <span className="text-muted"><MapPin size={16} className="mr-1" />{event.location}</span>
                     <button className="btn-secondary btn-sm">
                       View Details
                     </button>

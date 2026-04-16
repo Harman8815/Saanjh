@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Heart } from 'lucide-react';
 
 export default function WeddingCardsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(1);
@@ -83,7 +84,7 @@ export default function WeddingCardsPage() {
                 onClick={() => setSelectedTemplate(template.id)}
               >
                 <div className="aspect-square bg-surface flex items-center justify-center">
-                  <span className="text-4xl text-text-muted">💌</span>
+                  <Heart size={48} className="text-text-muted" />
                 </div>
                 <div className="p-3">
                   <h3 className="text-text-primary font-medium">{template.name}</h3>

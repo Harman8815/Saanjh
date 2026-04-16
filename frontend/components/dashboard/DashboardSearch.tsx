@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Search, X, CheckSquare, Users, Store, CreditCard } from 'lucide-react';
 
 interface DashboardSearchProps {
   onSearch?: (query: string) => void;
@@ -20,10 +21,10 @@ export default function DashboardSearch({ onSearch, placeholder = "Search dashbo
   };
 
   const quickFilters = [
-    { label: 'Tasks', icon: '📋', count: 5 },
-    { label: 'Guests', icon: '👥', count: 12 },
-    { label: 'Vendors', icon: '🏪', count: 3 },
-    { label: 'Expenses', icon: '💳', count: 8 },
+    { label: 'Tasks', icon: <CheckSquare size={16} />, count: 5 },
+    { label: 'Guests', icon: <Users size={16} />, count: 12 },
+    { label: 'Vendors', icon: <Store size={16} />, count: 3 },
+    { label: 'Expenses', icon: <CreditCard size={16} />, count: 8 },
   ];
 
   return (
@@ -55,7 +56,7 @@ export default function DashboardSearch({ onSearch, placeholder = "Search dashbo
               transition={{ duration: 0.5 }}
               className="text-2xl text-text-secondary"
             >
-              🔍
+              <Search size={24} />
             </motion.div>
           </div>
 
@@ -68,7 +69,7 @@ export default function DashboardSearch({ onSearch, placeholder = "Search dashbo
               onClick={() => handleSearch('')}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
             >
-              ✕
+              <X size={20} />
             </motion.button>
           )}
         </div>
@@ -91,7 +92,7 @@ export default function DashboardSearch({ onSearch, placeholder = "Search dashbo
                     className="w-full text-left px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">🔍</span>
+                      <Search size={16} className="text-text-secondary" />
                       <span>{term}</span>
                     </div>
                   </button>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Building, Camera, Flower, Utensils, Music } from 'lucide-react';
 
 export default function BudgetTrackerPage() {
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -27,11 +28,11 @@ export default function BudgetTrackerPage() {
   };
 
   const categories = [
-    { key: 'venue', label: 'Venue', icon: '🏪', color: 'primary' },
-    { key: 'photography', label: 'Photography', icon: '📸', color: 'secondary' },
-    { key: 'flowers', label: 'Flowers', icon: '💐', color: 'accent' },
-    { key: 'catering', label: 'Catering', icon: '🍽️', color: 'gold' },
-    { key: 'music', label: 'Music', icon: '🎵', color: 'bronze' }
+    { key: 'venue', label: 'Venue', icon: <Building size={24} />, color: 'primary' },
+    { key: 'photography', label: 'Photography', icon: <Camera size={24} />, color: 'secondary' },
+    { key: 'flowers', label: 'Flowers', icon: <Flower size={24} />, color: 'accent' },
+    { key: 'catering', label: 'Catering', icon: <Utensils size={24} />, color: 'gold' },
+    { key: 'music', label: 'Music', icon: <Music size={24} />, color: 'bronze' }
   ];
 
   return (
@@ -127,7 +128,7 @@ export default function BudgetTrackerPage() {
                 {categories.map((category) => (
                   <div key={category.key} className="glass-card p-6">
                     <div className="flex items-center gap-4 mb-4">
-                      <span className="text-2xl">{category.icon}</span>
+                      {category.icon}
                       <div>
                         <h3 className="text-lg font-semibold text-text-primary">{category.label}</h3>
                         <p className="text-2xl font-bold text-${category.color}">
