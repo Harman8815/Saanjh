@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info, Grid, List, ChevronRight, X, GitBranch } from 'lucide-react';
+import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users, Info, Grid, List, ChevronRight, X, GitBranch, Filter } from 'lucide-react';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
@@ -88,15 +88,51 @@ export default function GuestListPage() {
   const [viewMode, setViewMode] = useState<'table' | 'card' | 'graph'>('table');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [showGraphModal, setShowGraphModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [tableSearchQuery, setTableSearchQuery] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filters, setFilters] = useState({
+    rsvpStatus: 'all',
+    side: 'all',
+    table: 'all',
+    plusOne: 'all',
+    mealPreference: 'all'
+  });
 
-  // Filter guests based on search and table assignment
+  // Filter guests based on search, table assignment, and advanced filters
   const filteredGuests = guests.filter((guest: Guest) => {
     const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          guest.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          guest.phone.includes(searchQuery);
     const matchesTable = selectedTable === 'all' || guest.table === selectedTable;
-    return matchesSearch && matchesTable;
+    
+    // Advanced filters
+    const matchesRSVP = filters.rsvpStatus === 'all' || guest.rsvpStatus === filters.rsvpStatus;
+    const matchesSide = filters.side === 'all' || guest.side === filters.side;
+    const matchesPlusOne = filters.plusOne === 'all' || 
+      (filters.plusOne === 'yes' && guest.plusOne) || 
+      (filters.plusOne === 'no' && !guest.plusOne);
+    const matchesMeal = filters.mealPreference === 'all' || 
+      guest.mealPreference?.toLowerCase().includes(filters.mealPreference.toLowerCase());
+    
+    return matchesSearch && matchesTable && matchesRSVP && matchesSide && matchesPlusOne && matchesMeal;
   });
+
+  // Additional filtering for table view
+  const tableFilteredGuests = filteredGuests.filter((guest: Guest) => {
+    const matchesTableSearch = !tableSearchQuery || 
+      guest.name.toLowerCase().includes(tableSearchQuery.toLowerCase()) ||
+      guest.email.toLowerCase().includes(tableSearchQuery.toLowerCase()) ||
+      guest.phone.includes(tableSearchQuery);
+    return matchesTableSearch;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(tableFilteredGuests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedGuests = tableFilteredGuests.slice(startIndex, endIndex);
 
   // Group guests by keyword
   const getGroupedGuests = () => {
@@ -216,6 +252,40 @@ export default function GuestListPage() {
       selectedGuests.includes(g.id) ? { ...g, table: newTable } : g
     ));
     setSelectedGuests([]);
+  };
+
+  // Pagination navigation functions
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Filter handling functions
+  const handleFilterChange = (filterType: string, value: string) => {
+    setFilters(prev => ({ ...prev, [filterType]: value }));
+    setCurrentPage(1); // Reset to first page when applying filters
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      rsvpStatus: 'all',
+      side: 'all',
+      table: 'all',
+      plusOne: 'all',
+      mealPreference: 'all'
+    });
+    setCurrentPage(1);
   };
 
   return (
@@ -352,6 +422,56 @@ export default function GuestListPage() {
           </motion.div>
         </div>
 
+        {/* View Toggle Segmented Control */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="flex justify-center mb-8 px-4"
+        >
+          <div className="inline-flex bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-1 shadow-lg">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-300 transform min-w-0 flex-shrink-0 ${
+                viewMode === 'table'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg shadow-primary/25 scale-105'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              }`}
+            >
+              <span className="hidden xs:inline">Table</span>
+              <span className="xs:hidden">Tbl</span>
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-300 transform min-w-0 flex-shrink-0 ${
+                viewMode === 'card'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg shadow-primary/25 scale-105'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              }`}
+            >
+              <span className="hidden xs:inline">Card</span>
+              <span className="xs:hidden">Crd</span>
+            </button>
+            <button
+              onClick={() => {
+                if (viewMode === 'graph') {
+                  setShowGraphModal(true);
+                } else {
+                  setViewMode('graph');
+                }
+              }}
+              className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-300 transform min-w-0 flex-shrink-0 ${
+                viewMode === 'graph'
+                  ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg shadow-primary/25 scale-105'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              }`}
+            >
+              <span className="hidden xs:inline">Graph</span>
+              <span className="xs:hidden">Grph</span>
+            </button>
+          </div>
+        </motion.div>
+
         {/* Guest List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -402,6 +522,13 @@ export default function GuestListPage() {
                 Add Guest
               </button>
               <button 
+                onClick={() => setShowFilterModal(true)}
+                className="btn-secondary"
+              >
+                <Filter size={16} className="mr-2" />
+                Filters
+              </button>
+              <button 
                 onClick={handleSelectAll}
                 className="btn-secondary"
               >
@@ -411,37 +538,49 @@ export default function GuestListPage() {
                   <><CheckSquare size={16} className="mr-2" />Select All</>
                 )}
               </button>
-              <button
-                onClick={() => {
-                  if (viewMode === 'graph') {
-                    setShowGraphModal(true);
-                  } else {
-                    setViewMode('graph');
-                  }
-                }}
-                className={`btn-secondary ${
-                  viewMode === 'graph' ? 'bg-primary text-white' : ''
-                }`}
-              >
-                <GitBranch size={16} className="mr-2" />
-                Graph View
-              </button>
-              <button
-                onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
-                className="btn-secondary"
-              >
-                {viewMode === 'table' ? (
-                  <><Grid size={16} className="mr-2" />Card View</>
-                ) : (
-                  <><List size={16} className="mr-2" />Table View</>
-                )}
-              </button>
-            </div>
+                          </div>
           </div>
 
           {/* Guest Display */}
           {viewMode === 'table' ? (
             <div className="space-y-6">
+              {/* Table Search Bar */}
+              <div className="mb-6">
+                <input
+                  type="text"
+                  value={tableSearchQuery}
+                  onChange={(e) => setTableSearchQuery(e.target.value)}
+                  placeholder="Search guests in table..."
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              
+              {/* Items per page control */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted">Show</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1); // Reset to first page when changing items per page
+                    }}
+                    className="px-3 py-2 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span className="text-sm text-text-muted">per page</span>
+                </div>
+                
+                {/* Pagination info */}
+                <div className="text-sm text-text-muted">
+                  Showing {paginatedGuests.length} of {tableFilteredGuests.length} guests
+                </div>
+              </div>
+              
               {Object.entries(getGroupedGuests()).map(([groupName, groupGuests], groupIndex) => (
                 <div key={groupName}>
                   {Object.keys(getGroupedGuests()).length > 1 && (
@@ -477,7 +616,7 @@ export default function GuestListPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {groupGuests.map((guest, index) => (
+                        {paginatedGuests.map((guest, index) => (
                           <motion.tr
                             key={guest.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -608,11 +747,49 @@ export default function GuestListPage() {
           )}
 
           {/* Pagination */}
-          <div className="flex justify-center mt-6 gap-2">
-            <button className="btn-secondary">Previous</button>
-            <span className="text-text-muted">Page 1 of 1</span>
-            <button className="btn-secondary">Next</button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-6 gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentPage === 1 
+                    ? 'bg-surface text-text-muted cursor-not-allowed' 
+                    : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                      page === currentPage
+                        ? 'bg-primary text-white'
+                        : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentPage === totalPages 
+                    ? 'bg-surface text-text-muted cursor-not-allowed' 
+                    : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* TODO: Add seating chart integration */}
@@ -630,6 +807,8 @@ export default function GuestListPage() {
           setEditingGuest(null);
         }}
         onAddGuest={handleSaveGuest}
+        existingGuests={guests}
+        editingGuest={editingGuest}
       />
 
       {/* Graph Modal */}
@@ -792,6 +971,137 @@ export default function GuestListPage() {
                 </div>
                 <div className="text-sm text-text-muted">Groom Side Guests</div>
               </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowFilterModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-surface border border-white/20 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-text-primary">
+                Filter Guests
+              </h2>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-text-muted" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* RSVP Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  RSVP Status
+                </label>
+                <select
+                  value={filters.rsvpStatus}
+                  onChange={(e) => handleFilterChange('rsvpStatus', e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">All Status</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending">Pending</option>
+                  <option value="declined">Declined</option>
+                </select>
+              </div>
+              
+              {/* Side Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Side
+                </label>
+                <select
+                  value={filters.side}
+                  onChange={(e) => handleFilterChange('side', e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">All Sides</option>
+                  <option value="Bride">Bride</option>
+                  <option value="Groom">Groom</option>
+                </select>
+              </div>
+              
+              {/* Table Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Table Assignment
+                </label>
+                <select
+                  value={filters.table}
+                  onChange={(e) => handleFilterChange('table', e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">All Tables</option>
+                  <option value="A1">Table A1</option>
+                  <option value="A2">Table A2</option>
+                  <option value="A3">Table A3</option>
+                  <option value="B1">Table B1</option>
+                </select>
+              </div>
+              
+              {/* Plus One Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Plus One
+                </label>
+                <select
+                  value={filters.plusOne}
+                  onChange={(e) => handleFilterChange('plusOne', e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">All Guests</option>
+                  <option value="yes">With Plus One</option>
+                  <option value="no">Without Plus One</option>
+                </select>
+              </div>
+              
+              {/* Meal Preference Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Meal Preference
+                </label>
+                <input
+                  type="text"
+                  value={filters.mealPreference === 'all' ? '' : filters.mealPreference}
+                  onChange={(e) => handleFilterChange('mealPreference', e.target.value || 'all')}
+                  placeholder="Enter meal preference..."
+                  className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+            
+            {/* Filter Actions */}
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="flex-1 px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              >
+                Clear All Filters
+              </button>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Apply Filters
+              </button>
             </div>
           </motion.div>
         </motion.div>
