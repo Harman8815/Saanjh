@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, X, Menu } from 'lucide-react';
 import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
 import DashboardSearch from '../../components/dashboard/DashboardSearch';
 import Breadcrumbs from '../../components/dashboard/Breadcrumbs';
@@ -14,6 +14,9 @@ export default function DashboardLayout({
 }>) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeItem, setActiveItem] = useState('/dashboard');
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -82,6 +85,44 @@ export default function DashboardLayout({
             onSearch={setSearchQuery}
             placeholder="Search dashboard, tasks, guests, vendors..."
           />
+          
+          {/* Mobile Overlay */}
+          {isMobileMenuOpen && (
+            <div 
+              className="lg:hidden fixed inset-0 bg-black/50 z-30"
+              onClick={toggleMobileMenu}
+            >
+              {/* Mobile Menu Content */}
+              <div className="flex flex-col h-full w-64 bg-surface border-r border-white/10">
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-text-primary">Menu</h3>
+                    <button
+                      onClick={toggleMobileMenu}
+                      className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      <X size={20} className="text-text-muted" />
+                    </button>
+                  </div>
+                </div>
+                <nav className="flex-1 p-4 overflow-y-auto">
+                  <div className="space-y-2">
+                    {sidebarItems.map((item: SidebarItem, index: number) => (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+                        onClick={() => handleItemClick(item, index)}
+                      >
+                        <item.icon size={20} className="text-current" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </nav>
+              </div>
+            </div>
+          )}
           
           {/* Page Content */}
           {children}
