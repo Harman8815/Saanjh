@@ -54,7 +54,7 @@ export default function GuestManagementDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex items-center justify-center">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div

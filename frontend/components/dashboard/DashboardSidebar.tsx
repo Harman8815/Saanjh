@@ -69,10 +69,10 @@ const sidebarItems: SidebarItem[] = [
   {
     icon: Users,
     label: 'Guests',
-    href: '/dashboard/guests',
+    href: '/dashboard/guests/list',
     badge: '12',
     subItems: [
-      { label: 'Guest List', href: '/dashboard/guests/list' },
+      { label: 'Guest Management', href: '/dashboard/guests' },
       { label: 'RSVP Status', href: '/dashboard/guests/rsvp' },
       { label: 'Seating Chart', href: '/dashboard/guests/seating' },
       { label: 'Meal Preferences', href: '/dashboard/guests/meals' },
@@ -287,7 +287,9 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
               <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                   activeItem === item.href
-                    ? 'bg-primary text-white'
+                    ? item.subItems 
+                      ? 'bg-primary/20 text-primary border border-primary/30'
+                      : 'bg-primary text-white'
                     : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                 }`}
                 onClick={() => handleItemClick(item)}
@@ -339,7 +341,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
                       href={subItem.href}
                       className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 text-sm ${
                         activeItem === subItem.href
-                          ? 'bg-white/10 text-primary'
+                          ? 'bg-white/10 text-primary border border-primary/30'
                           : 'text-text-muted hover:text-text-secondary hover:bg-white/5'
                       }`}
                       onClick={() => {
