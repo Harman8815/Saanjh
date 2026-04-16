@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Upload, Edit2, Trash2, UserPlus } from 'lucide-react';
+import { Download, Upload, Edit2, Trash2, UserPlus, CheckSquare, Square, Users } from 'lucide-react';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 
 interface Guest {
@@ -151,6 +151,32 @@ export default function GuestListPage() {
     );
   };
 
+  const handleSelectAll = () => {
+    if (selectedGuests.length === filteredGuests.length) {
+      setSelectedGuests([]);
+    } else {
+      setSelectedGuests(filteredGuests.map(g => g.id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedGuests.length === 0) return;
+    
+    if (confirm(`Are you sure you want to delete ${selectedGuests.length} guest(s)?`)) {
+      setGuests(guests.filter(g => !selectedGuests.includes(g.id)));
+      setSelectedGuests([]);
+    }
+  };
+
+  const handleBulkRearrange = (newTable: string) => {
+    if (selectedGuests.length === 0) return;
+    
+    setGuests(guests.map(g => 
+      selectedGuests.includes(g.id) ? { ...g, table: newTable } : g
+    ));
+    setSelectedGuests([]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -242,15 +268,56 @@ export default function GuestListPage() {
           className="glass-card p-8"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-text-primary">
-              Guest List ({filteredGuests.length})
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-semibold text-text-primary">
+                Guest List ({filteredGuests.length})
+              </h2>
+              {selectedGuests.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-muted">
+                    {selectedGuests.length} guest{selectedGuests.length !== 1 ? 's' : ''} selected
+                  </span>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="btn-secondary btn-sm text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 size={16} className="mr-1" />
+                    Delete Selected
+                  </button>
+                  <select
+                    onChange={(e) => {
+                      const table = e.target.value;
+                      if (table && table !== '') {
+                        handleBulkRearrange(table);
+                      }
+                    }}
+                    className="px-3 py-1 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Move to table...</option>
+                    {['A1', 'A2', 'A3', 'B1'].map(table => (
+                      <option key={table} value={table}>Table {table.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             <div className="flex gap-3">
-              <button className="btn-secondary">
+              <button 
+                onClick={handleAddGuest}
+                className="btn-secondary"
+              >
+                <UserPlus size={16} className="mr-2" />
                 Add Guest
               </button>
-              <button className="btn-secondary">
-                Bulk Edit
+              <button 
+                onClick={handleSelectAll}
+                className="btn-secondary"
+              >
+                {selectedGuests.length === filteredGuests.length ? (
+                  <><Square size={16} className="mr-2" />Deselect All</>
+                ) : (
+                  <><CheckSquare size={16} className="mr-2" />Select All</>
+                )}
               </button>
             </div>
           </div>
@@ -260,6 +327,18 @@ export default function GuestListPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/20">
+                  <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                    <button
+                      onClick={handleSelectAll}
+                      className="flex items-center gap-2 hover:text-primary transition-colors"
+                    >
+                      {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
+                        <CheckSquare size={18} />
+                      ) : (
+                        <Square size={18} />
+                      )}
+                    </button>
+                  </th>
                   <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
                   <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
                   <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
@@ -276,8 +355,22 @@ export default function GuestListPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="border-b border-white/10 hover:bg-white/5"
+                    className={`border-b border-white/10 hover:bg-white/5 ${
+                      selectedGuests.includes(guest.id) ? 'bg-primary/10' : ''
+                    }`}
                   >
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleToggleGuestSelection(guest.id)}
+                        className="flex items-center gap-2 hover:text-primary transition-colors"
+                      >
+                        {selectedGuests.includes(guest.id) ? (
+                          <CheckSquare size={18} className="text-primary" />
+                        ) : (
+                          <Square size={18} className="text-text-muted" />
+                        )}
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
@@ -311,10 +404,22 @@ export default function GuestListPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button className="btn-secondary btn-sm">
+                        <button 
+                          onClick={() => handleEditGuest(guest)}
+                          className="btn-secondary btn-sm"
+                        >
+                          <Edit2 size={14} className="mr-1" />
                           Edit
                         </button>
-                        <button className="btn-secondary btn-sm">
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
+                              handleDeleteGuest(guest.id);
+                            }
+                          }}
+                          className="btn-secondary btn-sm text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 size={14} className="mr-1" />
                           Delete
                         </button>
                       </div>
