@@ -215,7 +215,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="md:hidden fixed inset-0 bg-black/50 z-30"
           onClick={toggleMobileMenu}
         />
       )}
@@ -231,7 +231,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
         className={`fixed left-0 top-0 h-full bg-surface border-r border-white/10 z-40 transition-all duration-300 overflow-y-auto overflow-x-hidden ${
           isCollapsed ? 'w-20' : 'w-64'
         } ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}>
       {/* Sidebar Header */}
       <div className="p-6 border-b border-white/10">
@@ -254,7 +254,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
             {/* Mobile Menu Toggle */}
             <button
               onClick={toggleMobileMenu}
-              className="lg:hidden text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+              className="md:hidden text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
               title={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -263,7 +263,7 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
             {!isCollapsed && (
               <button
                 onClick={onToggle}
-                className="hidden lg:flex text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
+                className="hidden md:flex text-text-secondary hover:text-text-primary transition-colors p-2 rounded-lg hover:bg-white/5"
                 title="Collapse Sidebar"
               >
                 <ChevronLeft size={20} />
