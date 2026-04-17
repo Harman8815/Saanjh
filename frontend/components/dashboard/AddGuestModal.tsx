@@ -3,32 +3,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, UserPlus } from 'lucide-react';
+import { Guest, NewGuest } from '../../types/guest';
 
 interface AddGuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddGuest: (guest: Omit<Guest, 'id'>) => void;
+  onAddGuest: (guest: NewGuest) => void;
   existingGuests?: Guest[];
   editingGuest?: Guest | null;
 }
 
-interface Guest {
-  name: string;
-  email: string;
-  phone: string;
-  rsvpStatus: 'confirmed' | 'pending' | 'declined';
-  mealPreference?: string;
-  plusOne: boolean;
-  gender: 'male' | 'female';
-  whatsapp?: string;
-  table?: string;
-  side?: 'Bride' | 'Groom';
-  address?: string;
-  notes?: string;
-}
-
 export default function AddGuestModal({ isOpen, onClose, onAddGuest, existingGuests = [], editingGuest }: AddGuestModalProps) {
-  const [formData, setFormData] = useState<Omit<Guest, 'id'>>({
+  const [formData, setFormData] = useState<NewGuest>({
     name: '',
     email: '',
     phone: '',

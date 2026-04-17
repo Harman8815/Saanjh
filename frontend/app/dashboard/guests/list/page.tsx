@@ -2,25 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, GitBranch, Grid, List, Edit2, Trash2, Users, UserPlus, CheckSquare, Square } from 'lucide-react';
+import { X, Download, Upload, Info, Filter, ChevronRight, Edit2, Trash2, UserPlus, CheckSquare, Square } from 'lucide-react';
 import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
-
-interface Guest {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  whatsapp?: string;
-  table?: string;
-  side?: 'Bride' | 'Groom';
-  plusOne: boolean;
-  rsvpStatus: 'confirmed' | 'pending' | 'declined';
-  mealPreference?: string;
-  address?: string;
-  notes?: string;
-  gender?: 'male' | 'female';
-}
+import { Guest } from '../../../../types/guest';
 
 export default function GuestListPage() {
   const [guests, setGuests] = useState<Guest[]>([
@@ -539,7 +524,7 @@ export default function GuestListPage() {
                   <><CheckSquare size={16} className="mr-2" />Select All</>
                 )}
               </button>
-                          </div>
+            </div>
           </div>
 
           {/* Guest Display */}
@@ -783,14 +768,13 @@ export default function GuestListPage() {
                         onClick={() => setExpandedCard(expandedCard === groupName ? null : groupName)}
                         className="text-primary hover:text-primary/80 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
                       >
-                        {expandedCard === groupName ? 'Show Less' : `Show ${groupGuests.length - (expandedCard === groupName ? 6 : 5)} More`}
+                        {expandedCard === groupName ? 'Show Less' : 'Show ' + (groupGuests.length - (expandedCard === groupName ? 6 : 5)) + ' More'}
                       </button>
                     </div>
                   )}
                 </motion.div>
               ))}
             </div>
-          </div>
           )}
 
           {/* Pagination */}
@@ -890,7 +874,6 @@ export default function GuestListPage() {
             {/* Content */}
             <div className="p-6 overflow-y-auto flex-1">
               <GuestRelationshipGraph />
-            </div>
             </div>
           </motion.div>
         </motion.div>
