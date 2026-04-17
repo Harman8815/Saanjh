@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Home,
   Calendar,
@@ -69,10 +70,10 @@ const sidebarItems: SidebarItem[] = [
   {
     icon: Users,
     label: 'Guests',
-    href: '/dashboard/guests/list',
+    href: '/dashboard/guests',
     badge: '12',
     subItems: [
-      { label: 'Guest Management', href: '/dashboard/guests' },
+      { label: 'Guest List', href: '/dashboard/guests/list' },
       { label: 'RSVP Status', href: '/dashboard/guests/rsvp' },
       { label: 'Seating Chart', href: '/dashboard/guests/seating' },
       { label: 'Meal Preferences', href: '/dashboard/guests/meals' },
@@ -165,9 +166,20 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({ isCollapsed = false, onToggle }: DashboardSidebarProps) {
-  const [activeItem, setActiveItem] = useState('/dashboard');
+  const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Determine if an item is active based on current pathname
+  const isItemActive = (itemHref?: string): boolean => {
+    if (!itemHref) return false;
+    // Dashboard should only be active on exact match, not sub-pages
+    if (itemHref === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    // For other items: exact match or starts with the item href (for parent items with sub-items)
+    return pathname === itemHref || pathname.startsWith(itemHref + '/');
+  };
   
   const toggleExpanded = (itemLabel: string) => {
     setExpandedItems(prev => 
@@ -178,24 +190,22 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
   };
 
   const handleItemClick = (item: SidebarItem) => {
+    // Toggle expansion if item has subItems
     if (item.subItems) {
-      // Expand submenu if not already expanded, otherwise collapse it
       if (!expandedItems.includes(item.label)) {
         toggleExpanded(item.label);
       } else {
         // If submenu is already expanded, clicking should collapse it
-        setExpandedItems(prev => 
-          prev.includes(item.label) 
+        setExpandedItems(prev =>
+          prev.includes(item.label)
             ? prev.filter(i => i !== item.label)
             : [...prev, item.label]
         );
       }
-    } else if (item.href) {
-      setActiveItem(item.href);
-      // Close mobile menu after navigation
-      if (isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
-      }
+    }
+    // Close mobile menu after navigation (whether or not item has subItems)
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
     }
   };
 
@@ -284,48 +294,99 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               {/* Main Item */}
-              <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                  activeItem === item.href
-                    ? item.subItems 
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-primary text-white'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                }`}
-                onClick={() => handleItemClick(item)}
-              >
-                <item.icon 
-                  size={20} 
-                  className={`group-hover:scale-110 transition-transform ${
-                    activeItem === item.href ? 'text-white' : 'text-text-secondary'
-                  }`} 
-                />
-                {!isCollapsed && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 + 0.1 }}
-                    className="flex-1 flex items-center justify-between"
-                  >
-                    <span className="font-medium">{item.label}</span>
-                    <div className="flex items-center gap-2">
-                      {item.badge && (
-                        <span className="bg-gold text-white text-xs px-2 py-1 rounded-full">
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.subItems && (
-                        <ChevronDown 
-                          size={14} 
-                          className={`transition-transform duration-200 text-current ${
-                            expandedItems.includes(item.label) ? 'rotate-180' : ''
-                          }`} 
-                        />
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </div>
+              {item.href ? (
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isItemActive(item.href)
+                      ? item.subItems 
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'bg-primary text-white'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                  onClick={() => handleItemClick(item)}
+                >
+                  <item.icon 
+                    size={20} 
+                    className={`group-hover:scale-110 transition-transform ${
+                      isItemActive(item.href) ? 'text-white' : 'text-text-secondary'
+                    }`} 
+                  />
+                  {!isCollapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 + 0.1 }}
+                      className="flex-1 flex items-center justify-between"
+                    >
+                      <span className="font-medium">{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className="bg-gold text-white text-xs px-2 py-1 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.subItems && (
+                          <ChevronDown 
+                            size={14} 
+                            className={`transition-transform duration-200 text-current ${
+                              expandedItems.includes(item.label) ? 'rotate-180' : ''
+                            }`} 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleExpanded(item.label);
+                            }}
+                          />
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </Link>
+              ) : (
+                <div
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isItemActive(item.href)
+                      ? item.subItems 
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'bg-primary text-white'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  }`}
+                  onClick={() => handleItemClick(item)}
+                >
+                  <item.icon 
+                    size={20} 
+                    className={`group-hover:scale-110 transition-transform ${
+                      isItemActive(item.href) ? 'text-white' : 'text-text-secondary'
+                    }`} 
+                  />
+                  {!isCollapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 + 0.1 }}
+                      className="flex-1 flex items-center justify-between"
+                    >
+                      <span className="font-medium">{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className="bg-gold text-white text-xs px-2 py-1 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.subItems && (
+                          <ChevronDown 
+                            size={14} 
+                            className={`transition-transform duration-200 text-current ${
+                              expandedItems.includes(item.label) ? 'rotate-180' : ''
+                            }`} 
+                          />
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
 
               {/* Sub Items */}
               {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
@@ -340,12 +401,11 @@ export default function DashboardSidebar({ isCollapsed = false, onToggle }: Dash
                       key={subItem.href}
                       href={subItem.href}
                       className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 text-sm ${
-                        activeItem === subItem.href
+                        isItemActive(subItem.href)
                           ? 'bg-white/10 text-primary border border-primary/30'
                           : 'text-text-muted hover:text-text-secondary hover:bg-white/5'
                       }`}
                       onClick={() => {
-                        setActiveItem(subItem.href);
                         if (isMobileMenuOpen) {
                           setIsMobileMenuOpen(false);
                         }
