@@ -80,6 +80,8 @@ export default function GuestListPage() {
   const [tableSearchQuery, setTableSearchQuery] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showImportExportModal, setShowImportExportModal] = useState(false);
+  const [showGuestDetailModal, setShowGuestDetailModal] = useState(false);
+  const [selectedGuestForDetail, setSelectedGuestForDetail] = useState<Guest | null>(null);
   const [filters, setFilters] = useState({
     rsvpStatus: 'all',
     side: 'all',
@@ -222,6 +224,12 @@ export default function GuestListPage() {
       setSelectedGuests([]);
     } else {
       setSelectedGuests(filteredGuests.map(g => g.id));
+    }
+  };
+
+  const handleRemoveGuest = (guestId: number) => {
+    if (confirm(`Are you sure you want to remove ${guestId} from the list?`)) {
+      setGuests(prev => prev.filter(g => g.id !== guestId));
     }
   };
 
@@ -587,50 +595,121 @@ export default function GuestListPage() {
 
                   {/* Guest Cards Grid - Responsive */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                    {groupGuests.slice(0, expandedCard === groupName ? 6 : 5).map((guest, index) => (
-                      <motion.div
-                        key={guest.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="bg-surface border border-white/20 rounded-lg p-3 hover:shadow-md transition-all duration-200 cursor-pointer"
-                        onClick={() => {
-                          handleEditGuest(guest);
-                          setExpandedCard(null);
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-sm font-bold">
-                              {guest.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-text-primary truncate">{guest.name}</div>
-                            <div className="text-sm text-text-muted truncate">{guest.table}</div>
-                            <div className="text-xs text-text-muted truncate">
-                              {guest.email}
+                    {groupGuests.slice(0, expandedCard === groupName ? 6 : 5).map((guest, index) => {
+                      // Only show guest number and name for first 2 guests, "more..." for others
+                      const shouldShowDetails = index < 2 || expandedCard === groupName;
+                      
+                      return (
+                        <motion.div
+                          key={guest.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          className="bg-surface border border-white/20 rounded-xl p-4 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                          onClick={() => setExpandedCard(expandedCard === groupName ? null : groupName)}
+                        >
+                          {/* Card Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-lg font-bold">
+                                  {guest.name.charAt(0)}
+                                </span>
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold text-text-primary">
+                                  {index < 2 ? guest.name : 'more...'}
+                                </h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`px-2 py-1 rounded-full text-sm ${
+                                    guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                                  }`}>
+                                    {guest.side}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded-full text-sm ${
+                                    guest.rsvpStatus === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                                    guest.rsvpStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {guest.rsvpStatus}
+                                  </span>
+                                  {guest.plusOne && (
+                                    <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
+                                      +1
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-text-muted mt-2">
+                                  Table {guest.table}
+                                </div>
+                              </div>
                             </div>
+                            {shouldShowDetails && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditGuest(guest)}
+                                  className="btn-secondary btn-sm"
+                                  title="Edit guest"
+                                >
+                                  <Edit2 size={14} className="mr-1" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
+                                      handleDeleteGuest(guest.id);
+                                    }
+                                  }}
+                                  className="btn-secondary btn-sm text-red-400 hover:text-red-300"
+                                  title="Delete guest"
+                                >
+                                  <Trash2 size={14} className="mr-1" />
+                                  Delete
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {guest.plusOne && (
-                            <span className="px-2 py-1 bg-gold text-white rounded-full text-xs">
-                              +1
-                            </span>
+
+                          {/* Card Content - Only show when expanded */}
+                          {shouldShowDetails && (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div className="text-sm text-text-muted w-20">Email:</div>
+                                <div className="flex-1 text-sm text-text-primary">{guest.email}</div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="text-sm text-text-muted w-20">Phone:</div>
+                                <div className="flex-1 text-sm text-text-primary">{guest.phone}</div>
+                              </div>
+                              {guest.whatsapp && (
+                                <div className="flex items-center gap-3">
+                                  <div className="text-sm text-text-muted w-20">WhatsApp:</div>
+                                  <div className="flex-1 text-sm text-text-primary">{guest.whatsapp}</div>
+                                </div>
+                              )}
+                              {guest.mealPreference && (
+                                <div className="flex items-center gap-3">
+                                  <div className="text-sm text-text-muted w-20">Meal:</div>
+                                  <div className="flex-1 text-sm text-text-primary">{guest.mealPreference}</div>
+                                </div>
+                              )}
+                              {guest.address && (
+                                <div className="flex items-start gap-3">
+                                  <div className="text-sm text-text-muted w-20">Address:</div>
+                                  <div className="flex-1 text-sm text-text-primary">{guest.address}</div>
+                                </div>
+                              )}
+                              {guest.notes && (
+                                <div className="flex items-start gap-3">
+                                  <div className="text-sm text-text-muted w-20">Notes:</div>
+                                  <div className="flex-1 text-sm text-text-primary">{guest.notes}</div>
+                                </div>
+                              )}
+                            </div>
                           )}
-                          <button
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
-                                handleDeleteGuest(guest.id);
-                              }
-                            }}
-                            className="text-text-muted hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10"
-                            title="Delete guest"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        </motion.div>
+                      );
+                    })}
                       </motion.div>
                     ))}
                   </div>
@@ -642,7 +721,7 @@ export default function GuestListPage() {
                         onClick={() => setExpandedCard(expandedCard === groupName ? null : groupName)}
                         className="text-primary hover:text-primary/80 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
                       >
-                        {expandedCard === groupName ? 'Show Less' : 'Show ' + (groupGuests.length - (expandedCard === groupName ? 6 : 5)) + ' More'}
+                        {expandedCard === groupName ? 'Show Less' : 'Show All'}
                       </button>
                     </div>
                   )}
@@ -844,22 +923,99 @@ export default function GuestListPage() {
         </motion.div>
       )}
 
-      {/* Filter Modal */}
-      {showFilterModal && (
+      {/* Guest Detail Modal */}
+      {showGuestDetailModal && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowFilterModal(false)}
+          onClick={() => setShowGuestDetailModal(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-surface border border-white/20 rounded-xl max-w-2xl w-full max-h-[45vh] flex flex-col"
+            className="bg-surface border border-white/20 rounded-xl max-w-4xl w-full max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-2xl font-bold text-text-primary">
+                Guest Details
+              </h2>
+              <button
+                onClick={() => setShowGuestDetailModal(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-text-muted" />
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Guest Info */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-2xl font-bold">
+                      {selectedGuestForDetail?.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-text-primary">
+                      {selectedGuestForDetail?.name}
+                    </h3>
+                    <div className="text-sm text-text-muted space-y-2">
+                      <div>Guest #{selectedGuestForDetail?.id}</div>
+                      <div>Email: {selectedGuestForDetail?.email}</div>
+                      <div>Phone: {selectedGuestForDetail?.phone}</div>
+                      {selectedGuestForDetail?.whatsapp && <div>WhatsApp: {selectedGuestForDetail?.whatsapp}</div>}
+                      <div>Table: {selectedGuestForDetail?.table}</div>
+                      <div>Side: {selectedGuestForDetail?.side}</div>
+                      <div>RSVP: {selectedGuestForDetail?.rsvpStatus}</div>
+                      <div>Plus One: {selectedGuestForDetail?.plusOne ? 'Yes' : 'No'}</div>
+                      <div>Meal: {selectedGuestForDetail?.mealPreference || 'None'}</div>
+                      {selectedGuestForDetail?.address && <div>Address: {selectedGuestForDetail?.address}</div>}
+                      {selectedGuestForDetail?.notes && <div>Notes: {selectedGuestForDetail?.notes}</div>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete ${selectedGuestForDetail?.name}?`)) {
+                      handleDeleteGuest(selectedGuestForDetail?.id);
+                      setShowGuestDetailModal(false);
+                      setSelectedGuestForDetail(null);
+                    }
+                  }}
+                  className="btn-secondary text-red-400 hover:text-red-300"
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  Delete Guest
+                </button>
+                <button
+                  onClick={() => {
+                    handleEditGuest(selectedGuestForDetail);
+                    setShowGuestDetailModal(false);
+                    setSelectedGuestForDetail(null);
+                  }}
+                  className="btn-secondary"
+                >
+                  <Edit2 size={16} className="mr-2" />
+                  Edit Guest
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Filter Modal */}
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-2xl font-bold text-text-primary">
