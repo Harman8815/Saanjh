@@ -1,18 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+// Force dynamic rendering to avoid SSR issues
+export const dynamic = 'force-dynamic';
 import { motion } from 'framer-motion';
 import { Users, Check, Clock, X, List, MapPin, Utensils, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import GuestLayoutSkeleton from '../../../components/dashboard/GuestLayoutSkeleton';
 
 export default function GuestManagementDashboard() {
-  // TODO: Fetch real data from API
-  const stats = {
-    total: 150,
-    confirmed: 89,
-    pending: 45,
-    declined: 16
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    confirmed: 0,
+    pending: 0,
+    declined: 0
+  });
+
+  // Simulate data loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStats({
+        total: 150,
+        confirmed: 89,
+        pending: 45,
+        declined: 16
+      });
+      setIsLoading(false);
+    }, 1500); // Simulate 1.5 second loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const dashboardCards = [
     {
@@ -54,10 +73,14 @@ export default function GuestManagementDashboard() {
   ];
 
   return (
-    <div className="h-screen bg-background flex items-center justify-center">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
+    <>
+      {isLoading ? (
+        <GuestLayoutSkeleton />
+      ) : (
+        <div className="h-screen bg-background flex items-center justify-center">
+          <div className="container mx-auto px-4 py-8">
+            {/* Header */}
+            <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -132,6 +155,8 @@ export default function GuestManagementDashboard() {
           </div>
         </motion.div>
       </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Upload, Info, Filter, ChevronRight, Edit2, Trash2, UserPlus, CheckSquare, Square } from 'lucide-react';
-import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
+// import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 import { Guest } from '../../../../types/guest';
 
@@ -873,7 +873,10 @@ export default function GuestListPage() {
             
             {/* Content */}
             <div className="p-6 overflow-y-auto flex-1">
-              <GuestRelationshipGraph />
+              {/* <GuestRelationshipGraph /> */}
+              <div className="text-center text-text-muted">
+                Graph view temporarily disabled for build
+              </div>
             </div>
           </motion.div>
         </motion.div>
