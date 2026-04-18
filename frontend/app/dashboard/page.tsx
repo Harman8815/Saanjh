@@ -8,7 +8,6 @@ import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 // TODO: Create comprehensive wedding dashboard
 // TODO: Add wedding timeline and progress tracking
 // TODO: Implement budget management and tracking
-// TODO: Add guest list management and RSVP tracking
 // TODO: Create vendor management and communication
 // TODO: Add task management and checklists
 // TODO: Implement calendar integration and scheduling
@@ -33,7 +32,6 @@ export default function DashboardPage() {
   // TODO: Fetch dashboard data and analytics
   // TODO: Load wedding progress and timeline
   // TODO: Get budget and expense data
-  // TODO: Load guest list and RSVP data
   // TODO: Fetch vendor information and communications
   // TODO: Get upcoming tasks and deadlines
 
