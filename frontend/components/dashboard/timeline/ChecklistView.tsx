@@ -8,7 +8,7 @@ interface Event {
   date: string;
   location: string;
   status: 'completed' | 'in-progress' | 'upcoming';
-  category: 'milestone' | 'planning';
+  category: 'milestone' | 'planning' | 'ceremony' | 'reception';
 }
 
 interface ChecklistViewProps {

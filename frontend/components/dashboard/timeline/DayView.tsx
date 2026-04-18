@@ -10,7 +10,7 @@ interface Event {
   time: string;
   location: string;
   status: 'completed' | 'in-progress' | 'upcoming';
-  category: 'milestone' | 'planning';
+  category: 'milestone' | 'planning' | 'ceremony' | 'reception';
 }
 
 interface DayViewProps {

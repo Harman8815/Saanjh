@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 interface Event {
   id: number;
   title: string;
-  category: 'milestone' | 'planning';
+  category: 'milestone' | 'planning' | 'ceremony' | 'reception';
 }
 
 interface DayData {
