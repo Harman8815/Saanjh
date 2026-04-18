@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft, X, Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { X, Menu } from 'lucide-react';
 import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
 import DashboardSearch from '../../components/dashboard/DashboardSearch';
 import Breadcrumbs from '../../components/dashboard/Breadcrumbs';
@@ -18,7 +18,6 @@ export default function DashboardLayout({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   // Scroll to top on route change
   useEffect(() => {
@@ -42,12 +41,6 @@ export default function DashboardLayout({
     return breadcrumbItems;
   };
 
-  const goBack = () => {
-    if (pathname !== '/dashboard') {
-      router.push('/dashboard');
-    }
-  };
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   };
@@ -63,32 +56,19 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 overflow-x-hidden ${isSidebarCollapsed ? 'md:ml-20 ml-0' : 'md:ml-64 ml-0'}`}>
         <div className={`w-full px-4 py-8 transition-all duration-300`}>
-          {/* Breadcrumbs and Back Button */}
+          {/* Breadcrumbs and Search */}
           {pathname !== '/dashboard' && (
-            <div className="flex flex-row justify-between mb-6 w-full">
-              <div className="flex ">
-                <Breadcrumbs items={getBreadcrumbItems()} />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={goBack}
-                  className="flex items-center gap-2 px-4 py-1 bg-surface border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
-                  title="Go back to dashboard"
-                >
-                  <ChevronLeft size={16} />
-                  <span>Back</span>
-                </button>
+            <div className="flex items-center justify-between mb-6 w-full">
+              <Breadcrumbs items={getBreadcrumbItems()} />
+              <div className="w-64">
+                <DashboardSearch
+                  onSearch={setSearchQuery}
+                  placeholder="Search..."
+                />
               </div>
             </div>
           )}
-          
-          {/* Search Bar */}
-          <DashboardSearch 
-            onSearch={setSearchQuery}
-            placeholder="Search dashboard, tasks, guests, vendors..."
-          />
-          
-                    
+
           {/* Page Content */}
           {children}
         </div>
