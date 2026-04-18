@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, ArrowLeft, Plus, Trash2, Edit2, Download, UserPlus, Search, Filter, Armchair } from 'lucide-react';
+import { MapPin, Users, ArrowLeft, Plus, Trash2, Edit2, Download, UserPlus, Search, Filter, Armchair, LayoutGrid, Settings } from 'lucide-react';
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
 import { Guest } from '../../../../types/guest';
@@ -18,6 +18,7 @@ interface Table {
 
 export default function SeatingChartPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'manage' | 'visual'>('manage');
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -163,7 +164,38 @@ export default function SeatingChartPage() {
           </p>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.05 }}
+          className="flex gap-2 mb-8"
+        >
+          <button
+            onClick={() => setActiveTab('manage')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'manage'
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <Settings size={20} />
+            <span>Manage & Edit</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('visual')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'visual'
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <LayoutGrid size={20} />
+            <span>Visual Layout</span>
+          </button>
+        </motion.div>
+
+        {/* Stats Cards - Show in both tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,252 +229,309 @@ export default function SeatingChartPage() {
           ))}
         </motion.div>
 
-        {/* Action Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex flex-wrap gap-4 mb-8"
-        >
-          <button
-            onClick={() => setShowAddTableModal(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            <Plus size={20} />
-            <span>Add Table</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-3 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
-            <Download size={20} />
-            <span>Export Layout</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-3 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
-            <MapPin size={20} />
-            <span>Auto-Arrange</span>
-          </button>
-        </motion.div>
+        {activeTab === 'manage' ? (
+          <>
+            {/* Action Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="flex flex-wrap gap-4 mb-8"
+            >
+              <button
+                onClick={() => setShowAddTableModal(true)}
+                className="flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={20} />
+                <span>Add Table</span>
+              </button>
+              <button className="flex items-center gap-2 px-4 py-3 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
+                <Download size={20} />
+                <span>Export Layout</span>
+              </button>
+              <button className="flex items-center gap-2 px-4 py-3 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
+                <MapPin size={20} />
+                <span>Auto-Arrange</span>
+              </button>
+            </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Seating Layout */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="lg:col-span-2"
-          >
-            <div className="glass-card p-6 min-h-[600px]">
-              <h2 className="heading-data text-data-xl text-text-primary mb-6">Venue Layout</h2>
-              
-              {/* Legend */}
-              <div className="flex flex-wrap gap-4 mb-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-green-500/50 bg-green-500/10" />
-                  <span className="text-text-muted">Low occupancy (&lt;50%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-yellow-500/50 bg-yellow-500/10" />
-                  <span className="text-text-muted">Medium occupancy (50-80%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-red-500/50 bg-red-500/10" />
-                  <span className="text-text-muted">High occupancy (&gt;80%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-500/50 bg-gray-500/10" />
-                  <span className="text-text-muted">Empty</span>
-                </div>
-              </div>
-
-              {/* Tables Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {tables.map((table) => (
-                  <motion.div
-                    key={table.id}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => setSelectedTable(table)}
-                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
-                      selectedTable?.id === table.id 
-                        ? 'border-primary bg-primary/20' 
-                        : getTableColor(table)
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-text-primary">{table.name}</h3>
-                      {table.shape === 'round' ? (
-                        <div className="w-8 h-8 rounded-full border-2 border-current opacity-50" />
-                      ) : (
-                        <div className="w-8 h-6 border-2 border-current opacity-50" />
-                      )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Seating Layout */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="lg:col-span-2"
+              >
+                <div className="glass-card p-6 min-h-[600px]">
+                  <h2 className="heading-data text-data-xl text-text-primary mb-6">Venue Layout</h2>
+                  
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-4 mb-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border-2 border-green-500/50 bg-green-500/10" />
+                      <span className="text-text-muted">Low occupancy (&lt;50%)</span>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-text-muted">Occupancy</span>
-                        <span className="text-text-primary font-medium">
-                          {table.guests.length}/{table.seats}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-surface rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${(table.guests.length / table.seats) * 100}%` }}
-                        />
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border-2 border-yellow-500/50 bg-yellow-500/10" />
+                      <span className="text-text-muted">Medium occupancy (50-80%)</span>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {table.guests.slice(0, 3).map((guest, idx) => (
-                        <span 
-                          key={idx}
-                          className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted truncate max-w-[80px]"
-                        >
-                          {guest.name.split(' ')[0]}
-                        </span>
-                      ))}
-                      {table.guests.length > 3 && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted">
-                          +{table.guests.length - 3}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border-2 border-red-500/50 bg-red-500/10" />
+                      <span className="text-text-muted">High occupancy (&gt;80%)</span>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border-2 border-gray-500/50 bg-gray-500/10" />
+                      <span className="text-text-muted">Empty</span>
+                    </div>
+                  </div>
 
-          {/* Sidebar - Table Details or Unassigned Guests */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            {selectedTable ? (
-              <div className="glass-card p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="heading-data text-data-xl text-text-primary">{selectedTable.name}</h2>
-                  <button
-                    onClick={() => setSelectedTable(null)}
-                    className="text-text-muted hover:text-text-primary"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Shape</span>
-                    <span className="text-text-primary capitalize">{selectedTable.shape}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Capacity</span>
-                    <span className="text-text-primary">{selectedTable.seats} seats</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Occupancy</span>
-                    <span className="text-text-primary">{selectedTable.guests.length}/{selectedTable.seats}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-muted">Available</span>
-                    <span className="text-green-500">{selectedTable.seats - selectedTable.guests.length} seats</span>
-                  </div>
-                </div>
-
-                <h3 className="text-text-primary font-medium mb-3">Assigned Guests</h3>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto mb-4">
-                  {selectedTable.guests.map((guest) => (
-                    <div 
-                      key={guest.id}
-                      className="flex items-center justify-between p-3 bg-surface rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
-                          {guest.name.charAt(0)}
+                  {/* Tables Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {tables.map((table) => (
+                      <motion.div
+                        key={table.id}
+                        whileHover={{ scale: 1.02 }}
+                        onClick={() => setSelectedTable(table)}
+                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                          selectedTable?.id === table.id 
+                            ? 'border-primary bg-primary/20' 
+                            : getTableColor(table)
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-semibold text-text-primary">{table.name}</h3>
+                          {table.shape === 'round' ? (
+                            <div className="w-8 h-8 rounded-full border-2 border-current opacity-50" />
+                          ) : (
+                            <div className="w-8 h-6 border-2 border-current opacity-50" />
+                          )}
                         </div>
-                        <div>
-                          <p className="text-text-primary text-sm font-medium">{guest.name}</p>
-                          <p className="text-text-muted text-xs">{guest.side}</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-text-muted">Occupancy</span>
+                            <span className="text-text-primary font-medium">
+                              {table.guests.length}/{table.seats}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-surface rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary transition-all duration-300"
+                              style={{ width: `${(table.guests.length / table.seats) * 100}%` }}
+                            />
+                          </div>
                         </div>
-                      </div>
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {table.guests.slice(0, 3).map((guest, idx) => (
+                            <span 
+                              key={idx}
+                              className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted truncate max-w-[80px]"
+                            >
+                              {guest.name.split(' ')[0]}
+                            </span>
+                          ))}
+                          {table.guests.length > 3 && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted">
+                              +{table.guests.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Sidebar - Table Details or Unassigned Guests */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                {selectedTable ? (
+                  <div className="glass-card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="heading-data text-data-xl text-text-primary">{selectedTable.name}</h2>
                       <button
-                        onClick={() => handleRemoveGuestFromTable(selectedTable.id, guest.id)}
-                        className="p-1 text-text-muted hover:text-red-500 transition-colors"
+                        onClick={() => setSelectedTable(null)}
+                        className="text-text-muted hover:text-text-primary"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-muted">Shape</span>
+                        <span className="text-text-primary capitalize">{selectedTable.shape}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-muted">Capacity</span>
+                        <span className="text-text-primary">{selectedTable.seats} seats</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-muted">Occupancy</span>
+                        <span className="text-text-primary">{selectedTable.guests.length}/{selectedTable.seats}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-muted">Available</span>
+                        <span className="text-green-500">{selectedTable.seats - selectedTable.guests.length} seats</span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-text-primary font-medium mb-3">Assigned Guests</h3>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto mb-4">
+                      {selectedTable.guests.map((guest) => (
+                        <div 
+                          key={guest.id}
+                          className="flex items-center justify-between p-3 bg-surface rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
+                              {guest.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-text-primary text-sm font-medium">{guest.name}</p>
+                              <p className="text-text-muted text-xs">{guest.side}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveGuestFromTable(selectedTable.id, guest.id)}
+                            className="p-1 text-text-muted hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                      {selectedTable.guests.length === 0 && (
+                        <p className="text-text-muted text-center py-4">No guests assigned</p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
+                        <Edit2 size={16} />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTable(selectedTable.id)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
-                  ))}
-                  {selectedTable.guests.length === 0 && (
-                    <p className="text-text-muted text-center py-4">No guests assigned</p>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-surface border border-white/10 rounded-lg text-text-primary hover:bg-white/5 transition-colors">
-                    <Edit2 size={16} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTable(selectedTable.id)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="glass-card p-6">
-                <h2 className="heading-data text-data-xl text-text-primary mb-4">Unassigned Guests</h2>
-                
-                {/* Search */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
-                  <input
-                    type="text"
-                    placeholder="Search guests..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-surface border border-white/10 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary text-sm"
-                  />
-                </div>
-
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {filteredUnassigned.map((guest) => (
-                    <div 
-                      key={guest.id}
-                      className="flex items-center justify-between p-3 bg-surface rounded-lg hover:bg-white/5 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
-                          {guest.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-text-primary text-sm font-medium">{guest.name}</p>
-                          <p className="text-text-muted text-xs">{guest.side} · {guest.rsvpStatus}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {tables.map((table) => (
-                          <button
-                            key={table.id}
-                            onClick={() => handleAddGuestToTable(table.id, guest)}
-                            disabled={table.guests.length >= table.seats}
-                            title={`Add to ${table.name}`}
-                            className="p-1 text-text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        ))}
-                      </div>
+                  </div>
+                ) : (
+                  <div className="glass-card p-6">
+                    <h2 className="heading-data text-data-xl text-text-primary mb-4">Unassigned Guests</h2>
+                    
+                    {/* Search */}
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Search guests..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-surface border border-white/10 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary text-sm"
+                      />
                     </div>
-                  ))}
-                  {filteredUnassigned.length === 0 && (
-                    <p className="text-text-muted text-center py-8">
-                      {searchQuery ? 'No matching guests found' : 'All guests have been assigned'}
-                    </p>
-                  )}
+
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                      {filteredUnassigned.map((guest) => (
+                        <div 
+                          key={guest.id}
+                          className="flex items-center justify-between p-3 bg-surface rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
+                              {guest.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-text-primary text-sm font-medium">{guest.name}</p>
+                              <p className="text-text-muted text-xs">{guest.side} · {guest.rsvpStatus}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {tables.map((table) => (
+                              <button
+                                key={table.id}
+                                onClick={() => handleAddGuestToTable(table.id, guest)}
+                                disabled={table.guests.length >= table.seats}
+                                title={`Add to ${table.name}`}
+                                className="p-1 text-text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {filteredUnassigned.length === 0 && (
+                        <p className="text-text-muted text-center py-8">
+                          {searchQuery ? 'No matching guests found' : 'All guests have been assigned'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          </>
+        ) : (
+          /* Visual Layout Tab */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="glass-card p-8 min-h-[600px]"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="heading-data text-data-2xl text-text-primary">Visual Seating Layout</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-24 h-24 rounded-full bg-surface flex items-center justify-center mb-6">
+                <LayoutGrid size={48} className="text-text-muted" />
+              </div>
+              <h3 className="heading-emotional text-emotional-2xl text-text-primary mb-3">
+                Interactive Visual Layout
+              </h3>
+              <p className="body-emotional text-emotional-lg text-text-muted max-w-xl mb-6">
+                This feature will provide a drag-and-drop visual interface where you can see tables 
+                positioned in the venue and arrange guests around each table.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full">
+                <div className="p-4 bg-surface rounded-lg">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                    <MapPin size={24} className="text-primary" />
+                  </div>
+                  <h4 className="text-text-primary font-medium mb-1">Drag & Drop</h4>
+                  <p className="text-text-muted text-sm">Move guests between tables visually</p>
+                </div>
+                <div className="p-4 bg-surface rounded-lg">
+                  <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-3">
+                    <Users size={24} className="text-secondary" />
+                  </div>
+                  <h4 className="text-text-primary font-medium mb-1">Seat Assignment</h4>
+                  <p className="text-text-muted text-sm">Assign specific seats at each table</p>
+                </div>
+                <div className="p-4 bg-surface rounded-lg">
+                  <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-3">
+                    <Armchair size={24} className="text-accent" />
+                  </div>
+                  <h4 className="text-text-primary font-medium mb-1">Table Designer</h4>
+                  <p className="text-text-muted text-sm">Customize table shapes and sizes</p>
                 </div>
               </div>
-            )}
+            </div>
           </motion.div>
-        </div>
+        )}
       </div>
     </div>
   );
