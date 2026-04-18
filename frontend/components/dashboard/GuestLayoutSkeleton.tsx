@@ -47,8 +47,8 @@ export default function GuestLayoutSkeleton() {
       </div>
 
       {/* Main Content Skeleton - Match exact layout structure */}
-      <div className="flex-1 transition-all duration-300 overflow-x-hidden md:ml-64 ml-0">
-        <div className="container mx-auto px-4 py-8 transition-all duration-300 max-w-[calc(100vw-16rem)]">
+      <div className="flex-1 transition-all duration-300 overflow-x-hidden ml-0">
+        <div className="container mx-auto px-4 py-8 transition-all duration-300 ">
           {/* Breadcrumbs and Back Button Skeleton */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
