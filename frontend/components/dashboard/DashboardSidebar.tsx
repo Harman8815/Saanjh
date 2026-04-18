@@ -60,12 +60,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Building,
     label: 'Venues & Booking',
     href: '/dashboard/venues',
-    subItems: [
-      { label: 'Book Venue', href: '/dashboard/venues/book' },
-      { label: 'My Bookings', href: '/dashboard/venues/bookings' },
-      { label: 'Venue Search', href: '/dashboard/venues/search' },
-      { label: 'Saved Venues', href: '/dashboard/venues/saved' },
-    ],
   },
   {
     icon: Users,
