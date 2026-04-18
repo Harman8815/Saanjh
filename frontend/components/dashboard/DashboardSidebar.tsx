@@ -71,12 +71,6 @@ const sidebarItems: SidebarItem[] = [
     icon: DollarSign,
     label: 'Budget',
     href: '/dashboard/budget',
-    subItems: [
-      { label: 'Budget Overview', href: '/dashboard/budget/overview' },
-      { label: 'Expenses', href: '/dashboard/budget/expenses' },
-      { label: 'Income', href: '/dashboard/budget/income' },
-      { label: 'Reports', href: '/dashboard/budget/reports' },
-    ],
   },
   {
     icon: Store,
