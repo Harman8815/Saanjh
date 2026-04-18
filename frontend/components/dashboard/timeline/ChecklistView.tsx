@@ -9,7 +9,35 @@ interface Event {
   location: string;
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
+  color?: string;
 }
+
+// Get color border class based on event color or category
+const getEventBorderColor = (event: Event): string => {
+  if (event.color) {
+    switch (event.color) {
+      case 'rose': return 'border-l-rose-500';
+      case 'blue': return 'border-l-blue-500';
+      case 'violet': return 'border-l-violet-500';
+      case 'amber': return 'border-l-amber-500';
+      case 'emerald': return 'border-l-emerald-500';
+      case 'cyan': return 'border-l-cyan-500';
+      case 'pink': return 'border-l-pink-500';
+      case 'orange': return 'border-l-orange-500';
+      case 'indigo': return 'border-l-indigo-500';
+      case 'teal': return 'border-l-teal-500';
+      default: return 'border-l-rose-500';
+    }
+  }
+  // Fallback to category colors
+  switch (event.category) {
+    case 'milestone': return 'border-l-rose-500';
+    case 'planning': return 'border-l-blue-500';
+    case 'ceremony': return 'border-l-violet-500';
+    case 'reception': return 'border-l-amber-500';
+    default: return 'border-l-slate-500';
+  }
+};
 
 interface ChecklistViewProps {
   events: Event[];
@@ -32,7 +60,7 @@ export default function ChecklistView({ events, getStatusColor }: ChecklistViewP
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: index * 0.05 }}
-          className={`p-6 rounded-2xl backdrop-blur-xl border transition-all duration-300 ${
+          className={`p-6 rounded-2xl backdrop-blur-xl border border-l-4 ${getEventBorderColor(event)} transition-all duration-300 ${
             event.status === 'completed'
               ? 'bg-slate-900/30 border-white/5'
               : 'bg-surface/50 border-white/10 hover:border-primary/30'

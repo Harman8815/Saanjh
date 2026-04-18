@@ -3,28 +3,20 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/common/Modal';
 import { Calendar, Clock, MapPin, FileText, Tag, AlertCircle } from 'lucide-react';
-
-interface Event {
-  id?: number;
-  title: string;
-  date: string;
-  time: string;
-  duration: number;
-  location: string;
-  description: string;
-  status: 'completed' | 'in-progress' | 'upcoming';
-  category: 'milestone' | 'planning' | 'ceremony' | 'reception';
-}
+import { Event, suggestColorFromKeywords } from '../../../types/event';
+import ColorPicker from './ColorPicker';
 
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Event) => void;
+  onSubmit: (event: Omit<Event, 'id'> & { id?: number }) => void;
   event?: Event | null;
   mode: 'create' | 'edit';
 }
 
-const initialFormData: Event = {
+type FormData = Omit<Event, 'id'> & { id?: number };
+
+const initialFormData: FormData = {
   title: '',
   date: new Date().toISOString().split('T')[0],
   time: '09:00',
@@ -32,11 +24,12 @@ const initialFormData: Event = {
   location: '',
   description: '',
   status: 'upcoming',
-  category: 'planning'
+  category: 'planning',
+  color: undefined
 };
 
 export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode }: EventFormModalProps) {
-  const [formData, setFormData] = useState<Event>(initialFormData);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -68,10 +61,21 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
     }
   };
 
-  const handleChange = (field: keyof Event, value: string | number) => {
+  const handleChange = (field: keyof FormData, value: string | number | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Auto-suggest color when title changes (only if no color is selected)
+  const handleTitleChange = (value: string) => {
+    handleChange('title', value);
+    if (!formData.color && value.trim()) {
+      const suggestedColor = suggestColorFromKeywords(value);
+      if (suggestedColor !== 'rose') { // Only auto-apply if it's a meaningful suggestion
+        handleChange('color', suggestedColor);
+      }
     }
   };
 
@@ -116,7 +120,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => handleChange('title', e.target.value)}
+            onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="e.g., Wedding Ceremony"
             className={inputClasses('title')}
           />
@@ -256,6 +260,14 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
             className={`${inputClasses('description')} resize-none`}
           />
         </div>
+
+        {/* Color Picker */}
+        <ColorPicker
+          value={formData.color}
+          onChange={(color) => handleChange('color', color)}
+          title={formData.title}
+          description={formData.description}
+        />
       </form>
     </Modal>
   );

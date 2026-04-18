@@ -46,7 +46,35 @@ const formatMinutesToTime = (minutes: number): string => {
   return `${displayHrs}:${mins.toString().padStart(2, '0')} ${period}`;
 };
 
-// Get category color
+// Get event color based on the color field or fall back to category
+const getEventColorClasses = (event: Event): { border: string; bg: string; gradient: string } => {
+  if (event.color) {
+    // Use the custom event color
+    switch (event.color) {
+      case 'rose': return { border: 'border-l-rose-500', bg: 'bg-rose-500/10', gradient: 'from-rose-500 to-pink-500' };
+      case 'blue': return { border: 'border-l-blue-500', bg: 'bg-blue-500/10', gradient: 'from-blue-500 to-cyan-500' };
+      case 'violet': return { border: 'border-l-violet-500', bg: 'bg-violet-500/10', gradient: 'from-violet-500 to-purple-500' };
+      case 'amber': return { border: 'border-l-amber-500', bg: 'bg-amber-500/10', gradient: 'from-amber-500 to-orange-500' };
+      case 'emerald': return { border: 'border-l-emerald-500', bg: 'bg-emerald-500/10', gradient: 'from-emerald-500 to-teal-500' };
+      case 'cyan': return { border: 'border-l-cyan-500', bg: 'bg-cyan-500/10', gradient: 'from-cyan-500 to-sky-500' };
+      case 'pink': return { border: 'border-l-pink-500', bg: 'bg-pink-500/10', gradient: 'from-pink-500 to-rose-500' };
+      case 'orange': return { border: 'border-l-orange-500', bg: 'bg-orange-500/10', gradient: 'from-orange-500 to-amber-500' };
+      case 'indigo': return { border: 'border-l-indigo-500', bg: 'bg-indigo-500/10', gradient: 'from-indigo-500 to-violet-500' };
+      case 'teal': return { border: 'border-l-teal-500', bg: 'bg-teal-500/10', gradient: 'from-teal-500 to-emerald-500' };
+      default: return { border: 'border-l-rose-500', bg: 'bg-rose-500/10', gradient: 'from-rose-500 to-pink-500' };
+    }
+  }
+  // Fallback to category colors
+  switch (event.category) {
+    case 'milestone': return { border: 'border-l-rose-500', bg: 'bg-rose-500/10', gradient: 'from-rose-500 to-pink-500' };
+    case 'planning': return { border: 'border-l-blue-500', bg: 'bg-blue-500/10', gradient: 'from-blue-500 to-cyan-500' };
+    case 'ceremony': return { border: 'border-l-violet-500', bg: 'bg-violet-500/10', gradient: 'from-violet-500 to-purple-500' };
+    case 'reception': return { border: 'border-l-amber-500', bg: 'bg-amber-500/10', gradient: 'from-amber-500 to-orange-500' };
+    default: return { border: 'border-l-slate-500', bg: 'bg-slate-500/10', gradient: 'from-slate-500 to-gray-500' };
+  }
+};
+
+// Keep category colors for legend
 const getCategoryColor = (category: string): string => {
   switch (category) {
     case 'milestone': return 'from-rose-500 to-pink-500';
@@ -54,16 +82,6 @@ const getCategoryColor = (category: string): string => {
     case 'ceremony': return 'from-violet-500 to-purple-500';
     case 'reception': return 'from-amber-500 to-orange-500';
     default: return 'from-slate-500 to-gray-500';
-  }
-};
-
-const getCategoryAccent = (category: string): string => {
-  switch (category) {
-    case 'milestone': return 'border-l-rose-500 bg-rose-500/10';
-    case 'planning': return 'border-l-blue-500 bg-blue-500/10';
-    case 'ceremony': return 'border-l-violet-500 bg-violet-500/10';
-    case 'reception': return 'border-l-amber-500 bg-amber-500/10';
-    default: return 'border-l-slate-500 bg-slate-500/10';
   }
 };
 
@@ -243,7 +261,7 @@ export default function PremiumTimeline({ events, selectedDate, onEventClick }: 
           {positionedEvents.map(event => (
             <motion.div
               key={event.id}
-              className={`absolute rounded-xl border-l-4 ${getCategoryAccent(event.category)} 
+              className={`absolute rounded-xl border-l-4 ${getEventColorClasses(event).border} ${getEventColorClasses(event).bg}
                 backdrop-blur-sm cursor-pointer group transition-all duration-200
                 hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02] hover:z-40`}
               style={{

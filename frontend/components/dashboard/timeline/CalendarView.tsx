@@ -15,6 +15,7 @@ interface Event {
   location: string;
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
+  color?: string;
 }
 
 interface CalendarViewProps {

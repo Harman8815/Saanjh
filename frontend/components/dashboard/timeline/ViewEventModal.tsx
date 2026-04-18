@@ -1,19 +1,8 @@
 'use client';
 
 import Modal from '../../../components/common/Modal';
-import { Calendar, Clock, MapPin, FileText, Tag, CheckCircle2, Loader2, Circle, Edit3, Trash2 } from 'lucide-react';
-
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  duration: number;
-  location: string;
-  description: string;
-  status: 'completed' | 'in-progress' | 'upcoming';
-  category: 'milestone' | 'planning' | 'ceremony' | 'reception';
-}
+import { Calendar, Clock, MapPin, FileText, Tag, CheckCircle2, Loader2, Circle, Edit3, Trash2, Palette } from 'lucide-react';
+import { Event, getEventColor } from '../../../types/event';
 
 interface ViewEventModalProps {
   isOpen: boolean;
@@ -71,6 +60,7 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
   const statusConfig = getStatusConfig(event.status);
   const categoryConfig = getCategoryConfig(event.category);
   const StatusIcon = statusConfig.icon;
+  const eventColor = getEventColor(event.color);
 
   return (
     <Modal
@@ -120,6 +110,22 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
             </div>
           </div>
         </div>
+
+        {/* Color Indicator */}
+        {event.color && (
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <div 
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: eventColor.hex + '20' }}
+            >
+              <Palette size={20} style={{ color: eventColor.hex }} />
+            </div>
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wide">Event Color</p>
+              <p className="text-text-primary font-medium">{eventColor.name}</p>
+            </div>
+          </div>
+        )}
 
         {/* Details Grid */}
         <div className="grid gap-4">

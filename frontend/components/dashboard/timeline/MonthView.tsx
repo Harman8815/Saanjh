@@ -6,7 +6,35 @@ interface Event {
   id: number;
   title: string;
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
+  color?: string;
 }
+
+// Get color classes based on event color or category
+const getEventColorClasses = (event: Event): string => {
+  if (event.color) {
+    switch (event.color) {
+      case 'rose': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+      case 'blue': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+      case 'violet': return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
+      case 'amber': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      case 'emerald': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+      case 'cyan': return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+      case 'pink': return 'bg-pink-500/20 text-pink-300 border-pink-500/30';
+      case 'orange': return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+      case 'indigo': return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+      case 'teal': return 'bg-teal-500/20 text-teal-300 border-teal-500/30';
+      default: return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+    }
+  }
+  // Fallback to category colors
+  switch (event.category) {
+    case 'milestone': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+    case 'planning': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+    case 'ceremony': return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
+    case 'reception': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+    default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+  }
+};
 
 interface DayData {
   date: Date;
@@ -59,11 +87,7 @@ export default function MonthView({ days, selectedDate, onSelectDate }: MonthVie
               {day.events.slice(0, 2).map((event) => (
                 <div
                   key={event.id}
-                  className={`text-xs px-2 py-0.5 rounded truncate ${
-                    event.category === 'milestone'
-                      ? 'bg-rose-500/20 text-rose-300'
-                      : 'bg-blue-500/20 text-blue-300'
-                  }`}
+                  className={`text-xs px-2 py-0.5 rounded truncate border ${getEventColorClasses(event)}`}
                 >
                   {event.title}
                 </div>

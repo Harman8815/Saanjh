@@ -15,6 +15,7 @@ interface Event {
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
   duration?: number;
+  color?: string;
 }
 
 interface TimelineViewProps {

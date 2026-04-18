@@ -11,7 +11,35 @@ interface Event {
   location: string;
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
+  color?: string;
 }
+
+// Get color classes based on event color or category
+const getEventColorClasses = (event: Event): string => {
+  if (event.color) {
+    switch (event.color) {
+      case 'rose': return 'bg-rose-500/20 border-rose-500/30';
+      case 'blue': return 'bg-blue-500/20 border-blue-500/30';
+      case 'violet': return 'bg-violet-500/20 border-violet-500/30';
+      case 'amber': return 'bg-amber-500/20 border-amber-500/30';
+      case 'emerald': return 'bg-emerald-500/20 border-emerald-500/30';
+      case 'cyan': return 'bg-cyan-500/20 border-cyan-500/30';
+      case 'pink': return 'bg-pink-500/20 border-pink-500/30';
+      case 'orange': return 'bg-orange-500/20 border-orange-500/30';
+      case 'indigo': return 'bg-indigo-500/20 border-indigo-500/30';
+      case 'teal': return 'bg-teal-500/20 border-teal-500/30';
+      default: return 'bg-rose-500/20 border-rose-500/30';
+    }
+  }
+  // Fallback to category colors
+  switch (event.category) {
+    case 'milestone': return 'bg-rose-500/20 border-rose-500/30';
+    case 'planning': return 'bg-blue-500/20 border-blue-500/30';
+    case 'ceremony': return 'bg-violet-500/20 border-violet-500/30';
+    case 'reception': return 'bg-amber-500/20 border-amber-500/30';
+    default: return 'bg-slate-500/20 border-slate-500/30';
+  }
+};
 
 interface DayViewProps {
   currentDate: Date;
@@ -34,7 +62,7 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
-      className="grid grid-cols-3 gap-6"
+      className="grid grid-cols-1 lg:grid-cols-3 gap-6"
     >
       {/* Time Schedule */}
       <div className="col-span-2 glass-card p-6 rounded-3xl">
@@ -57,18 +85,14 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                     return hourEvents.map((event) => (
                       <div
                         key={event.id}
-                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border ${
-                          event.category === 'milestone'
-                            ? 'bg-rose-500/20 border-rose-500/30'
-                            : 'bg-blue-500/20 border-blue-500/30'
-                        }`}
-                        style={{ top: '10%', height: '70%' }}
+                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border ${getEventColorClasses(event)}`}
+                        style={{ height: `90%`, top:'5%' }}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-text-primary">{event.title}</span>
                           <span className="text-xs text-text-secondary">{event.time}</span>
                         </div>
-                        <div className="text-sm text-text-secondary mt-1 flex items-center gap-2">
+                        <div className="text-sm text-text-secondary my-1 flex items-center gap-2">
                           <MapPin size={12} />
                           {event.location}
                         </div>
@@ -83,8 +107,8 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
       </div>
 
       {/* Day Sidebar */}
-      <div className="space-y-4">
-        <div className="glass-card p-6 rounded-3xl">
+      <div className="space-y-4 w-full col-span-2 lg:col-span-1">
+        <div className="glass-card p-6 rounded-3xl w-full">
           <h4 className="text-lg font-semibold text-text-primary mb-4">Day Overview</h4>
           {dayEvents.length > 0 ? (
             <div className="space-y-3">
@@ -108,7 +132,7 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
           )}
         </div>
 
-        <div className="glass-card p-6 rounded-3xl">
+        <div className="glass-card p-6 rounded-3xl w-full">
           <h4 className="text-lg font-semibold text-text-primary mb-4">Statistics</h4>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
