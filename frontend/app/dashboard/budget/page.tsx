@@ -1,210 +1,195 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Building, Camera, Flower, Utensils, Music } from 'lucide-react';
+import { Wallet } from 'lucide-react';
+
+import {
+  TabNavigation,
+  BudgetTab,
+  DemographicsTab,
+  HistoryTab,
+  ExpenseModal,
+  TabType,
+  PaymentStatus,
+  Expense,
+  BudgetCategory,
+  initialCategories,
+  totalBudget,
+  formatCurrency,
+  formatShortCurrency
+} from '../../../components/dashboard/budget';
 
 export default function BudgetTrackerPage() {
-  const [selectedTab, setSelectedTab] = useState('overview');
-  const [transactions, setTransactions] = useState([
-    { id: 1, category: 'Venue', amount: 3000, date: '2024-04-10', description: 'Grand Ballroom deposit' },
-    { id: 2, category: 'Photography', amount: 1500, date: '2024-04-15', description: 'Capture Moments booking' },
-    { id: 3, category: 'Flowers', amount: 800, date: '2024-04-20', description: 'Bloom Florists deposit' },
-    { id: 4, category: 'Catering', amount: 2500, date: '2024-04-25', description: 'Delicious Catering deposit' },
-    { id: 5, category: 'Music', amount: 600, date: '2024-05-01', description: 'Sweet Harmony DJ booking' }
-  ]);
+  // State
+  const [categories, setCategories] = useState<BudgetCategory[]>(initialCategories);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [currentTotalBudget, setCurrentTotalBudget] = useState(totalBudget);
 
-  const budget = {
-    total: 10000,
-    spent: 8400,
-    remaining: 1600,
-    categories: {
-      venue: 3000,
-      photography: 1500,
-      flowers: 800,
-      catering: 2500,
-      music: 600
-    }
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>('budget');
+
+  // History tab filters and sorting
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<PaymentStatus | 'all'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' });
+
+  // Computed values
+  const { totalSpent, totalPaid, totalRemaining, budgetProgress } = useMemo(() => {
+    const spent = categories.reduce((acc, cat) => acc + cat.expenses.reduce((sum, exp) => sum + exp.amount, 0), 0);
+    const paid = categories.reduce((acc, cat) => acc + cat.expenses.reduce((sum, exp) => sum + exp.paidAmount, 0), 0);
+    return {
+      totalSpent: spent,
+      totalPaid: paid,
+      totalRemaining: currentTotalBudget - spent,
+      budgetProgress: (spent / currentTotalBudget) * 100
+    };
+  }, [categories, currentTotalBudget]);
+
+  // Handlers
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
-  const categories = [
-    { key: 'venue', label: 'Venue', icon: <Building size={24} />, color: 'primary' },
-    { key: 'photography', label: 'Photography', icon: <Camera size={24} />, color: 'secondary' },
-    { key: 'flowers', label: 'Flowers', icon: <Flower size={24} />, color: 'accent' },
-    { key: 'catering', label: 'Catering', icon: <Utensils size={24} />, color: 'gold' },
-    { key: 'music', label: 'Music', icon: <Music size={24} />, color: 'bronze' }
-  ];
+  const openAddModal = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setEditingExpense(null);
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (categoryId: string, expense: Expense) => {
+    setSelectedCategory(categoryId);
+    setEditingExpense(expense);
+    setIsAddModalOpen(true);
+  };
+
+  const saveExpense = (expenseData: Omit<Expense, 'id'> & { id?: string }) => {
+    const newExpense: Expense = {
+      id: expenseData.id || Date.now().toString(),
+      vendorName: expenseData.vendorName,
+      amount: expenseData.amount,
+      paidAmount: expenseData.paidAmount,
+      status: expenseData.status,
+      date: expenseData.date,
+      notes: expenseData.notes
+    };
+
+    setCategories(prev => prev.map(cat => {
+      if (cat.id !== selectedCategory) return cat;
+      
+      if (expenseData.id) {
+        return {
+          ...cat,
+          expenses: cat.expenses.map(exp => exp.id === expenseData.id ? newExpense : exp)
+        };
+      }
+      return { ...cat, expenses: [...cat.expenses, newExpense] };
+    }));
+
+    setIsAddModalOpen(false);
+  };
+
+  const deleteExpense = (categoryId: string, expenseId: string) => {
+    setCategories(prev => prev.map(cat =>
+      cat.id === categoryId
+        ? { ...cat, expenses: cat.expenses.filter(exp => exp.id !== expenseId) }
+        : cat
+    ));
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+  };
+
+  // Get category for modal
+  const selectedCategoryData = categories.find(c => c.id === selectedCategory) || null;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <h1 className="heading-data text-data-4xl text-text-primary mb-4">
-            <span className="text-glow">Budget Tracker</span>
-          </h1>
-          <p className="body-data text-data-xl text-text-muted max-w-3xl mx-auto">
-            Manage your wedding expenses and track your spending
-          </p>
-        </motion.div>
-
-        {/* Budget Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="glass-card p-8 mb-8"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Total Budget</h3>
-              <p className="text-data-3xl font-bold text-primary">${budget.total.toLocaleString()}</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d4a574, #c9a97e)' }}>
+              <Wallet className="text-white" size={24} />
             </div>
-            <div className="text-center">
-              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Spent</h3>
-              <p className="text-data-3xl font-bold text-warning">${budget.spent.toLocaleString()}</p>
-            </div>
-            <div className="text-center">
-              <h3 className="label-ui text-ui-xs text-text-muted mb-2">Remaining</h3>
-              <p className="text-data-3xl font-bold text-success">${budget.remaining.toLocaleString()}</p>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-6">
-            <div className="flex justify-between text-sm text-text-muted mb-2">
-              <span>Budget Usage</span>
-              <span>{Math.round((budget.spent / budget.total) * 100)}%</span>
-            </div>
-            <div className="w-full bg-surface rounded-full h-4">
-              <div 
-                className="bg-gradient-to-r from-primary to-secondary h-4 rounded-full transition-all duration-500"
-                style={{ width: `${(budget.spent / budget.total) * 100}%` }}
-              ></div>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
+                Wedding Budget
+              </h1>
+              <p className="text-sm text-text-muted">Plan, track, and manage your expenses</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="glass-card p-2 mb-8"
-        >
-          <div className="flex gap-4">
-            {['overview', 'transactions', 'reports'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setSelectedTab(tab)}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  selectedTab === tab
-                    ? 'bg-primary text-white'
-                    : 'text-text-muted hover:text-text-primary hover:bg-white/5'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        {/* Tab Navigation */}
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Tab Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="glass-card p-8"
-        >
-          {selectedTab === 'overview' && (
-            <div>
-              <h2 className="text-2xl font-semibold text-text-primary mb-6">Category Breakdown</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {categories.map((category) => (
-                  <div key={category.key} className="glass-card p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      {category.icon}
-                      <div>
-                        <h3 className="text-lg font-semibold text-text-primary">{category.label}</h3>
-                        <p className="text-2xl font-bold text-${category.color}">
-                          ${budget.categories[category.key as keyof typeof budget.categories]?.toLocaleString() || 0}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-full bg-surface rounded-full h-2">
-                      <div 
-                        className={`bg-${category.color} h-2 rounded-full transition-all duration-500`}
-                        style={{ 
-                          width: `${(budget.categories[category.key as keyof typeof budget.categories] || 0) / budget.total * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {activeTab === 'budget' && (
+          <BudgetTab
+            categories={categories}
+            totalBudget={currentTotalBudget}
+            totalSpent={totalSpent}
+            totalPaid={totalPaid}
+            totalRemaining={totalRemaining}
+            budgetProgress={budgetProgress}
+            expandedCategories={expandedCategories}
+            onToggleCategory={toggleCategory}
+            onAddExpense={openAddModal}
+            onEditExpense={openEditModal}
+            onDeleteExpense={deleteExpense}
+          />
+        )}
 
-          {selectedTab === 'transactions' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-text-primary">Recent Transactions</h2>
-                <button className="btn-primary">Add Transaction</button>
-              </div>
-              <div className="space-y-4">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-surface rounded-lg">
-                    <div>
-                      <h4 className="text-text-primary font-medium">{transaction.category}</h4>
-                      <p className="text-text-muted text-sm">{transaction.description}</p>
-                      <p className="text-text-muted text-xs">{transaction.date}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-warning">-${transaction.amount.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {activeTab === 'demographics' && (
+          <DemographicsTab categories={categories} />
+        )}
 
-          {selectedTab === 'reports' && (
-            <div>
-              <h2 className="text-2xl font-semibold text-text-primary mb-6">Budget Reports</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Monthly Spending</h3>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-warning">$2,800</p>
-                    <p className="text-text-muted">Average per month</p>
-                  </div>
-                </div>
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Top Categories</h3>
-                  <div className="space-y-2">
-                    {Object.entries(budget.categories).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-text-muted capitalize">{key}:</span>
-                        <span className="text-primary font-medium">${value.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* TODO: Add expense categories */}
-        {/* TODO: Add budget planning tools */}
-        {/* TODO: Add savings goals */}
-        {/* TODO: Add financial reports */}
+        {activeTab === 'history' && (
+          <HistoryTab
+            categories={categories}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterCategory={filterCategory}
+            onFilterCategoryChange={setFilterCategory}
+            filterStatus={filterStatus}
+            onFilterStatusChange={setFilterStatus}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={toggleSortOrder}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            onEditExpense={openEditModal}
+            onDeleteExpense={deleteExpense}
+          />
+        )}
       </div>
+
+      {/* Expense Modal */}
+      <ExpenseModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={saveExpense}
+        editingExpense={editingExpense}
+        category={selectedCategoryData}
+      />
     </div>
   );
 }
