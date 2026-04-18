@@ -131,8 +131,8 @@ export default function VenuesPage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filteredVenues.map((venue, index) => (
+            <Link href={`/dashboard/venues/${venue.id}`} key={venue.id}>
             <motion.div
-              key={venue.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -194,18 +194,20 @@ export default function VenuesPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
-                <button className="btn-secondary flex-1">
+              <div className="flex gap-3 mt-6" onClick={(e) => e.preventDefault()}>
+                <button className="btn-secondary flex-1" onClick={(e) => { e.preventDefault(); }}>
                   View Details
                 </button>
                 <button 
                   className={`btn-primary flex-1 ${!venue.available ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={!venue.available}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/dashboard/venues/${venue.id}`; }}
                 >
                   {venue.available ? 'Book Now' : 'Not Available'}
                 </button>
               </div>
             </motion.div>
+            </Link>
           ))}
         </motion.div>
 
