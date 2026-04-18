@@ -1,15 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Target, CheckSquare, Calendar, Star, MapPin, Clock, ListTodo } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, Calendar as CalendarIcon, ListTodo } from 'lucide-react';
+import TimelineView from '../../../components/dashboard/timeline/TimelineView';
+import CalendarView from '../../../components/dashboard/timeline/CalendarView';
+import ChecklistView from '../../../components/dashboard/timeline/ChecklistView';
+
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+  status: 'completed' | 'in-progress' | 'upcoming';
+  category: 'milestone' | 'planning';
+}
 
 export default function TimelinePage() {
   const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('calendar');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedEvent, setSelectedEvent] = useState(1);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // TODO: Fetch timeline events from API
-  const timelineEvents = [
+  const timelineEvents: Event[] = [
     {
       id: 1,
       title: 'Engagement Party',
@@ -73,10 +89,17 @@ export default function TimelinePage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'milestone': return <Target size={24} />;
-      case 'planning': return <CheckSquare size={24} />;
-      default: return <Calendar size={24} />;
+      case 'milestone': return 'milestone';
+      case 'planning': return 'planning';
+      default: return 'default';
     }
+  };
+
+  const getEventsForDate = (date: Date) => {
+    return timelineEvents.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate.toDateString() === date.toDateString();
+    });
   };
 
   return (
@@ -123,7 +146,7 @@ export default function TimelinePage() {
                 : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
             }`}
           >
-            <Calendar size={20} />
+            <CalendarIcon size={20} />
             <span>Calendar</span>
           </button>
           <button
@@ -139,128 +162,37 @@ export default function TimelinePage() {
           </button>
         </motion.div>
 
-        {/* Tab Content */}
-        {activeTab === 'timeline' && (
-          <div className="relative">
-            {/* Timeline Line */}
-            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary to-secondary"></div>
-            
-            {/* Timeline Events */}
-            <div className="space-y-8">
-            {timelineEvents.map((event, index) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="relative flex items-center gap-6"
-              >
-                {/* Timeline Dot */}
-                <div className="relative">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    selectedEvent === event.id
-                      ? 'bg-primary ring-4 ring-primary/30'
-                      : 'bg-surface'
-                  }`}>
-                    <div className="text-2xl">{getCategoryIcon(event.category)}</div>
-                  </div>
-                  {index < timelineEvents.length - 1 && (
-                    <div className="absolute top-16 left-8 w-0.5 h-8 bg-gradient-to-b from-primary to-secondary"></div>
-                  )}
-                </div>
+        <AnimatePresence mode="wait">
+          {activeTab === 'timeline' && (
+            <TimelineView
+              events={timelineEvents}
+              selectedEvent={selectedEvent}
+              onSelectEvent={setSelectedEvent}
+              getStatusColor={getStatusColor}
+            />
+          )}
 
-                {/* Event Card */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 + 0.2 }}
-                  className={`flex-1 glass-card p-6 cursor-pointer hover:scale-105 transition-transform ${
-                    selectedEvent === event.id ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => setSelectedEvent(event.id)}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-text-primary">{event.title}</h3>
-                      <div className="flex items-center gap-3 text-sm">
-                        <span className="text-muted">{event.date}</span>
-                        <span className="text-muted">{event.time}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-gold"><Star size={20} /></div>
-                  </div>
-                  
-                  <p className="text-text-muted mb-4">{event.description}</p>
-                  
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-muted"><MapPin size={16} className="mr-1" />{event.location}</span>
-                    <button className="btn-secondary btn-sm">
-                      View Details
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-        )}
+          {activeTab === 'calendar' && (
+            <CalendarView
+              events={timelineEvents}
+              calendarView={calendarView}
+              setCalendarView={setCalendarView}
+              currentDate={currentDate}
+              setCurrentDate={setCurrentDate}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              getStatusColor={getStatusColor}
+              getEventsForDate={getEventsForDate}
+            />
+          )}
 
-        {activeTab === 'calendar' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="glass-card p-8 min-h-[400px]"
-          >
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center mb-4">
-                <Calendar size={40} className="text-text-muted" />
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Calendar View</h3>
-              <p className="text-text-muted max-w-md">
-                Calendar view coming soon. This will display all your wedding events in a monthly/weekly calendar format.
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'checklist' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-4"
-          >
-            {timelineEvents.map((event, index) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="flex items-center gap-4 p-4 glass-card hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={event.status === 'completed'}
-                  className="w-5 h-5 rounded border-white/20 bg-surface text-primary focus:ring-primary"
-                  readOnly
-                />
-                <div className="flex-1">
-                  <h4 className={`font-medium ${event.status === 'completed' ? 'text-text-muted line-through' : 'text-text-primary'}`}>
-                    {event.title}
-                  </h4>
-                  <p className="text-sm text-text-muted">{event.date} · {event.location}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                  {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                </span>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+          {activeTab === 'checklist' && (
+            <ChecklistView
+              events={timelineEvents}
+              getStatusColor={getStatusColor}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
