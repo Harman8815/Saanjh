@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, CheckSquare, Calendar, Star, MapPin } from 'lucide-react';
+import { Target, CheckSquare, Calendar, Star, MapPin, Clock, ListTodo } from 'lucide-react';
 
 export default function TimelinePage() {
+  const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('timeline');
   const [selectedEvent, setSelectedEvent] = useState(1);
 
   // TODO: Fetch timeline events from API
@@ -96,13 +97,56 @@ export default function TimelinePage() {
           </p>
         </motion.div>
 
-        {/* Timeline */}
-        <div className="relative">
-          {/* Timeline Line */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary to-secondary"></div>
-          
-          {/* Timeline Events */}
-          <div className="space-y-8">
+        {/* Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex gap-2 mb-8"
+        >
+          <button
+            onClick={() => setActiveTab('timeline')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'timeline'
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <Clock size={20} />
+            <span>Timeline</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('calendar')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'calendar'
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <Calendar size={20} />
+            <span>Calendar</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('checklist')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              activeTab === 'checklist'
+                ? 'bg-primary text-white'
+                : 'bg-surface border border-white/10 text-text-secondary hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <ListTodo size={20} />
+            <span>Checklist</span>
+          </button>
+        </motion.div>
+
+        {/* Tab Content */}
+        {activeTab === 'timeline' && (
+          <div className="relative">
+            {/* Timeline Line */}
+            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary to-secondary"></div>
+            
+            {/* Timeline Events */}
+            <div className="space-y-8">
             {timelineEvents.map((event, index) => (
               <motion.div
                 key={event.id}
@@ -162,12 +206,61 @@ export default function TimelinePage() {
             ))}
           </div>
         </div>
+        )}
 
-        {/* TODO: Add event creation */}
-        {/* TODO: Add calendar view */}
-        {/* TODO: Add task integration */}
-        {/* TODO: Add reminder notifications */}
-        {/* TODO: Add photo upload for events */}
+        {activeTab === 'calendar' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="glass-card p-8 min-h-[400px]"
+          >
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center mb-4">
+                <Calendar size={40} className="text-text-muted" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2">Calendar View</h3>
+              <p className="text-text-muted max-w-md">
+                Calendar view coming soon. This will display all your wedding events in a monthly/weekly calendar format.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'checklist' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-4"
+          >
+            {timelineEvents.map((event, index) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="flex items-center gap-4 p-4 glass-card hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={event.status === 'completed'}
+                  className="w-5 h-5 rounded border-white/20 bg-surface text-primary focus:ring-primary"
+                  readOnly
+                />
+                <div className="flex-1">
+                  <h4 className={`font-medium ${event.status === 'completed' ? 'text-text-muted line-through' : 'text-text-primary'}`}>
+                    {event.title}
+                  </h4>
+                  <p className="text-sm text-text-muted">{event.date} · {event.location}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+                  {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
     </div>
   );
