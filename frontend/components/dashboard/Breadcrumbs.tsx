@@ -22,10 +22,10 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   ];
 
   return (
-    <nav className="flex items-center space-x-2 text-sm text-text-muted mb-6 h-8">
-      <Link 
+    <nav className="flex items-center  space-x-2 text-sm text-text-muted h-10">
+      <Link
         href="/dashboard"
-        className="flex items-center gap-2 px-3 py-2 bg-surface border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-white/10 rounded-lg hover:bg-white/5 transition-colors h-10"
       >
         <Home size={16} />
         <span>Dashboard</span>
@@ -35,9 +35,9 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
         <div key={item.label} className="flex items-center gap-2">
           <ChevronLeft size={16} />
           {item.href ? (
-            <Link 
+            <Link
               href={item.href}
-              className={`px-3 py-2 h-8 rounded-lg transition-colors flex items-center ${
+              className={`px-3 py-1.5 h-10 rounded-lg transition-colors flex items-center ${
                 pathname === item.href
                   ? 'bg-primary text-white'
                   : 'bg-surface border border-white/10 hover:bg-white/5'
@@ -46,7 +46,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
               {item.label}
             </Link>
           ) : (
-            <span className="px-3 py-2 h-8 bg-surface border border-white/10 rounded-lg flex items-center">
+            <span className="px-3 py-1.5 h-10 bg-surface border border-white/10 rounded-lg flex items-center">
               {item.label}
             </span>
           )}

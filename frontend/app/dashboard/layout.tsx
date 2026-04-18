@@ -62,21 +62,23 @@ export default function DashboardLayout({
       
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 overflow-x-hidden ${isSidebarCollapsed ? 'md:ml-20 ml-0' : 'md:ml-64 ml-0'}`}>
-        <div className={`container mx-auto px-4 py-8 transition-all duration-300 ${
-          isSidebarCollapsed ? 'max-w-full' : 'max-w-[calc(100vw-16rem)]'
-        }`}>
+        <div className={`w-full px-4 py-8 transition-all duration-300`}>
           {/* Breadcrumbs and Back Button */}
           {pathname !== '/dashboard' && (
-            <div className="flex items-center justify-between mb-6">
-              <Breadcrumbs items={getBreadcrumbItems()} />
-              <button
-                onClick={goBack}
-                className="flex items-center gap-2 px-4 py-2 bg-surface border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
-                title="Go back to dashboard"
-              >
-                <ChevronLeft size={16} />
-                <span>Back</span>
-              </button>
+            <div className="flex flex-row justify-between mb-6 w-full">
+              <div className="flex ">
+                <Breadcrumbs items={getBreadcrumbItems()} />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={goBack}
+                  className="flex items-center gap-2 px-4 py-1 bg-surface border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+                  title="Go back to dashboard"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Back</span>
+                </button>
+              </div>
             </div>
           )}
           
