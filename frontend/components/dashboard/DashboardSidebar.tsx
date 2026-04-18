@@ -49,12 +49,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Calendar,
     label: 'Timeline',
     href: '/dashboard/timeline',
-    subItems: [
-      { label: 'Wedding Day', href: '/dashboard/timeline/wedding' },
-      { label: 'Engagement', href: '/dashboard/timeline/engagement' },
-      { label: 'Rehearsal', href: '/dashboard/timeline/rehearsal' },
-      { label: 'Showers', href: '/dashboard/timeline/showers' },
-    ],
   },
   {
     icon: Building,
