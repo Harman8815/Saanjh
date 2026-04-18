@@ -1,6 +1,7 @@
 'use client';
 
-import { useLoading } from "../hooks/useLoading";
+import { usePathname } from 'next/navigation';
+import { useLoading } from "../../hooks/useLoading";
 import LoadingAnimation from "./LoadingAnimation";
 
 interface LayoutWrapperProps {
@@ -8,7 +9,14 @@ interface LayoutWrapperProps {
 }
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
+  const pathname = usePathname();
+  const isDashboardPage = pathname?.startsWith('/dashboard');
   const { isLoading } = useLoading(2500);
+
+  // Skip loading animation for dashboard pages (they have their own skeleton loading)
+  if (isDashboardPage) {
+    return <main className="flex-1">{children}</main>;
+  }
 
   return (
     <>

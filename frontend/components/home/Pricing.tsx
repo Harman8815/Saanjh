@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import TraditionalWeddingCard from './TraditionalWeddingCard';
+import TraditionalWeddingCard from '../ui/TraditionalWeddingCard';
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');

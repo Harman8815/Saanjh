@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import LuxuryWeddingCard from './LuxuryWeddingCard';
+import LuxuryWeddingCard from '../ui/LuxuryWeddingCard';
 
 export default function Testimonials() {
   const testimonials = [
@@ -82,7 +82,7 @@ export default function Testimonials() {
             className="mb-8"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
-              <span className="text-glow">Love Stories We've Helped Create</span>
+              <span className="text-glow">Love Stories We&apos;ve Helped Create</span>
             </h2>
             <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
               Join thousands of happy couples who started their forever with our intelligent wedding platform

@@ -1,42 +1,56 @@
+'use client';
+
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import LayoutWrapper from "../components/LayoutWrapper";
-// import CustomCursor from '../components/CustomCursor'; // Commented out - using default cursor
+import { usePathname } from "next/navigation";
+import Navbar from "../components/common/Navbar";
+import Footer from "../components/common/Footer";
+import LayoutWrapper from "../components/common/LayoutWrapper";
+import { metadata } from "./metadata";
+// import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Primary font for data-heavy sections - clean, modern, highly readable
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Secondary font for wedding/emotional content - elegant, romantic, expressive
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Perfect Proposal - AI-Powered Wedding Proposal Generator",
-  description: "Create unforgettable wedding proposals with our AI-powered generator. Make your special moment truly magical and personalized.",
-};
+// Neutral fallback font for UI elements - simple, consistent
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
         <LayoutWrapper>
-          <Navbar />
+          {isHomePage && <Navbar />}
           {children}
-          <Footer />
+          {isHomePage && <Footer />}
         </LayoutWrapper>
       </body>
     </html>

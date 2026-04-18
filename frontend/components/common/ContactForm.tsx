@@ -52,8 +52,8 @@ export default function ContactForm() {
               <span className="text-glow">Thank You for Reaching Out!</span>
             </h2>
             <p className="text-xl text-text-muted mb-8 leading-relaxed">
-              We've received your message and will get back to you within 24 hours. 
-              We're excited to help you create the perfect wedding!
+              We&apos;ve received your message and will get back to you within 24 hours. 
+              We&apos;re excited to help you create the perfect wedding!
             </p>
             <button
               onClick={() => setIsSubmitted(false)}
@@ -72,10 +72,10 @@ export default function ContactForm() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
-            <span className="text-glow">Let's Create Your Perfect Wedding</span>
+            <span className="text-glow">Let&apos;s Create Your Perfect Wedding</span>
           </h2>
           <p className="text-xl text-text-muted max-w-3xl mx-auto leading-relaxed">
-            Have questions? Need personalized advice? We're here to help make your dream wedding a reality.
+            Have questions? Need personalized advice? We&apos;re here to help make your dream wedding a reality.
           </p>
         </div>
 
