@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Target, CheckSquare, Calendar, Star, MapPin, Clock, ListTodo } from 'lucide-react';
 
 export default function TimelinePage() {
-  const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('calendar');
   const [selectedEvent, setSelectedEvent] = useState(1);
 
   // TODO: Fetch timeline events from API
@@ -102,7 +102,7 @@ export default function TimelinePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex gap-2 mb-8"
+          className="flex justify-center gap-2 mb-8"
         >
           <button
             onClick={() => setActiveTab('timeline')}
