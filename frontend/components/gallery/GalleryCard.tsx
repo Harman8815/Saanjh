@@ -1,7 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Heart, Calendar, Camera, Video, Image as ImageIcon, MoreVertical } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Calendar, Camera, Video, Image as ImageIcon, MoreVertical, Edit3, Trash2, FolderOpen, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 interface GalleryCardProps {
@@ -19,9 +20,32 @@ interface GalleryCardProps {
   };
   viewMode?: 'grid' | 'list';
   index?: number;
+  onEdit?: (album: any) => void;
+  onRename?: (album: any) => void;
+  onDelete?: (album: any) => void;
+  onManageMedia?: (album: any) => void;
 }
 
-export default function GalleryCard({ album, viewMode = 'grid', index = 0 }: GalleryCardProps) {
+export default function GalleryCard({ 
+  album, 
+  viewMode = 'grid', 
+  index = 0, 
+  onEdit, 
+  onRename, 
+  onDelete, 
+  onManageMedia 
+}: GalleryCardProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => setShowDropdown(false);
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showDropdown]);
+
   const cardContent = (
     <div className="glass-card h-full overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
       {/* Cover Image */}
@@ -73,12 +97,98 @@ export default function GalleryCard({ album, viewMode = 'grid', index = 0 }: Gal
               {album.description}
             </p>
           </div>
-          {viewMode === 'list' && (
-            <button className="text-text-muted hover:text-text-primary transition-colors p-1">
-              <MoreVertical size={18} />
-            </button>
-          )}
-        </div>
+            
+            {/* Actions Dropdown */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDropdown(!showDropdown);
+                }}
+                className="text-text-muted hover:text-text-primary transition-colors p-1 rounded-lg hover:bg-white/5"
+              >
+                <MoreVertical size={18} />
+              </button>
+              
+              <AnimatePresence>
+                {showDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-48 bg-surface border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="py-1">
+                      {onManageMedia && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowDropdown(false);
+                            onManageMedia(album);
+                          }}
+                          className="w-full px-4 py-2 text-left text-text-primary hover:bg-white/5 transition-colors flex items-center gap-3"
+                        >
+                          <FolderOpen size={16} />
+                          Manage Media
+                        </button>
+                      )}
+                      
+                      {onEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowDropdown(false);
+                            onEdit(album);
+                          }}
+                          className="w-full px-4 py-2 text-left text-text-primary hover:bg-white/5 transition-colors flex items-center gap-3"
+                        >
+                          <Edit3 size={16} />
+                          Edit Details
+                        </button>
+                      )}
+                      
+                      {onRename && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowDropdown(false);
+                            onRename(album);
+                          }}
+                          className="w-full px-4 py-2 text-left text-text-primary hover:bg-white/5 transition-colors flex items-center gap-3"
+                        >
+                          <Settings size={16} />
+                          Rename Album
+                        </button>
+                      )}
+                      
+                      <div className="border-t border-white/10 my-1"></div>
+                      
+                      {onDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowDropdown(false);
+                            onDelete(album);
+                          }}
+                          className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-3"
+                        >
+                          <Trash2 size={16} />
+                          Delete Album
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
 
         {/* Date and Event */}
         <div className="flex items-center gap-3 text-text-muted text-sm mb-3">
