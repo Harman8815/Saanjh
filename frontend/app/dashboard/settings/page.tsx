@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Palette, 
   Globe, 
@@ -16,7 +16,10 @@ import {
   Database,
   Download,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Check,
+  X,
+  Info
 } from 'lucide-react';
 import { useThemeSystem } from '../../../hooks/useTheme';
 import { useLocalizationSystem } from '../../../hooks/useLocalization';
@@ -40,6 +43,13 @@ interface SettingItem {
   action?: () => void;
 }
 
+interface SettingChange {
+  id: string;
+  oldValue: any;
+  newValue: any;
+  timestamp: number;
+}
+
 const settingsSections: SettingSection[] = [
   {
     id: 'appearance',
@@ -50,21 +60,21 @@ const settingsSections: SettingSection[] = [
       {
         id: 'theme',
         label: 'Theme',
-        description: 'Choose your preferred color scheme',
+        description: 'Choose your preferred color scheme. Changes apply instantly.',
         type: 'theme-selector',
         defaultValue: 'light'
       },
       {
         id: 'animations',
         label: 'Animations',
-        description: 'Enable smooth transitions and micro-interactions',
+        description: 'Enable smooth transitions and micro-interactions for better visual feedback.',
         type: 'toggle',
         defaultValue: true
       },
       {
         id: 'compact-mode',
         label: 'Compact Mode',
-        description: 'Reduce spacing and padding for a denser layout',
+        description: 'Reduce spacing and padding for a denser layout. Useful for smaller screens.',
         type: 'toggle',
         defaultValue: false
       }
@@ -79,21 +89,21 @@ const settingsSections: SettingSection[] = [
       {
         id: 'notifications',
         label: 'Push Notifications',
-        description: 'Receive notifications about important updates',
+        description: 'Receive notifications about important updates and deadlines.',
         type: 'toggle',
         defaultValue: true
       },
       {
         id: 'email-updates',
         label: 'Email Updates',
-        description: 'Get weekly summaries and important announcements',
+        description: 'Get weekly summaries and important announcements via email.',
         type: 'toggle',
         defaultValue: false
       },
       {
         id: 'default-view',
         label: 'Default Dashboard View',
-        description: 'Choose which view loads first',
+        description: 'Choose which view loads first when you open the dashboard.',
         type: 'select',
         defaultValue: 'table',
         options: [
@@ -113,7 +123,7 @@ const settingsSections: SettingSection[] = [
       {
         id: 'language',
         label: 'Language',
-        description: 'Choose your preferred language',
+        description: 'Choose your preferred language for the interface.',
         type: 'select',
         defaultValue: 'en',
         options: [
@@ -124,7 +134,7 @@ const settingsSections: SettingSection[] = [
       {
         id: 'currency',
         label: 'Currency',
-        description: 'Select your preferred currency for display',
+        description: 'Select your preferred currency for displaying prices and budgets.',
         type: 'select',
         defaultValue: 'INR',
         options: [
@@ -136,7 +146,7 @@ const settingsSections: SettingSection[] = [
       {
         id: 'timezone',
         label: 'Timezone',
-        description: 'Set your local timezone',
+        description: 'Set your local timezone for accurate time display.',
         type: 'select',
         defaultValue: 'utc',
         options: [
@@ -150,7 +160,7 @@ const settingsSections: SettingSection[] = [
       {
         id: 'date-format',
         label: 'Date Format',
-        description: 'Choose how dates are displayed',
+        description: 'Choose how dates are displayed throughout the application.',
         type: 'select',
         defaultValue: 'mdy',
         options: [
@@ -170,28 +180,28 @@ const settingsSections: SettingSection[] = [
       {
         id: 'auto-save',
         label: 'Auto-save',
-        description: 'Automatically save changes every 30 seconds',
+        description: 'Automatically save changes every 30 seconds to prevent data loss.',
         type: 'toggle',
         defaultValue: true
       },
       {
         id: 'cache',
         label: 'Clear Cache',
-        description: 'Remove temporary files and cached data',
+        description: 'Remove temporary files and cached data to free up storage space.',
         type: 'button',
         action: () => console.log('Clear cache clicked')
       },
       {
         id: 'export-data',
         label: 'Export Data',
-        description: 'Download all your wedding planning data',
+        description: 'Download all your wedding planning data as a backup file.',
         type: 'button',
         action: () => console.log('Export data clicked')
       },
       {
         id: 'reset-settings',
         label: 'Reset Settings',
-        description: 'Restore all settings to default values',
+        description: 'Restore all settings to their default values. This action cannot be undone.',
         type: 'button',
         action: () => console.log('Reset settings clicked')
       }
@@ -235,11 +245,130 @@ export default function SettingsPage() {
     return initialSettings;
   });
 
+  // State for tracking setting changes and feedback
+  const [recentChanges, setRecentChanges] = useState<SettingChange[]>([]);
+  const [highlightedSettings, setHighlightedSettings] = useState<Set<string>>(new Set());
+  const [showFeedback, setShowFeedback] = useState<Record<string, boolean>>({});
+
   const updateLocalSetting = (settingId: string, value: any) => {
+    const oldValue = localSettings[settingId];
     setLocalSettings((prev: Record<string, any>) => ({
       ...prev,
       [settingId]: value
     }));
+
+    // Track the change for feedback
+    const change: SettingChange = {
+      id: settingId,
+      oldValue,
+      newValue: value,
+      timestamp: Date.now()
+    };
+    
+    setRecentChanges(prev => [change, ...prev.slice(0, 4)]); // Keep last 5 changes
+    setHighlightedSettings(prev => new Set([...prev, settingId]));
+    setShowFeedback(prev => ({ ...prev, [settingId]: true }));
+
+    // Clear highlight after 2 seconds
+    setTimeout(() => {
+      setHighlightedSettings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(settingId);
+        return newSet;
+      });
+    }, 2000);
+
+    // Clear feedback after 1 second
+    setTimeout(() => {
+      setShowFeedback(prev => ({ ...prev, [settingId]: false }));
+    }, 1000);
+  };
+
+  // Reset section to defaults
+  const resetSectionToDefaults = (sectionId: string) => {
+    const section = settingsSections.find(s => s.id === sectionId);
+    if (!section) return;
+
+    section.items.forEach(item => {
+      if (item.defaultValue !== undefined) {
+        if (item.id === 'theme') {
+          setTheme(item.defaultValue);
+        } else if (item.id === 'animations') {
+          setAnimations(item.defaultValue);
+        } else if (item.id === 'language') {
+          setLanguage(item.defaultValue);
+        } else if (item.id === 'currency') {
+          setCurrency(item.defaultValue);
+        } else {
+          updateLocalSetting(item.id, item.defaultValue);
+        }
+      }
+    });
+  };
+
+  // Handle instant apply for theme and localization
+  const handleThemeChange = (themeId: string) => {
+    setTheme(themeId);
+    setHighlightedSettings(prev => new Set([...prev, 'theme']));
+    setShowFeedback(prev => ({ ...prev, theme: true }));
+    setTimeout(() => {
+      setHighlightedSettings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('theme');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback(prev => ({ ...prev, theme: false }));
+    }, 1000);
+  };
+
+  const handleLanguageChange = (languageCode: string) => {
+    setLanguage(languageCode);
+    setHighlightedSettings(prev => new Set([...prev, 'language']));
+    setShowFeedback(prev => ({ ...prev, language: true }));
+    setTimeout(() => {
+      setHighlightedSettings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('language');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback(prev => ({ ...prev, language: false }));
+    }, 1000);
+  };
+
+  const handleCurrencyChange = (currencyCode: string) => {
+    setCurrency(currencyCode);
+    setHighlightedSettings(prev => new Set([...prev, 'currency']));
+    setShowFeedback(prev => ({ ...prev, currency: true }));
+    setTimeout(() => {
+      setHighlightedSettings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('currency');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback(prev => ({ ...prev, currency: false }));
+    }, 1000);
+  };
+
+  const handleAnimationToggle = () => {
+    toggleAnimations();
+    setHighlightedSettings(prev => new Set([...prev, 'animations']));
+    setShowFeedback(prev => ({ ...prev, animations: true }));
+    setTimeout(() => {
+      setHighlightedSettings(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('animations');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback(prev => ({ ...prev, animations: false }));
+    }, 1000);
   };
 
   const getSettingValue = (settingId: string, defaultValue?: any) => {
@@ -250,40 +379,84 @@ export default function SettingsPage() {
     return localSettings[settingId] ?? defaultValue;
   };
 
-  const ToggleSwitch = ({ checked, onChange, id }: { checked: boolean; onChange: (value: boolean) => void; id: string }) => (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        checked ? 'bg-primary' : 'bg-surface'
-      }`}
-      id={id}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-6' : 'translate-x-1'
+  const ToggleSwitch = ({ checked, onChange, id, isHighlighted }: { 
+    checked: boolean; 
+    onChange: (value: boolean) => void; 
+    id: string;
+    isHighlighted?: boolean;
+  }) => (
+    <div className="relative">
+      <AnimatePresence>
+        {showFeedback[id] && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute -top-8 left-0 bg-primary text-white text-xs px-2 py-1 rounded-md z-10"
+          >
+            Updated!
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.button
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
+          checked ? 'bg-primary' : 'bg-surface'
+        } ${
+          isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : ''
         }`}
-      />
-    </button>
+        id={id}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <motion.span
+          className="inline-block h-4 w-4 transform rounded-full bg-white shadow-md"
+          animate={{
+            x: checked ? 24 : 4
+          }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+      </motion.button>
+    </div>
   );
 
-  const SelectDropdown = ({ value, onChange, options, id }: {
+  const SelectDropdown = ({ value, onChange, options, id, isHighlighted }: {
     value: string;
     onChange: (value: string) => void;
     options: { label: string; value: string }[];
     id: string;
+    isHighlighted?: boolean;
   }) => (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      id={id}
-      className="bg-surface border border-white/20 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-    >
-      {options.map(option => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <div className="relative">
+      <AnimatePresence>
+        {showFeedback[id] && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute -top-8 left-0 bg-primary text-white text-xs px-2 py-1 rounded-md z-10"
+          >
+            Updated!
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        id={id}
+        className={`bg-surface border border-white/20 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ${
+          isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : ''
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileFocus={{ scale: 1.02 }}
+      >
+        {options.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </motion.select>
+    </div>
   );
 
   const ActionButton = ({ onClick, label, variant = 'secondary', id }: {
@@ -310,39 +483,59 @@ export default function SettingsPage() {
     );
   };
 
-  const ThemeSelector = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {availableThemes.map((theme) => (
-        <motion.button
-          key={theme.id}
-          onClick={() => onChange(theme.id)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 ${
-            value === theme.id
-              ? 'border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50'
-              : 'border-white/20 hover:border-white/40'
-          }`}
-        >
-          <div className={`h-24 ${theme.preview.bg} relative`}>
-            <div className={`absolute top-2 left-2 w-8 h-8 ${theme.preview.card} rounded-lg shadow-sm`}></div>
-            <div className={`absolute top-2 right-2 w-6 h-6 ${theme.preview.primary} rounded-full shadow-sm`}></div>
-            <div className={`absolute bottom-2 left-2 w-12 h-2 ${theme.preview.accent} rounded-full shadow-sm`}></div>
-            {value === theme.id && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute top-1 right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center"
-              >
-                <span className="text-white text-xs">✓</span>
-              </motion.div>
-            )}
-          </div>
-          <div className="p-2 bg-surface/50 backdrop-blur-sm">
-            <p className="text-xs font-medium text-text-primary truncate">{theme.name}</p>
-          </div>
-        </motion.button>
-      ))}
+  const ThemeSelector = ({ value, onChange, isHighlighted }: { 
+    value: string; 
+    onChange: (value: string) => void;
+    isHighlighted?: boolean;
+  }) => (
+    <div className="relative">
+      <AnimatePresence>
+        {showFeedback['theme'] && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute -top-8 left-0 bg-primary text-white text-xs px-2 py-1 rounded-md z-10"
+          >
+            Theme Updated!
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 ${
+        isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background rounded-xl p-2' : ''
+      }`}>
+        {availableThemes.map((theme) => (
+          <motion.button
+            key={theme.id}
+            onClick={() => onChange(theme.id)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+              value === theme.id
+                ? 'border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50'
+                : 'border-white/20 hover:border-white/40'
+            }`}
+          >
+            <div className={`h-24 ${theme.preview.bg} relative`}>
+              <div className={`absolute top-2 left-2 w-8 h-8 ${theme.preview.card} rounded-lg shadow-sm`}></div>
+              <div className={`absolute top-2 right-2 w-6 h-6 ${theme.preview.primary} rounded-full shadow-sm`}></div>
+              <div className={`absolute bottom-2 left-2 w-12 h-2 ${theme.preview.accent} rounded-full shadow-sm`}></div>
+              {value === theme.id && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-1 right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center"
+                >
+                  <Check size={10} className="text-white" />
+                </motion.div>
+              )}
+            </div>
+            <div className="p-2 bg-surface/50 backdrop-blur-sm">
+              <p className="text-xs font-medium text-text-primary truncate">{theme.name}</p>
+            </div>
+          </motion.button>
+        ))}
+      </div>
     </div>
   );
 
@@ -362,12 +555,23 @@ export default function SettingsPage() {
             transition={{ duration: 0.5, delay: sectionIndex * 0.1 }}
             className="glass-card p-6 rounded-xl"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <section.icon size={24} className="text-primary" />
-              <div>
-                <h2 className="text-xl font-semibold text-text-primary">{section.title}</h2>
-                <p className="text-text-secondary text-sm">{section.description}</p>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <section.icon size={24} className="text-primary" />
+                <div>
+                  <h2 className="text-xl font-semibold text-text-primary">{section.title}</h2>
+                  <p className="text-text-secondary text-sm">{section.description}</p>
+                </div>
               </div>
+              <motion.button
+                onClick={() => resetSectionToDefaults(section.id)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-surface/50 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <RefreshCw size={14} />
+                Reset to Default
+              </motion.button>
             </div>
 
             <div className="space-y-6">
@@ -400,12 +604,13 @@ export default function SettingsPage() {
                         checked={getSettingValue(item.id, item.defaultValue)}
                         onChange={(value) => {
                           if (item.id === 'animations') {
-                            toggleAnimations();
+                            handleAnimationToggle();
                           } else {
                             updateLocalSetting(item.id, value);
                           }
                         }}
                         id={item.id}
+                        isHighlighted={highlightedSettings.has(item.id)}
                       />
                     )}
                     {item.type === 'select' && item.options && (
@@ -413,21 +618,23 @@ export default function SettingsPage() {
                         value={getSettingValue(item.id, item.defaultValue) || ''}
                         onChange={(value) => {
                           if (item.id === 'language') {
-                            setLanguage(value);
+                            handleLanguageChange(value);
                           } else if (item.id === 'currency') {
-                            setCurrency(value);
+                            handleCurrencyChange(value);
                           } else {
                             updateLocalSetting(item.id, value);
                           }
                         }}
                         options={item.options}
                         id={item.id}
+                        isHighlighted={highlightedSettings.has(item.id)}
                       />
                     )}
                     {item.type === 'theme-selector' && (
                       <ThemeSelector
                         value={getSettingValue(item.id, item.defaultValue) || 'light'}
-                        onChange={(value) => setTheme(value)}
+                        onChange={handleThemeChange}
+                        isHighlighted={highlightedSettings.has(item.id)}
                       />
                     )}
                     {item.type === 'button' && (

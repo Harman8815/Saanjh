@@ -23,6 +23,25 @@ export interface Theme {
 
 export const themes: Theme[] = [
   {
+    id: 'system',
+    name: 'System Default',
+    description: 'Follows your system preference (light/dark)',
+    colors: {
+      primary: '#3b82f6',
+      secondary: '#6366f1',
+      background: '#ffffff',
+      surface: '#f8fafc',
+      text: '#1e293b',
+      accent: '#0ea5e9'
+    },
+    preview: {
+      bg: 'bg-gradient-to-br from-blue-50 to-indigo-50',
+      card: 'bg-white/90',
+      primary: 'bg-gradient-to-r from-blue-500 to-indigo-500',
+      accent: 'bg-sky-400'
+    }
+  },
+  {
     id: 'dark',
     name: 'Dark',
     description: 'Elegant dark theme with subtle accents',
@@ -129,8 +148,16 @@ interface ThemeState {
   resetToDefaults: () => void;
 }
 
-const defaultTheme = 'light';
+const defaultTheme = 'system';
 const defaultAnimations = true;
+
+// Function to detect system theme preference
+const getSystemTheme = (): string => {
+  if (typeof window !== 'undefined') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return 'light';
+};
 
 export const useThemeStore = create<ThemeState>()(
   persist(
@@ -142,7 +169,16 @@ export const useThemeStore = create<ThemeState>()(
         const theme = themes.find(t => t.id === themeId);
         if (theme) {
           set({ currentTheme: themeId });
-          applyThemeToDOM(theme.colors);
+          // If system default, apply the actual system theme
+          if (themeId === 'system') {
+            const systemThemeId = getSystemTheme();
+            const systemTheme = themes.find(t => t.id === systemThemeId);
+            if (systemTheme) {
+              applyThemeToDOM(systemTheme.colors);
+            }
+          } else {
+            applyThemeToDOM(theme.colors);
+          }
         }
       },
 
@@ -158,14 +194,26 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       getThemeColors: () => {
-        const theme = themes.find(t => t.id === get().currentTheme);
+        const currentThemeId = get().currentTheme;
+        // If system default, get the actual system theme colors
+        const actualThemeId = currentThemeId === 'system' ? getSystemTheme() : currentThemeId;
+        const theme = themes.find(t => t.id === actualThemeId);
         return theme?.colors || themes[0].colors;
       },
 
       resetToDefaults: () => {
         set({ currentTheme: defaultTheme, animationsEnabled: defaultAnimations });
-        const defaultThemeColors = themes.find(t => t.id === defaultTheme)?.colors || themes[0].colors;
-        applyThemeToDOM(defaultThemeColors);
+        // Apply system theme if default is system
+        if (defaultTheme === 'system') {
+          const systemThemeId = getSystemTheme();
+          const systemTheme = themes.find(t => t.id === systemThemeId);
+          if (systemTheme) {
+            applyThemeToDOM(systemTheme.colors);
+          }
+        } else {
+          const defaultThemeColors = themes.find(t => t.id === defaultTheme)?.colors || themes[0].colors;
+          applyThemeToDOM(defaultThemeColors);
+        }
         applyAnimationsToDOM(defaultAnimations);
       },
     }),
@@ -174,9 +222,18 @@ export const useThemeStore = create<ThemeState>()(
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          const theme = themes.find(t => t.id === state.currentTheme);
-          if (theme) {
-            applyThemeToDOM(theme.colors);
+          // If system default, apply the actual system theme
+          if (state.currentTheme === 'system') {
+            const systemThemeId = getSystemTheme();
+            const systemTheme = themes.find(t => t.id === systemThemeId);
+            if (systemTheme) {
+              applyThemeToDOM(systemTheme.colors);
+            }
+          } else {
+            const theme = themes.find(t => t.id === state.currentTheme);
+            if (theme) {
+              applyThemeToDOM(theme.colors);
+            }
           }
           applyAnimationsToDOM(state.animationsEnabled);
         }
