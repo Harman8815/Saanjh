@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Eye, Palette, Share2, Download, Mail, MessageCircle, Check } from 'lucide-react';
 import { useAppStore } from '../../../store/useAppStore';
 import TemplateCard from '../../../components/invitation-builder/TemplateCard';
+import SharingPanel from '../../../components/invitation-builder/SharingPanel';
 
 interface Template {
   id: string;
@@ -49,6 +50,7 @@ const templates: Template[] = [
 export default function InvitationBuilderPage() {
   const { wedding, setWedding } = useAppStore();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(wedding?.selectedTemplate || '');
+  const [showSharingPanel, setShowSharingPanel] = useState(false);
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -56,6 +58,10 @@ export default function InvitationBuilderPage() {
       ...wedding,
       selectedTemplate: templateId
     });
+  };
+
+  const handleShare = () => {
+    setShowSharingPanel(true);
   };
   return (
     <div className="container mx-auto px-4 py-8">
@@ -189,19 +195,22 @@ export default function InvitationBuilderPage() {
               
               {/* Share Options */}
               <div className="space-y-4">
+                <button 
+                  onClick={handleShare}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg transition-colors text-left"
+                >
+                  <Share2 className="w-5 h-5 text-primary" />
+                  <div>
+                    <div className="font-medium text-text-primary">Generate Link & QR Code</div>
+                    <div className="text-sm text-text-muted">Create shareable invitation link</div>
+                  </div>
+                </button>
+                
                 <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-left">
                   <Mail className="w-5 h-5 text-primary" />
                   <div>
                     <div className="font-medium text-text-primary">Email Invitations</div>
                     <div className="text-sm text-text-muted">Send directly to guest emails</div>
-                  </div>
-                </button>
-                
-                <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-left">
-                  <MessageCircle className="w-5 h-5 text-primary" />
-                  <div>
-                    <div className="font-medium text-text-primary">Share Link</div>
-                    <div className="text-sm text-text-muted">Get shareable link</div>
                   </div>
                 </button>
                 
@@ -214,12 +223,18 @@ export default function InvitationBuilderPage() {
                 </button>
               </div>
               
-              {/* Placeholder for additional share options */}
-              <div className="mt-6 p-4 bg-white/5 rounded-lg">
-                <p className="text-text-muted text-sm text-center">
-                  More sharing options coming soon
-                </p>
-              </div>
+              {/* Share Status */}
+              {selectedTemplate && (
+                <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-primary" />
+                    <p className="text-sm text-primary font-medium">Ready to Share!</p>
+                  </div>
+                  <p className="text-text-secondary text-sm">
+                    Your invitation is ready. Generate a link to share with your guests.
+                  </p>
+                </div>
+              )}
             </motion.div>
 
             {/* Quick Actions */}
@@ -241,6 +256,19 @@ export default function InvitationBuilderPage() {
             </motion.div>
           </div>
         </div>
+      
+      {/* Sharing Panel */}
+      <SharingPanel
+        isOpen={showSharingPanel}
+        onClose={() => setShowSharingPanel(false)}
+        invitationData={{
+          brideName: wedding?.brideName,
+          groomName: wedding?.groomName,
+          weddingDate: wedding?.weddingDate,
+          venue: wedding?.venue,
+          selectedTemplate: wedding?.selectedTemplate
+        }}
+      />
       </motion.div>
     </div>
   );
