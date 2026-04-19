@@ -197,27 +197,42 @@ export default function InvitationBuilderPage() {
               <div className="space-y-4">
                 <button 
                   onClick={handleShare}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] text-left group"
                 >
-                  <Share2 className="w-5 h-5 text-primary" />
-                  <div>
-                    <div className="font-medium text-text-primary">Generate Link & QR Code</div>
+                  <motion.div
+                    whileHover={{ rotate: 15 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Share2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-200" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <div className="font-medium text-text-primary group-hover:text-primary transition-colors duration-200">Generate Link & QR Code</div>
                     <div className="text-sm text-text-muted">Create shareable invitation link</div>
                   </div>
                 </button>
                 
-                <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-left">
-                  <Mail className="w-5 h-5 text-primary" />
-                  <div>
-                    <div className="font-medium text-text-primary">Email Invitations</div>
+                <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] text-left group">
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Mail className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-200" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <div className="font-medium text-text-primary group-hover:text-primary transition-colors duration-200">Email Invitations</div>
                     <div className="text-sm text-text-muted">Send directly to guest emails</div>
                   </div>
                 </button>
                 
-                <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-left">
-                  <Download className="w-5 h-5 text-primary" />
-                  <div>
-                    <div className="font-medium text-text-primary">Download PDF</div>
+                <button className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] text-left group">
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Download className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-200" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <div className="font-medium text-text-primary group-hover:text-primary transition-colors duration-200">Download PDF</div>
                     <div className="text-sm text-text-muted">Print-ready version</div>
                   </div>
                 </button>
@@ -246,12 +261,20 @@ export default function InvitationBuilderPage() {
             >
               <h3 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
+                >
                   Save Draft
-                </button>
-                <button className="w-full px-4 py-2 bg-white/10 text-text-primary rounded-lg hover:bg-white/20 transition-colors">
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2 bg-white/10 text-text-primary rounded-lg hover:bg-white/20 transition-all duration-200 hover:shadow-md"
+                >
                   Preview Fullscreen
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           </div>

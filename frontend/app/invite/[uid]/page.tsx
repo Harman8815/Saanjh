@@ -195,9 +195,9 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
             ></div>
             
             {/* Names */}
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               <motion.h1 
-                className="text-6xl md:text-7xl tracking-wide leading-tight"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-wide leading-tight"
                 style={{ 
                   color: colors.primary,
                   fontFamily: data.fontFamily || 'serif'
@@ -206,11 +206,11 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                {data.brideName}
+                {data.brideName || 'Bride'}
               </motion.h1>
               
               <motion.div
-                className="text-4xl md:text-5xl font-light tracking-widest"
+                className="text-3xl sm:text-4xl md:text-5xl font-light tracking-widest"
                 style={{ color: colors.secondary }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -220,7 +220,7 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
               </motion.div>
               
               <motion.h1 
-                className="text-6xl md:text-7xl tracking-wide leading-tight"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-wide leading-tight"
                 style={{ 
                   color: colors.primary,
                   fontFamily: data.fontFamily || 'serif'
@@ -229,7 +229,7 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.8 }}
               >
-                {data.groomName}
+                {data.groomName || 'Groom'}
               </motion.h1>
             </div>
 
@@ -686,9 +686,9 @@ const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
               </motion.div>
 
               {/* Names with Glowing Effect */}
-              <div className="space-y-8">
+              <div className="space-y-6 md:space-y-8">
                 <motion.h1 
-                  className="text-7xl md:text-8xl font-bold text-white tracking-tight"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white tracking-tight"
                   initial={{ opacity: 0, x: -100 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 1, delay: 0.3 }}
@@ -707,12 +707,12 @@ const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    {data.brideName}
+                    {data.brideName || 'Bride'}
                   </motion.span>
                 </motion.h1>
 
                 <motion.div
-                  className="text-5xl md:text-6xl text-white/90 font-light tracking-widest"
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white/90 font-light tracking-widest"
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.8, delay: 0.5 }}
@@ -727,7 +727,7 @@ const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
                 </motion.div>
 
                 <motion.h1 
-                  className="text-7xl md:text-8xl font-bold text-white tracking-tight"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white tracking-tight"
                   initial={{ opacity: 0, x: 100 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 1, delay: 0.7 }}
@@ -746,7 +746,7 @@ const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
                     }}
                     transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
                   >
-                    {data.groomName}
+                    {data.groomName || 'Groom'}
                   </motion.span>
                 </motion.h1>
               </div>
@@ -1175,50 +1175,139 @@ export default function InvitationPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-gray-300 border-t-primary rounded-full"
-        />
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center"
+      >
+        <div className="text-center space-y-6">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-gray-200 border-t-primary rounded-full mx-auto"
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-2"
+          >
+            <h3 className="text-lg font-medium text-gray-700">Loading Invitation</h3>
+            <p className="text-sm text-gray-500">Preparing your beautiful wedding invitation...</p>
+          </motion.div>
+          <motion.div
+            className="flex justify-center gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full"
+                animate={{ 
+                  scale: [1, 1.5, 1],
+                  opacity: [0.5, 1, 0.5]
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity, 
+                  ease: "easeInOut",
+                  delay: i * 0.2
+                }}
+              />
+            ))}
+          </motion.div>
+        </div>
+      </motion.div>
     );
   }
 
   if (error || !invitationData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center p-8">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center p-8"
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
         >
-          <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <X className="w-8 h-8 text-red-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Invitation Not Found</h1>
-          <p className="text-gray-600 mb-6">
-            {error || 'The invitation you\'re looking for doesn\'t exist or has been removed.'}
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center"
           >
-            Go Back
-          </button>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, -5, 5, 0]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <X className="w-8 h-8 text-red-500" />
+            </motion.div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="space-y-4"
+          >
+            <h1 className="text-2xl font-bold text-gray-900">Invitation Not Found</h1>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {error || 'The invitation you\'re looking for doesn\'t exist or has been removed.'}
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="space-y-3"
+          >
+            <button
+              onClick={() => window.history.back()}
+              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 hover:shadow-md"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 hover:shadow-md"
+            >
+              Go to Homepage
+            </button>
+          </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
     );
   }
 
-  // Render the appropriate template
-  switch (invitationData.selectedTemplate) {
-    case 'elegant-classic':
-      return <ElegantClassicTemplate data={invitationData} />;
-    case 'modern-animated':
-      return <ModernAnimatedTemplate data={invitationData} />;
-    default:
-      return <ElegantClassicTemplate data={invitationData} />;
-  }
+  // Render the appropriate template with smooth transition
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {invitationData.selectedTemplate === 'elegant-classic' && (
+        <ElegantClassicTemplate data={invitationData} />
+      )}
+      {invitationData.selectedTemplate === 'modern-animated' && (
+        <ModernAnimatedTemplate data={invitationData} />
+      )}
+      {!invitationData.selectedTemplate && (
+        <ElegantClassicTemplate data={invitationData} />
+      )}
+    </motion.div>
+  );
 }
