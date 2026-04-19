@@ -1,0 +1,260 @@
+/* Theme CSS Variables System */
+:root {
+  /* Default theme colors - will be overridden by JavaScript */
+  --color-primary: #3b82f6;
+  --color-secondary: #6366f1;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #1e293b;
+  --color-accent: #0ea5e9;
+
+  /* Semantic color aliases for easier use */
+  --color-primary-rgb: 59, 130, 246;
+  --color-secondary-rgb: 99, 102, 241;
+  --color-background-rgb: 255, 255, 255;
+  --color-surface-rgb: 248, 250, 252;
+  --color-text-rgb: 30, 41, 59;
+  --color-accent-rgb: 14, 165, 233;
+
+  /* Opacity variants */
+  --color-primary-10: rgba(var(--color-primary-rgb), 0.1);
+  --color-primary-20: rgba(var(--color-primary-rgb), 0.2);
+  --color-primary-30: rgba(var(--color-primary-rgb), 0.3);
+  --color-primary-50: rgba(var(--color-primary-rgb), 0.5);
+  --color-primary-80: rgba(var(--color-primary-rgb), 0.8);
+
+  --color-surface-10: rgba(var(--color-surface-rgb), 0.1);
+  --color-surface-20: rgba(var(--color-surface-rgb), 0.2);
+  --color-surface-30: rgba(var(--color-surface-rgb), 0.3);
+  --color-surface-50: rgba(var(--color-surface-rgb), 0.5);
+  --color-surface-80: rgba(var(--color-surface-rgb), 0.8);
+
+  /* Animation settings */
+  --animation-duration-fast: 150ms;
+  --animation-duration-normal: 300ms;
+  --animation-duration-slow: 500ms;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Shadow colors based on theme */
+  --color-shadow: rgba(var(--color-primary-rgb), 0.1);
+  --color-shadow-strong: rgba(var(--color-primary-rgb), 0.25);
+  --color-border: rgba(var(--color-text-rgb), 0.1);
+}
+
+/* Theme-specific overrides */
+[data-theme="dark"] {
+  --color-primary-rgb: 99, 102, 241;
+  --color-secondary-rgb: 139, 92, 246;
+  --color-background-rgb: 15, 23, 42;
+  --color-surface-rgb: 30, 41, 59;
+  --color-text-rgb: 241, 245, 249;
+  --color-accent-rgb: 245, 158, 11;
+}
+
+[data-theme="blue-gradient"] {
+  --color-primary-rgb: 37, 99, 235;
+  --color-secondary-rgb: 59, 130, 246;
+  --color-background-rgb: 240, 249, 255;
+  --color-surface-rgb: 224, 242, 254;
+  --color-text-rgb: 12, 74, 110;
+  --color-accent-rgb: 2, 132, 199;
+}
+
+[data-theme="ivory-gold"] {
+  --color-primary-rgb: 217, 119, 6;
+  --color-secondary-rgb: 245, 158, 11;
+  --color-background-rgb: 254, 252, 232;
+  --color-surface-rgb: 254, 243, 199;
+  --color-text-rgb: 120, 53, 15;
+  --color-accent-rgb: 251, 191, 36;
+}
+
+[data-theme="soft-pastel"] {
+  --color-primary-rgb: 236, 72, 153;
+  --color-secondary-rgb: 244, 114, 182;
+  --color-background-rgb: 253, 242, 248;
+  --color-surface-rgb: 252, 231, 243;
+  --color-text-rgb: 131, 24, 67;
+  --color-accent-rgb: 249, 168, 212;
+}
+
+/* Animation control classes */
+.animations-disabled * {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+.animations-disabled .motion-div,
+.animations-disabled [data-motion="true"] {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color var(--animation-duration-normal) var(--animation-easing),
+              color var(--animation-duration-normal) var(--animation-easing),
+              border-color var(--animation-duration-normal) var(--animation-easing),
+              box-shadow var(--animation-duration-normal) var(--animation-easing);
+}
+
+/* Disable transitions during theme switching to prevent flicker */
+.theme-switching * {
+  transition: none !important;
+}
+
+/* Glass card effect using theme variables */
+.glass-card {
+  background: rgba(var(--color-surface-rgb), 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 12px var(--color-shadow-strong);
+  transform: translateY(-2px);
+}
+
+/* Primary button styles */
+.btn-primary {
+  background: rgb(var(--color-primary-rgb));
+  color: white;
+  border: 1px solid rgb(var(--color-primary-rgb));
+  transition: all var(--animation-duration-normal) var(--animation-easing);
+}
+
+.btn-primary:hover {
+  background: rgba(var(--color-primary-rgb), 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--color-shadow-strong);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary button styles */
+.btn-secondary {
+  background: rgba(var(--color-surface-rgb), 0.5);
+  color: rgb(var(--color-text-rgb));
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  transition: all var(--animation-duration-normal) var(--animation-easing);
+}
+
+.btn-secondary:hover {
+  background: rgba(var(--color-surface-rgb), 0.8);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+  transform: translateY(-1px);
+}
+
+/* Toggle switch styles */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: rgba(var(--color-surface-rgb), 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--animation-duration-normal) var(--animation-easing);
+}
+
+.toggle:hover {
+  background: rgba(var(--color-surface-rgb), 0.5);
+}
+
+.toggle.active {
+  background: rgb(var(--color-primary-rgb));
+  border-color: rgb(var(--color-primary-rgb));
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: all var(--animation-duration-normal) var(--animation-easing);
+  box-shadow: 0 2px 4px var(--color-shadow);
+}
+
+.toggle.active::after {
+  transform: translateX(20px);
+}
+
+/* Text color utilities */
+.text-primary {
+  color: rgb(var(--color-primary-rgb));
+}
+
+.text-secondary {
+  color: rgba(var(--color-text-rgb), 0.7);
+}
+
+.text-muted {
+  color: rgba(var(--color-text-rgb), 0.5);
+}
+
+/* Background utilities */
+.bg-surface {
+  background: rgb(var(--color-surface-rgb));
+}
+
+.bg-primary {
+  background: rgb(var(--color-primary-rgb));
+}
+
+/* Border utilities */
+.border-theme {
+  border-color: var(--color-border);
+}
+
+/* Shadow utilities */
+.shadow-theme {
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+.shadow-theme-strong {
+  box-shadow: 0 8px 12px var(--color-shadow-strong);
+}
+
+/* Responsive theme adjustments */
+@media (max-width: 768px) {
+  :root {
+    --animation-duration-fast: 100ms;
+    --animation-duration-normal: 200ms;
+    --animation-duration-slow: 300ms;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: rgba(var(--color-text-rgb), 0.3);
+    --color-shadow: rgba(var(--color-primary-rgb), 0.2);
+    --color-shadow-strong: rgba(var(--color-primary-rgb), 0.4);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-duration-fast: 0s;
+    --animation-duration-normal: 0s;
+    --animation-duration-slow: 0s;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

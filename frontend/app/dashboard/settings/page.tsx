@@ -18,6 +18,8 @@ import {
   Trash2,
   RefreshCw
 } from 'lucide-react';
+import { useThemeSystem } from '../../../hooks/useTheme';
+import { themes } from '../../../store/themeStore';
 
 interface SettingSection {
   id: string;
@@ -36,124 +38,6 @@ interface SettingItem {
   options?: { label: string; value: string }[];
   action?: () => void;
 }
-
-interface Theme {
-  id: string;
-  name: string;
-  description: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    surface: string;
-    text: string;
-    accent: string;
-  };
-  preview: {
-    bg: string;
-    card: string;
-    primary: string;
-    accent: string;
-  };
-}
-
-const themes: Theme[] = [
-  {
-    id: 'dark',
-    name: 'Dark',
-    description: 'Elegant dark theme with subtle accents',
-    colors: {
-      primary: '#6366f1',
-      secondary: '#8b5cf6',
-      background: '#0f172a',
-      surface: '#1e293b',
-      text: '#f1f5f9',
-      accent: '#f59e0b'
-    },
-    preview: {
-      bg: 'bg-gray-900',
-      card: 'bg-gray-800',
-      primary: 'bg-indigo-500',
-      accent: 'bg-amber-500'
-    }
-  },
-  {
-    id: 'light',
-    name: 'Light',
-    description: 'Clean white minimal design',
-    colors: {
-      primary: '#3b82f6',
-      secondary: '#6366f1',
-      background: '#ffffff',
-      surface: '#f8fafc',
-      text: '#1e293b',
-      accent: '#0ea5e9'
-    },
-    preview: {
-      bg: 'bg-white',
-      card: 'bg-gray-50',
-      primary: 'bg-blue-500',
-      accent: 'bg-sky-500'
-    }
-  },
-  {
-    id: 'blue-gradient',
-    name: 'Blue Gradient',
-    description: 'Premium modern blue gradient theme',
-    colors: {
-      primary: '#2563eb',
-      secondary: '#3b82f6',
-      background: '#f0f9ff',
-      surface: '#e0f2fe',
-      text: '#0c4a6e',
-      accent: '#0284c7'
-    },
-    preview: {
-      bg: 'bg-gradient-to-br from-blue-50 to-blue-100',
-      card: 'bg-white/80',
-      primary: 'bg-gradient-to-r from-blue-500 to-blue-600',
-      accent: 'bg-blue-400'
-    }
-  },
-  {
-    id: 'ivory-gold',
-    name: 'Ivory & Gold',
-    description: 'Luxurious wedding premium theme',
-    colors: {
-      primary: '#d97706',
-      secondary: '#f59e0b',
-      background: '#fefce8',
-      surface: '#fef3c7',
-      text: '#78350f',
-      accent: '#fbbf24'
-    },
-    preview: {
-      bg: 'bg-gradient-to-br from-yellow-50 to-amber-50',
-      card: 'bg-white/90',
-      primary: 'bg-gradient-to-r from-amber-500 to-yellow-500',
-      accent: 'bg-yellow-400'
-    }
-  },
-  {
-    id: 'soft-pastel',
-    name: 'Soft Pastel',
-    description: 'Gentle pink and peach wedding feel',
-    colors: {
-      primary: '#ec4899',
-      secondary: '#f472b6',
-      background: '#fdf2f8',
-      surface: '#fce7f3',
-      text: '#831843',
-      accent: '#f9a8d4'
-    },
-    preview: {
-      bg: 'bg-gradient-to-br from-pink-50 to-orange-50',
-      card: 'bg-white/90',
-      primary: 'bg-gradient-to-r from-pink-400 to-pink-500',
-      accent: 'bg-orange-300'
-    }
-  }
-];
 
 const settingsSections: SettingSection[] = [
   {
@@ -306,11 +190,22 @@ const settingsSections: SettingSection[] = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Record<string, any>>(() => {
+  const {
+    currentTheme,
+    themes: availableThemes,
+    setTheme,
+    animationsEnabled,
+    toggleAnimations,
+    setAnimations,
+    resetToDefaults
+  } = useThemeSystem();
+
+  // Local state for non-theme settings
+  const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => {
     const initialSettings: Record<string, any> = {};
     settingsSections.forEach(section => {
       section.items.forEach(item => {
-        if (item.defaultValue !== undefined) {
+        if (item.id !== 'theme' && item.id !== 'animations' && item.defaultValue !== undefined) {
           initialSettings[item.id] = item.defaultValue;
         }
       });
@@ -318,11 +213,17 @@ export default function SettingsPage() {
     return initialSettings;
   });
 
-  const updateSetting = (settingId: string, value: any) => {
-    setSettings(prev => ({
+  const updateLocalSetting = (settingId: string, value: any) => {
+    setLocalSettings((prev: Record<string, any>) => ({
       ...prev,
       [settingId]: value
     }));
+  };
+
+  const getSettingValue = (settingId: string, defaultValue?: any) => {
+    if (settingId === 'theme') return currentTheme;
+    if (settingId === 'animations') return animationsEnabled;
+    return localSettings[settingId] ?? defaultValue;
   };
 
   const ToggleSwitch = ({ checked, onChange, id }: { checked: boolean; onChange: (value: boolean) => void; id: string }) => (
@@ -387,7 +288,7 @@ export default function SettingsPage() {
 
   const ThemeSelector = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {themes.map((theme) => (
+      {availableThemes.map((theme) => (
         <motion.button
           key={theme.id}
           onClick={() => onChange(theme.id)}
@@ -472,28 +373,41 @@ export default function SettingsPage() {
                   <div className={`${item.type === 'theme-selector' ? 'w-full' : 'ml-4'}`}>
                     {item.type === 'toggle' && (
                       <ToggleSwitch
-                        checked={settings[item.id] || false}
-                        onChange={(value) => updateSetting(item.id, value)}
+                        checked={getSettingValue(item.id, item.defaultValue)}
+                        onChange={(value) => {
+                          if (item.id === 'animations') {
+                            toggleAnimations();
+                          } else {
+                            updateLocalSetting(item.id, value);
+                          }
+                        }}
                         id={item.id}
                       />
                     )}
                     {item.type === 'select' && item.options && (
                       <SelectDropdown
-                        value={settings[item.id] || item.defaultValue || ''}
-                        onChange={(value) => updateSetting(item.id, value)}
+                        value={getSettingValue(item.id, item.defaultValue) || ''}
+                        onChange={(value) => updateLocalSetting(item.id, value)}
                         options={item.options}
                         id={item.id}
                       />
                     )}
                     {item.type === 'theme-selector' && (
                       <ThemeSelector
-                        value={settings[item.id] || item.defaultValue || 'light'}
-                        onChange={(value) => updateSetting(item.id, value)}
+                        value={getSettingValue(item.id, item.defaultValue) || 'light'}
+                        onChange={(value) => setTheme(value)}
                       />
                     )}
-                    {item.type === 'button' && item.action && (
+                    {item.type === 'button' && (
                       <ActionButton
-                        onClick={item.action}
+                        onClick={() => {
+                          if (item.id === 'reset-settings') {
+                            resetToDefaults();
+                            setLocalSettings({});
+                          } else {
+                            item.action?.();
+                          }
+                        }}
                         label={item.label}
                         variant={item.id === 'reset-settings' ? 'danger' : 'secondary'}
                         id={item.id}
