@@ -1,66 +1,16 @@
 @import "tailwindcss";
 
-/* Elegant Dark Wedding Theme Color Palette */
+/* Theme system will set these CSS custom properties via JavaScript */
 :root {
-  /* Base Colors - Deep, Rich Dark */
-  --background: #0a0a0f;
-  --surface: #141419;
-  --card: #1e1e23;
-  
-  /* Refined Accent Colors - Sophisticated & Subtle */
-  --primary: #d4a574; /* Warm gold */
-  --primary-dark: #b8935f;
-  --secondary: #8b7355; /* Muted bronze */
-  --secondary-dark: #6b5a45;
-  --highlight: #c9a97e; /* Soft champagne */
-  --highlight-dark: #a88060;
-  --accent: #9b8b7a; /* Dusty rose */
-  --accent-dark: #7a6a5a;
-  
-  /* Elegant Wedding Colors */
-  --gold: #d4a574;
-  --bronze: #8b7355;
-  --champagne: #c9a97e;
-  --dusty-rose: #9b8b7a;
-  --ivory: #f5f5f0;
-  --pearl: #e8e8e3;
-  
-  /* Text Colors - Soft & Refined */
-  --text-primary: #f5f5f0;
-  --text-secondary: #d4d4d0;
-  --text-muted: #9b9b95;
-  
-  /* Subtle Glassmorphism */
-  --glass-bg: rgba(30, 30, 35, 0.5);
-  --glass-border: rgba(245, 245, 240, 0.06);
-  --glass-glow: rgba(212, 165, 116, 0.03);
-  
-  /* Elegant Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
-  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
-  --shadow-primary: 0 4px 14px rgba(212, 165, 116, 0.15);
-  
-  /* Refined Gradients */
-  --gradient-primary: linear-gradient(135deg, #d4a574, #c9a97e);
-  --gradient-secondary: linear-gradient(135deg, #8b7355, #9b8b7a);
-  --gradient-accent: linear-gradient(135deg, #f5f5f0, #d4d4d0);
-  --gradient-surface: linear-gradient(135deg, #141419, #1e1e23);
-  --gradient-glow: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(201, 169, 126, 0.15));
-  --gradient-ambient: linear-gradient(135deg, rgba(212, 165, 116, 0.05), rgba(139, 115, 85, 0.05), rgba(155, 139, 122, 0.05));
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-card: var(--card);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-highlight: var(--highlight);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
+  /* These will be set by theme system via JavaScript */
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-card: #ffffff;
+  --color-primary: #3b82f6;
+  --color-secondary: #6366f1;
+  --color-highlight: #0ea5e9;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
   
   /* Typography System - Premium Font Hierarchy */
   --font-data: var(--font-inter);          /* Clean, modern, highly readable for data */
@@ -107,13 +57,8 @@ html {
 }
 
 body {
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(212, 165, 116, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(201, 169, 126, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(139, 115, 85, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 90% 90%, rgba(155, 139, 122, 0.03) 0%, transparent 50%),
-    var(--background);
-  color: var(--text-primary);
+  background: var(--color-background);
+  color: var(--color-text-primary);
   font-family: var(--font-data), system-ui, -apple-system, sans-serif;
   font-size: var(--text-base);
   line-height: var(--leading-normal);
