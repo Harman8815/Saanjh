@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, AlertTriangle, Check } from 'lucide-react';
 
 interface DeleteConfirmationModalProps {
-  itemType: 'album' | 'media';
+  itemType: 'album' | 'media' | 'document';
   itemName: string;
   itemCount?: number;
   isOpen: boolean;
@@ -26,7 +26,7 @@ export default function DeleteConfirmationModal({
   const [confirmText, setConfirmText] = useState('');
   const [isChecked, setIsChecked] = useState(false);
 
-  const requiredConfirmText = itemType === 'album' ? 'DELETE' : 'DELETE MEDIA';
+  const requiredConfirmText = itemType === 'album' ? 'DELETE' : itemType === 'media' ? 'DELETE MEDIA' : 'DELETE DOCUMENT';
   const isConfirmed = itemType === 'album' 
     ? confirmText === requiredConfirmText && isChecked
     : isChecked;
@@ -98,12 +98,14 @@ export default function DeleteConfirmationModal({
                 <AlertTriangle size={20} className="text-red-400 mt-0.5" />
                 <div>
                   <p className="text-red-400 font-medium mb-1">
-                    {itemType === 'album' ? 'Album Deletion Warning' : 'Media Deletion Warning'}
+                    {itemType === 'album' ? 'Album Deletion Warning' : itemType === 'media' ? 'Media Deletion Warning' : 'Document Deletion Warning'}
                   </p>
                   <p className="text-red-300 text-sm">
                     {itemType === 'album' 
                       ? `Deleting "${itemName}" will permanently remove the album and all its ${itemCount || 0} media items. This action cannot be undone.`
-                      : `This will permanently delete the selected media item${itemCount && itemCount > 1 ? `s (${itemCount} items)` : ''}. This action cannot be undone.`
+                      : itemType === 'media'
+                      ? `This will permanently delete the selected media item${itemCount && itemCount > 1 ? `s (${itemCount} items)` : ''}. This action cannot be undone.`
+                      : `This will permanently delete the document "${itemName}". This action cannot be undone.`
                     }
                   </p>
                 </div>
@@ -161,7 +163,9 @@ export default function DeleteConfirmationModal({
               <p className="text-text-muted text-xs">
                 {itemType === 'album' 
                   ? 'All photos, videos, and album data will be permanently deleted'
-                  : 'Media files will be permanently removed from the album'
+                  : itemType === 'media'
+                  ? 'Media files will be permanently removed from the album'
+                  : 'The document file will be permanently deleted from your storage'
                 }
               </p>
             </div>
@@ -183,13 +187,13 @@ export default function DeleteConfirmationModal({
             >
               {isDeleting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin"></div>
                   Deleting...
                 </>
               ) : (
                 <>
                   <Trash2 size={16} />
-                  Delete {itemType === 'album' ? 'Album' : 'Media'}
+                  Delete {itemType === 'album' ? 'Album' : itemType === 'media' ? 'Media' : 'Document'}
                 </>
               )}
             </button>

@@ -104,8 +104,8 @@ export default function DocumentCard({
   React.useEffect(() => {
     const handleClickOutside = () => setShowDropdown(false);
     if (showDropdown) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      window.document.addEventListener('click', handleClickOutside);
+      return () => window.document.removeEventListener('click', handleClickOutside);
     }
   }, [showDropdown]);
 
