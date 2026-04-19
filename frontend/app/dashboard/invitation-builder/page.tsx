@@ -1,9 +1,62 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Palette, Share2, Download, Mail, MessageCircle } from 'lucide-react';
+import { Eye, Palette, Share2, Download, Mail, MessageCircle, Check } from 'lucide-react';
+import { useAppStore } from '../../../store/useAppStore';
+import TemplateCard from '../../../components/invitation-builder/TemplateCard';
+
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  preview: string;
+  features: string[];
+}
+
+const templates: Template[] = [
+  {
+    id: 'elegant-classic',
+    name: 'Elegant Classic',
+    description: 'Timeless and sophisticated design with traditional typography and delicate details',
+    category: 'Classic',
+    preview: '/templates/elegant-classic.jpg',
+    features: [
+      'Classic typography',
+      'Gold accents',
+      'Traditional layout',
+      'Elegant borders',
+      'Customizable colors'
+    ]
+  },
+  {
+    id: 'modern-animated',
+    name: 'Modern Animated',
+    description: 'Contemporary design with smooth animations and interactive elements',
+    category: 'Modern',
+    preview: '/templates/modern-animated.jpg',
+    features: [
+      'Animated elements',
+      'Modern typography',
+      'Interactive components',
+      'Gradient effects',
+      'Responsive design'
+    ]
+  }
+];
 
 export default function InvitationBuilderPage() {
+  const { wedding, setWedding } = useAppStore();
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(wedding?.selectedTemplate || '');
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    setWedding({
+      ...wedding,
+      selectedTemplate: templateId
+    });
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div
@@ -78,24 +131,45 @@ export default function InvitationBuilderPage() {
                 Choose Your Template
               </h2>
               
-              {/* Empty State for Template Selection */}
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-white/10 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <Palette className="w-12 h-12 text-text-muted" />
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-3">Templates Coming Soon</h3>
-                <p className="text-text-secondary max-w-md mx-auto mb-6">
-                  We're working on beautiful wedding invitation templates. Check back soon to choose from our curated collection.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                    Get Notified
-                  </button>
-                  <button className="px-6 py-3 bg-white/10 text-text-primary rounded-lg hover:bg-white/20 transition-colors">
-                    Browse Examples
-                  </button>
-                </div>
+              {/* Template Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {templates.map((template, index) => (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                  >
+                    <TemplateCard
+                      template={template}
+                      isSelected={selectedTemplate === template.id}
+                      onSelect={handleTemplateSelect}
+                    />
+                  </motion.div>
+                ))}
               </div>
+
+              {/* Template Selection Info */}
+              {selectedTemplate && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  className="mt-8 p-6 bg-primary/10 border border-primary/30 rounded-xl"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      Template Selected: {templates.find(t => t.id === selectedTemplate)?.name}
+                    </h3>
+                  </div>
+                  <p className="text-text-secondary">
+                    Great choice! You can now customize this template with your wedding details and personal touches.
+                  </p>
+                </motion.div>
+              )}
             </motion.div>
           </div>
 

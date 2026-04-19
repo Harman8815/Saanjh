@@ -23,6 +23,7 @@ interface AppState {
     weddingDate?: string;
     venue?: string;
     message?: string;
+    selectedTemplate?: string;
     budget?: number;
     guestCount?: number;
   } | null;
