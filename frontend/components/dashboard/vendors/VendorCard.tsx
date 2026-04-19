@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Phone, Mail, ExternalLink, CheckCircle, XCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { Vendor, VendorCategory, VENDOR_CATEGORY_CONFIG } from '../../../types/vendor';
+import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -20,6 +21,7 @@ export default function VendorCard({ vendor, index }: VendorCardProps) {
   const config = VENDOR_CATEGORY_CONFIG[vendor.category];
   const status = statusConfig[vendor.status];
   const StatusIcon = status.icon;
+  const { formatCurrency } = useFormatCurrency();
 
   return (
     <motion.div
@@ -97,7 +99,7 @@ export default function VendorCard({ vendor, index }: VendorCardProps) {
         <div className="flex items-center justify-between py-2 border-t border-b border-white/5">
           <span className="text-sm text-text-muted">Starting from</span>
           <span className="text-lg font-semibold text-primary">
-            {vendor.pricing.currency}{vendor.pricing.startingPrice.toLocaleString()}
+            {formatCurrency(vendor.pricing.startingPrice)}
           </span>
         </div>
 
