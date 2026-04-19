@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Grid, List, Plus, Heart, Calendar, Camera, Video, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import GalleryCard from '../../../components/gallery/GalleryCard';
+import EditAlbumModal from '../../../components/gallery/EditAlbumModal';
+import RenameAlbumModal from '../../../components/gallery/RenameAlbumModal';
+import DeleteConfirmationModal from '../../../components/gallery/DeleteConfirmationModal';
 
 // Mock data for wedding albums
 const mockAlbums = [
@@ -106,6 +109,12 @@ export default function GalleryPage() {
   const [selectedSort, setSelectedSort] = useState('date-desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
+
   // Filter and sort albums
   useEffect(() => {
     let filtered = [...albums];
@@ -150,6 +159,42 @@ export default function GalleryPage() {
 
     setFilteredAlbums(filtered);
   }, [albums, searchQuery, selectedFilter, selectedSort]);
+
+  // Album management handlers
+  const handleEditAlbum = (album) => {
+    setSelectedAlbum(album);
+    setEditModalOpen(true);
+  };
+
+  const handleRenameAlbum = (album) => {
+    setSelectedAlbum(album);
+    setRenameModalOpen(true);
+  };
+
+  const handleDeleteAlbum = (album) => {
+    setSelectedAlbum(album);
+    setDeleteModalOpen(true);
+  };
+
+  const handleSaveAlbum = (updatedAlbum) => {
+    setAlbums(prev => prev.map(album => 
+      album.id === updatedAlbum.id ? updatedAlbum : album
+    ));
+  };
+
+  const handleRenameAlbumConfirm = (albumId, newTitle) => {
+    setAlbums(prev => prev.map(album => 
+      album.id === albumId ? { ...album, title: newTitle } : album
+    ));
+  };
+
+  const handleDeleteAlbumConfirm = () => {
+    if (selectedAlbum) {
+      setAlbums(prev => prev.filter(album => album.id !== selectedAlbum.id));
+      setDeleteModalOpen(false);
+      setSelectedAlbum(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,6 +333,9 @@ export default function GalleryPage() {
             album={album}
             viewMode={viewMode}
             index={index}
+            onEdit={handleEditAlbum}
+            onRename={handleRenameAlbum}
+            onDelete={handleDeleteAlbum}
           />
         ))}
       </motion.div>
@@ -318,6 +366,33 @@ export default function GalleryPage() {
           )}
         </motion.div>
       )}
+    </div>
+
+      {/* Edit Album Modal */}
+      <EditAlbumModal
+        album={selectedAlbum}
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleSaveAlbum}
+      />
+
+      {/* Rename Album Modal */}
+      <RenameAlbumModal
+        album={selectedAlbum}
+        isOpen={renameModalOpen}
+        onClose={() => setRenameModalOpen(false)}
+        onRename={handleRenameAlbumConfirm}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        itemType="album"
+        itemName={selectedAlbum?.title || ''}
+        itemCount={selectedAlbum?.imageCount + selectedAlbum?.videoCount}
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDeleteAlbumConfirm}
+      />
     </div>
   );
 }
