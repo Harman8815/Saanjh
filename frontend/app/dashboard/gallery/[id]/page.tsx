@@ -89,6 +89,19 @@ interface MediaItem {
   dimensions: string;
 }
 
+// Generate static params for static export
+export async function generateStaticParams() {
+  // Return the known album IDs for static generation
+  return [
+    { id: 'haldi-ceremony' },
+    { id: 'mehendi-night' },
+    { id: 'sangeet' },
+    { id: 'wedding-ceremony' },
+    { id: 'reception' },
+    { id: 'couple-portraits' }
+  ];
+}
+
 export default function AlbumPage() {
   const params = useParams();
   const router = useRouter();
