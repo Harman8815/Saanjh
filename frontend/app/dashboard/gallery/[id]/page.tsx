@@ -24,6 +24,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import Lightbox from '../../../../components/gallery/Lightbox';
+import MediaManagementModal from '../../../../components/gallery/MediaManagementModal';
 
 // Mock data for album media
 const generateMockMedia = (albumId: string, count: number): MediaItem[] => {
@@ -103,6 +104,7 @@ export default function AlbumPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
 
   // Load album data and media
   useEffect(() => {
@@ -327,6 +329,13 @@ export default function AlbumPage() {
               </div>
 
               {/* Action Buttons */}
+              <button 
+                onClick={() => setMediaModalOpen(true)}
+                className="bg-gradient-to-r from-primary to-secondary text-white rounded-xl px-4 py-3 hover:shadow-lg transition-all flex items-center gap-2"
+              >
+                <Camera size={18} />
+                <span className="hidden sm:inline">Manage Media</span>
+              </button>
               <button className="bg-background/50 border border-white/10 rounded-xl px-4 py-3 text-text-primary hover:bg-background/70 transition-all flex items-center gap-2">
                 <Download size={18} />
                 <span className="hidden sm:inline">Download</span>
@@ -456,6 +465,25 @@ export default function AlbumPage() {
         isOpen={!!selectedMedia}
         onClose={closeLightbox}
         onNavigate={navigateMedia}
+      />
+
+      {/* Media Management Modal */}
+      <MediaManagementModal
+        albumId={albumId}
+        albumName={album?.title || ''}
+        isOpen={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        media={media}
+        onMediaUpdate={(updatedMedia) => {
+          setMedia(updatedMedia);
+          setFilteredMedia(updatedMedia);
+          // Update album counts
+          if (album) {
+            const imageCount = updatedMedia.filter(item => item.type === 'image').length;
+            const videoCount = updatedMedia.filter(item => item.type === 'video').length;
+            setAlbum({ ...album, imageCount, videoCount });
+          }
+        }}
       />
     </div>
   );
