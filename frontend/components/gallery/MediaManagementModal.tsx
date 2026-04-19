@@ -62,7 +62,9 @@ export default function MediaManagementModal({
   const filteredMedia = media.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === 'all' || item.type === filterType;
+    const matchesType = filterType === 'all' || 
+    (filterType === 'images' && item.type === 'image') || 
+    (filterType === 'videos' && item.type === 'video');
     return matchesSearch && matchesType;
   });
 

@@ -113,7 +113,7 @@ export default function GalleryPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<typeof mockAlbums[0] | null>(null);
 
   // Filter and sort albums
   useEffect(() => {
@@ -161,28 +161,28 @@ export default function GalleryPage() {
   }, [albums, searchQuery, selectedFilter, selectedSort]);
 
   // Album management handlers
-  const handleEditAlbum = (album) => {
+  const handleEditAlbum = (album: typeof mockAlbums[0]) => {
     setSelectedAlbum(album);
     setEditModalOpen(true);
   };
 
-  const handleRenameAlbum = (album) => {
+  const handleRenameAlbum = (album: typeof mockAlbums[0]) => {
     setSelectedAlbum(album);
     setRenameModalOpen(true);
   };
 
-  const handleDeleteAlbum = (album) => {
+  const handleDeleteAlbum = (album: typeof mockAlbums[0]) => {
     setSelectedAlbum(album);
     setDeleteModalOpen(true);
   };
 
-  const handleSaveAlbum = (updatedAlbum) => {
+  const handleSaveAlbum = (updatedAlbum: typeof mockAlbums[0]) => {
     setAlbums(prev => prev.map(album => 
       album.id === updatedAlbum.id ? updatedAlbum : album
     ));
   };
 
-  const handleRenameAlbumConfirm = (albumId, newTitle) => {
+  const handleRenameAlbumConfirm = (albumId: string, newTitle: string) => {
     setAlbums(prev => prev.map(album => 
       album.id === albumId ? { ...album, title: newTitle } : album
     ));
@@ -366,8 +366,7 @@ export default function GalleryPage() {
           )}
         </motion.div>
       )}
-    </div>
-
+      
       {/* Edit Album Modal */}
       <EditAlbumModal
         album={selectedAlbum}
@@ -388,7 +387,7 @@ export default function GalleryPage() {
       <DeleteConfirmationModal
         itemType="album"
         itemName={selectedAlbum?.title || ''}
-        itemCount={selectedAlbum?.imageCount + selectedAlbum?.videoCount}
+        itemCount={(selectedAlbum?.imageCount || 0) + (selectedAlbum?.videoCount || 0)}
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteAlbumConfirm}
