@@ -18,12 +18,18 @@ interface AppState {
   
   // Wedding State
   wedding: {
-    coupleName?: string;
+    brideName?: string;
+    groomName?: string;
     weddingDate?: string;
     venue?: string;
+    message?: string;
     budget?: number;
     guestCount?: number;
   } | null;
+  
+  // First-time Modal State
+  isFirstTimeUser: boolean;
+  showFirstTimeModal: boolean;
   
   // Navigation State
   currentPage: string;
@@ -35,6 +41,8 @@ interface AppState {
   setUser: (user: AppState['user']) => void;
   setWedding: (wedding: AppState['wedding']) => void;
   setCurrentPage: (page: string) => void;
+  setShowFirstTimeModal: (show: boolean) => void;
+  setFirstTimeUser: (isFirstTime: boolean) => void;
   reset: () => void;
 }
 
@@ -48,6 +56,8 @@ export const useAppStore = create<AppState>()(
         currentTheme: 'dark',
         user: null,
         wedding: null,
+        isFirstTimeUser: true,
+        showFirstTimeModal: false,
         currentPage: 'home',
         
         // Actions
@@ -57,12 +67,16 @@ export const useAppStore = create<AppState>()(
         setUser: (user) => set({ user }),
         setWedding: (wedding) => set({ wedding }),
         setCurrentPage: (page) => set({ currentPage: page }),
+        setShowFirstTimeModal: (show) => set({ showFirstTimeModal: show }),
+        setFirstTimeUser: (isFirstTime) => set({ isFirstTimeUser: isFirstTime }),
         reset: () => set({
           isLoading: false,
           sidebarOpen: false,
           currentTheme: 'dark',
           user: null,
           wedding: null,
+          isFirstTimeUser: true,
+          showFirstTimeModal: false,
           currentPage: 'home',
         }),
       }),
@@ -72,6 +86,7 @@ export const useAppStore = create<AppState>()(
           user: state.user,
           wedding: state.wedding,
           currentTheme: state.currentTheme,
+          isFirstTimeUser: state.isFirstTimeUser,
         }),
       }
     )
@@ -84,3 +99,5 @@ export const useWedding = () => useAppStore((state) => state.wedding);
 export const useLoading = () => useAppStore((state) => state.isLoading);
 export const useTheme = () => useAppStore((state) => state.currentTheme);
 export const useCurrentPage = () => useAppStore((state) => state.currentPage);
+export const useFirstTimeUser = () => useAppStore((state) => state.isFirstTimeUser);
+export const useShowFirstTimeModal = () => useAppStore((state) => state.showFirstTimeModal);
