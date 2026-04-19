@@ -77,12 +77,6 @@ const sidebarItems: SidebarItem[] = [
     label: 'Vendors',
     href: '/dashboard/vendors',
     badge: '3',
-    subItems: [
-      { label: 'Find Vendors', href: '/dashboard/vendors/search' },
-      { label: 'My Vendors', href: '/dashboard/vendors/my' },
-      { label: 'Messages', href: '/dashboard/vendors/messages' },
-      { label: 'Reviews', href: '/dashboard/vendors/reviews' },
-    ],
   },
   {
     icon: CheckSquare,
