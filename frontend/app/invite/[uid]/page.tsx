@@ -49,81 +49,157 @@ const fetchInvitationData = async (uid: string): Promise<InvitationData | null> 
 // Elegant Classic Template Component
 const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-pink-50 flex items-center justify-center p-8">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-pink-50 flex items-center justify-center p-6 md:p-8">
+      <div className="max-w-4xl w-full">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-12 border border-amber-200"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-amber-100/50 overflow-hidden"
         >
-          {/* Decorative Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-rose-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Heart className="w-8 h-8 text-white" />
+          {/* Hero Section - Names + Date */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative px-8 md:px-16 py-16 md:py-24 text-center bg-gradient-to-br from-amber-50/50 to-rose-50/50"
+          >
+            {/* Decorative Elements */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-200 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-200 to-transparent"></div>
+            
+            {/* Names */}
+            <div className="space-y-8">
+              <motion.h1 
+                className="text-6xl md:text-7xl font-serif text-amber-950 tracking-wide leading-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                {data.brideName}
+              </motion.h1>
+              
+              <motion.div
+                className="text-4xl md:text-5xl text-amber-700 font-light tracking-widest"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                &
+              </motion.div>
+              
+              <motion.h1 
+                className="text-6xl md:text-7xl font-serif text-amber-950 tracking-wide leading-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                {data.groomName}
+              </motion.h1>
             </div>
-            <div className="w-32 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400 mx-auto"></div>
-          </div>
 
-          {/* Names */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-5xl font-serif text-amber-900 mb-2">
-              {data.brideName}
-            </h1>
-            <div className="text-2xl text-amber-700 mb-2">&</div>
-            <h1 className="text-5xl font-serif text-amber-900 mb-4">
-              {data.groomName}
-            </h1>
-            <p className="text-lg text-amber-600 italic">invite you to celebrate their wedding</p>
+            {/* Date in Hero */}
+            <motion.div
+              className="mt-12 space-y-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1 }}
+            >
+              <p className="text-amber-700 text-lg font-light tracking-wide uppercase">Together with their families</p>
+              <p className="text-amber-600 text-xl font-medium">invite you to celebrate their wedding</p>
+            </motion.div>
           </motion.div>
 
-          {/* Date */}
+          {/* Event Details Section */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex items-center justify-center gap-3 mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="px-8 md:px-16 py-12 md:py-16 border-b border-amber-100/30"
           >
-            <Calendar className="w-5 h-5 text-amber-600" />
-            <p className="text-lg text-amber-800 font-medium">
-              {new Date(data.weddingDate).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
+            <div className="text-center space-y-8">
+              {/* Date */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+                className="space-y-4"
+              >
+                <h2 className="text-amber-700 text-sm font-medium tracking-widest uppercase">Date</h2>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-8 h-0.5 bg-amber-300"></div>
+                  <Calendar className="w-5 h-5 text-amber-600" />
+                  <div className="w-8 h-0.5 bg-amber-300"></div>
+                </div>
+                <p className="text-2xl md:text-3xl text-amber-900 font-light leading-relaxed">
+                  {new Date(data.weddingDate).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </motion.div>
+            </div>
           </motion.div>
 
-          {/* Venue */}
+          {/* Venue Section */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="flex items-center justify-center gap-3 mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 1.6 }}
+            className="px-8 md:px-16 py-12 md:py-16 border-b border-amber-100/30"
           >
-            <MapPin className="w-5 h-5 text-amber-600" />
-            <p className="text-lg text-amber-800 font-medium">{data.venue}</p>
+            <div className="text-center space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.8 }}
+                className="space-y-4"
+              >
+                <h2 className="text-amber-700 text-sm font-medium tracking-widest uppercase">Venue</h2>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-8 h-0.5 bg-amber-300"></div>
+                  <MapPin className="w-5 h-5 text-amber-600" />
+                  <div className="w-8 h-0.5 bg-amber-300"></div>
+                </div>
+                <p className="text-2xl md:text-3xl text-amber-900 font-light leading-relaxed">
+                  {data.venue}
+                </p>
+              </motion.div>
+            </div>
           </motion.div>
 
-          {/* Message */}
+          {/* Message Section */}
           {data.message && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-center mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 2 }}
+              className="px-8 md:px-16 py-12 md:py-16"
             >
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-amber-600" />
-                <p className="text-sm text-amber-600 uppercase tracking-wide">A Message</p>
+              <div className="text-center space-y-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 2.2 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-amber-700 text-sm font-medium tracking-widest uppercase">A Message</h2>
+                  <div className="max-w-2xl mx-auto">
+                    <div className="relative">
+                      <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-amber-200"></div>
+                      <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-amber-200"></div>
+                      <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-amber-200"></div>
+                      <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-amber-200"></div>
+                      
+                      <p className="text-gray-700 text-lg md:text-xl italic leading-relaxed px-8 py-6 font-light">
+                        "{data.message}"
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-              <p className="text-gray-700 italic leading-relaxed">"{data.message}"</p>
             </motion.div>
           )}
 
@@ -131,11 +207,18 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="text-center"
+            transition={{ duration: 0.8, delay: 2.4 }}
+            className="px-8 md:px-16 py-8 md:py-12 bg-gradient-to-br from-amber-50/30 to-rose-50/30 text-center"
           >
-            <div className="w-32 h-0.5 bg-gradient-to-r from-amber-400 to-rose-400 mx-auto mb-4"></div>
-            <p className="text-sm text-amber-600">With joy and anticipation</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-16 h-0.5 bg-gradient-to-r from-transparent to-amber-300"></div>
+                <Heart className="w-6 h-6 text-amber-600" />
+                <div className="w-16 h-0.5 bg-gradient-to-r from-amber-300 to-transparent"></div>
+              </div>
+              <p className="text-amber-700 text-sm font-light tracking-wide">With joy and anticipation</p>
+              <p className="text-amber-600 text-xs">We look forward to celebrating with you</p>
+            </div>
           </motion.div>
         </motion.div>
       </div>
