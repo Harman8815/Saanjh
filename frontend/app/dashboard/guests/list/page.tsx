@@ -661,11 +661,6 @@ export default function GuestListPage() {
           )}
         </motion.div>
 
-        {/* TODO: Add seating chart integration */}
-        {/* TODO: Add meal preference management */}
-        {/* TODO: Add RSVP tracking */}
-        {/* TODO: Add guest grouping */}
-        {/* TODO: Add address management */}
       </div>
 
       {/* Absolute Positioned Import/Export Button */}

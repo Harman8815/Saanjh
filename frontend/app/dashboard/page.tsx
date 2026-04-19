@@ -5,12 +5,7 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 
-// TODO: Create comprehensive wedding dashboard
-// TODO: Add wedding timeline and progress tracking
-// TODO: Implement budget management and tracking
-// TODO: Create vendor management and communication
 // TODO: Add task management and checklists
-// TODO: Implement calendar integration and scheduling
 // TODO: Add document storage and organization
 // TODO: Create analytics and insights dashboard
 

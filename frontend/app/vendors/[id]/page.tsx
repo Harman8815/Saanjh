@@ -4,15 +4,10 @@ import { motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { useAppStore } from '../../../store/useAppStore';
 
-// TODO: Create detailed vendor profile page with portfolio gallery
-// TODO: Add vendor services and packages
 // TODO: Implement vendor availability calendar
-// TODO: Add vendor reviews and testimonials
 // TODO: Create vendor inquiry and booking system
 // TODO: Add vendor messaging/chat functionality
 // TODO: Implement vendor comparison feature
-// TODO: Add vendor social media integration
-// TODO: Create vendor portfolio with video support
 
 export default function VendorDetailPage() {
   const params = useParams();
