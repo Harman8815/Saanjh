@@ -122,12 +122,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Settings,
     label: 'Settings',
     href: '/dashboard/settings',
-    subItems: [
-      { label: 'Profile', href: '/dashboard/settings/profile' },
-      { label: 'Wedding Details', href: '/dashboard/settings/wedding' },
-      { label: 'Privacy', href: '/dashboard/settings/privacy' },
-      { label: 'Notifications', href: '/dashboard/settings/notifications' },
-    ],
   },
 ];
 
