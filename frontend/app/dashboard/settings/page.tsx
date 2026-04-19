@@ -19,6 +19,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useThemeSystem } from '../../../hooks/useTheme';
+import { useLocalizationSystem } from '../../../hooks/useLocalization';
 import { themes } from '../../../store/themeStore';
 
 interface SettingSection {
@@ -117,10 +118,19 @@ const settingsSections: SettingSection[] = [
         defaultValue: 'en',
         options: [
           { label: 'English', value: 'en' },
-          { label: 'Spanish', value: 'es' },
-          { label: 'French', value: 'fr' },
-          { label: 'German', value: 'de' },
-          { label: 'Italian', value: 'it' }
+          { label: 'Hindi', value: 'hi' }
+        ]
+      },
+      {
+        id: 'currency',
+        label: 'Currency',
+        description: 'Select your preferred currency for display',
+        type: 'select',
+        defaultValue: 'INR',
+        options: [
+          { label: 'INR - Indian Rupee', value: 'INR' },
+          { label: 'USD - US Dollar', value: 'USD' },
+          { label: 'EUR - Euro', value: 'EUR' }
         ]
       },
       {
@@ -200,12 +210,24 @@ export default function SettingsPage() {
     resetToDefaults
   } = useThemeSystem();
 
+  const {
+    currentLanguage,
+    currentCurrency,
+    languages: availableLanguages,
+    currencies: availableCurrencies,
+    setLanguage,
+    setCurrency,
+    isLanguageActive,
+    isCurrencyActive,
+    formatCurrency
+  } = useLocalizationSystem();
+
   // Local state for non-theme settings
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => {
     const initialSettings: Record<string, any> = {};
     settingsSections.forEach(section => {
       section.items.forEach(item => {
-        if (item.id !== 'theme' && item.id !== 'animations' && item.defaultValue !== undefined) {
+        if (item.id !== 'theme' && item.id !== 'animations' && item.id !== 'language' && item.id !== 'currency' && item.defaultValue !== undefined) {
           initialSettings[item.id] = item.defaultValue;
         }
       });
@@ -223,6 +245,8 @@ export default function SettingsPage() {
   const getSettingValue = (settingId: string, defaultValue?: any) => {
     if (settingId === 'theme') return currentTheme;
     if (settingId === 'animations') return animationsEnabled;
+    if (settingId === 'language') return currentLanguage;
+    if (settingId === 'currency') return currentCurrency;
     return localSettings[settingId] ?? defaultValue;
   };
 
@@ -387,7 +411,15 @@ export default function SettingsPage() {
                     {item.type === 'select' && item.options && (
                       <SelectDropdown
                         value={getSettingValue(item.id, item.defaultValue) || ''}
-                        onChange={(value) => updateLocalSetting(item.id, value)}
+                        onChange={(value) => {
+                          if (item.id === 'language') {
+                            setLanguage(value);
+                          } else if (item.id === 'currency') {
+                            setCurrency(value);
+                          } else {
+                            updateLocalSetting(item.id, value);
+                          }
+                        }}
                         options={item.options}
                         id={item.id}
                       />
