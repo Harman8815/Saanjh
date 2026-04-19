@@ -94,11 +94,12 @@ const sidebarItems: SidebarItem[] = [
     icon: Image,
     label: 'Gallery',
     href: '/dashboard/gallery',
+    badge: '6',
     subItems: [
       { label: 'All Albums', href: '/dashboard/gallery' },
-      { label: 'Featured', href: '/dashboard/gallery?filter=featured' },
       { label: 'Recent Uploads', href: '/dashboard/gallery?sort=date-desc' },
-      { label: 'Manage Media', href: '/dashboard/gallery/manage' },
+      { label: 'Featured Albums', href: '/dashboard/gallery?filter=featured' },
+      { label: 'Create Album', href: '/dashboard/gallery?action=create' },
     ],
   },
   {

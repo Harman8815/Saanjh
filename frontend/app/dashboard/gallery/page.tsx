@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, Grid, List, Plus, Heart, Calendar, Camera, Video, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import GalleryCard from '../../../components/gallery/GalleryCard';
@@ -101,7 +102,8 @@ const sortOptions = [
   { label: 'Alphabetical', value: 'title-asc' }
 ];
 
-export default function GalleryPage() {
+function GalleryContent() {
+  const searchParams = useSearchParams();
   const [albums, setAlbums] = useState(mockAlbums);
   const [filteredAlbums, setFilteredAlbums] = useState(mockAlbums);
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,6 +116,25 @@ export default function GalleryPage() {
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<typeof mockAlbums[0] | null>(null);
+
+  // Handle query parameters from sidebar navigation
+  useEffect(() => {
+    const filter = searchParams.get('filter');
+    const sort = searchParams.get('sort');
+    const action = searchParams.get('action');
+
+    if (filter) {
+      setSelectedFilter(filter);
+    }
+    if (sort) {
+      setSelectedSort(sort);
+    }
+    if (action) {
+      // Handle specific actions like create album
+      console.log(`Gallery action: ${action}`);
+      // You could open a modal or trigger specific functionality here
+    }
+  }, [searchParams]);
 
   // Filter and sort albums
   useEffect(() => {
@@ -393,5 +414,17 @@ export default function GalleryPage() {
         onConfirm={handleDeleteAlbumConfirm}
       />
     </div>
+  );
+}
+
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Loading gallery...</div>
+      </div>
+    }>
+      <GalleryContent />
+    </Suspense>
   );
 }
