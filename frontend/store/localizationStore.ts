@@ -81,13 +81,15 @@ export const useLocalizationStore = create<LocalizationState>()(
         const language = languages.find(lang => lang.code === languageCode);
         if (language) {
           set({ currentLanguage: languageCode });
-          // Update document lang attribute
-          document.documentElement.lang = languageCode;
-          // Update text direction if needed
-          if (language.rtl) {
-            document.documentElement.dir = 'rtl';
-          } else {
-            document.documentElement.dir = 'ltr';
+          // Update document lang attribute only on client side
+          if (typeof window !== 'undefined') {
+            document.documentElement.lang = languageCode;
+            // Update text direction if needed
+            if (language.rtl) {
+              document.documentElement.dir = 'rtl';
+            } else {
+              document.documentElement.dir = 'ltr';
+            }
           }
         }
       },
@@ -146,15 +148,17 @@ export const useLocalizationStore = create<LocalizationState>()(
 
       resetToDefaults: () => {
         set({ currentLanguage: defaultLanguage, currentCurrency: defaultCurrency });
-        document.documentElement.lang = defaultLanguage;
-        document.documentElement.dir = 'ltr';
+        if (typeof window !== 'undefined') {
+          document.documentElement.lang = defaultLanguage;
+          document.documentElement.dir = 'ltr';
+        }
       },
     }),
     {
       name: 'localization-settings',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        if (state) {
+        if (state && typeof window !== 'undefined') {
           const language = languages.find(lang => lang.code === state.currentLanguage);
           if (language) {
             document.documentElement.lang = state.currentLanguage;
@@ -172,6 +176,8 @@ export const useLocalizationStore = create<LocalizationState>()(
 
 // Initialize localization on app start
 export const initializeLocalization = () => {
+  if (typeof window === 'undefined') return;
+  
   const state = useLocalizationStore.getState();
   const language = languages.find(lang => lang.code === state.currentLanguage);
   if (language) {

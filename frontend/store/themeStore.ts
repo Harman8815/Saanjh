@@ -203,17 +203,9 @@ export const useThemeStore = create<ThemeState>()(
 
       resetToDefaults: () => {
         set({ currentTheme: defaultTheme, animationsEnabled: defaultAnimations });
-        // Apply system theme if default is system
-        if (defaultTheme === 'system') {
-          const systemThemeId = getSystemTheme();
-          const systemTheme = themes.find(t => t.id === systemThemeId);
-          if (systemTheme) {
-            applyThemeToDOM(systemTheme.colors);
-          }
-        } else {
-          const defaultThemeColors = themes.find(t => t.id === defaultTheme)?.colors || themes[0].colors;
-          applyThemeToDOM(defaultThemeColors);
-        }
+        // Apply the default theme
+        const defaultThemeColors = themes.find(t => t.id === defaultTheme)?.colors || themes[0].colors;
+        applyThemeToDOM(defaultThemeColors);
         applyAnimationsToDOM(defaultAnimations);
       },
     }),
@@ -244,6 +236,9 @@ export const useThemeStore = create<ThemeState>()(
 
 // Helper functions to apply theme to DOM
 function applyThemeToDOM(colors: Theme['colors']) {
+  // Prevent DOM manipulation during SSR/hydration
+  if (typeof window === 'undefined') return;
+  
   const root = document.documentElement;
   
   // Apply CSS custom properties
@@ -263,6 +258,9 @@ function applyThemeToDOM(colors: Theme['colors']) {
 }
 
 function applyAnimationsToDOM(enabled: boolean) {
+  // Prevent DOM manipulation during SSR/hydration
+  if (typeof window === 'undefined') return;
+  
   const root = document.documentElement;
   
   if (enabled) {

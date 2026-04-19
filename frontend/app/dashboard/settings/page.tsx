@@ -19,7 +19,8 @@ import {
   RefreshCw,
   Check,
   X,
-  Info
+  Info,
+  Settings
 } from 'lucide-react';
 import { useThemeSystem } from '../../../hooks/useTheme';
 import { useI18nLocalization } from '../../../hooks/useI18nLocalization';
@@ -42,6 +43,7 @@ interface SettingItem {
   defaultValue?: any;
   options?: { label: string; value: string }[];
   action?: () => void;
+  instantApply?: boolean;
 }
 
 interface SettingChange {
@@ -55,89 +57,54 @@ const settingsSections: SettingSection[] = [
   {
     id: 'appearance',
     title: 'Appearance',
-    description: 'Customize the look and feel of your dashboard',
+    description: 'Customize look and feel of your wedding planner with instant preview',
     icon: Palette,
     items: [
       {
         id: 'theme',
         label: 'Theme',
-        description: 'Choose your preferred color scheme. Changes apply instantly.',
+        description: 'Choose your preferred color scheme - changes apply instantly',
         type: 'theme-selector',
-        defaultValue: 'light'
+        defaultValue: 'dark',
+        instantApply: true
       },
       {
         id: 'animations',
         label: 'Animations',
-        description: 'Enable smooth transitions and micro-interactions for better visual feedback.',
+        description: 'Enable smooth transitions and micro-interactions for better user experience',
         type: 'toggle',
-        defaultValue: true
-      },
-      {
-        id: 'compact-mode',
-        label: 'Compact Mode',
-        description: 'Reduce spacing and padding for a denser layout. Useful for smaller screens.',
-        type: 'toggle',
-        defaultValue: false
+        defaultValue: true,
+        instantApply: true
       }
     ]
   },
   {
     id: 'preferences',
     title: 'Preferences',
-    description: 'Configure your personal dashboard preferences',
-    icon: Bell,
-    items: [
-      {
-        id: 'notifications',
-        label: 'Push Notifications',
-        description: 'Receive notifications about important updates and deadlines.',
-        type: 'toggle',
-        defaultValue: true
-      },
-      {
-        id: 'email-updates',
-        label: 'Email Updates',
-        description: 'Get weekly summaries and important announcements via email.',
-        type: 'toggle',
-        defaultValue: false
-      },
-      {
-        id: 'default-view',
-        label: 'Default Dashboard View',
-        description: 'Choose which view loads first when you open the dashboard.',
-        type: 'select',
-        defaultValue: 'table',
-        options: [
-          { label: 'Table View', value: 'table' },
-          { label: 'Card View', value: 'card' },
-          { label: 'Graph View', value: 'graph' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'localization',
-    title: 'Localization',
-    description: 'Set your language and regional preferences',
-    icon: Globe,
+    description: 'Configure your personal preferences with smart defaults',
+    icon: Settings,
     items: [
       {
         id: 'language',
         label: 'Language',
-        description: 'Choose your preferred language for the interface.',
+        description: 'Select your preferred language for all interface elements',
         type: 'select',
         defaultValue: 'en',
+        instantApply: true,
         options: [
           { label: 'English', value: 'en' },
-          { label: 'Hindi', value: 'hi' }
+          { label: 'Hindi', value: 'hi' },
+          { label: 'Spanish', value: 'es' },
+          { label: 'French', value: 'fr' }
         ]
       },
       {
         id: 'currency',
         label: 'Currency',
-        description: 'Select your preferred currency for displaying prices and budgets.',
+        description: 'Choose your preferred currency for pricing and budget tracking',
         type: 'select',
         defaultValue: 'INR',
+        instantApply: true,
         options: [
           { label: 'INR - Indian Rupee', value: 'INR' },
           { label: 'USD - US Dollar', value: 'USD' },
@@ -147,58 +114,101 @@ const settingsSections: SettingSection[] = [
       {
         id: 'timezone',
         label: 'Timezone',
-        description: 'Set your local timezone for accurate time display',
+        description: 'Set your local timezone for accurate time display across all features',
         type: 'select',
         defaultValue: 'utc',
+        instantApply: true,
         options: timezones.map(tz => ({ label: `${tz.name} (${tz.offset})`, value: tz.code }))
       },
       {
         id: 'date-format',
         label: 'Date Format',
-        description: 'Choose how dates are displayed throughout the application.',
+        description: 'Choose how dates are displayed throughout the application',
         type: 'select',
         defaultValue: 'mdy',
+        instantApply: true,
         options: [
-          { label: 'MM/DD/YYYY', value: 'mdy' },
-          { label: 'DD/MM/YYYY', value: 'dmy' },
-          { label: 'YYYY-MM-DD', value: 'ymd' }
+          { label: 'MM/DD/YYYY (US)', value: 'mdy' },
+          { label: 'DD/MM/YYYY (European)', value: 'dmy' },
+          { label: 'YYYY-MM-DD (ISO)', value: 'ymd' }
         ]
       }
     ]
   },
   {
-    id: 'system',
-    title: 'System',
-    description: 'Manage system settings and data',
+    id: 'notifications',
+    title: 'Notifications',
+    description: 'Stay updated with important wedding planning reminders and updates',
+    icon: Bell,
+    items: [
+      {
+        id: 'email-notifications',
+        label: 'Email Notifications',
+        description: 'Receive wedding updates, task reminders, and vendor communications via email',
+        type: 'toggle',
+        defaultValue: true,
+        instantApply: true
+      },
+      {
+        id: 'push-notifications',
+        label: 'Push Notifications',
+        description: 'Get instant alerts on your device for urgent wedding matters',
+        type: 'toggle',
+        defaultValue: false,
+        instantApply: true
+      },
+      {
+        id: 'reminder-frequency',
+        label: 'Reminder Frequency',
+        description: 'How often to remind you about upcoming tasks and deadlines',
+        type: 'select',
+        defaultValue: 'weekly',
+        instantApply: true,
+        options: [
+          { label: 'Daily', value: 'daily' },
+          { label: 'Weekly', value: 'weekly' },
+          { label: 'Monthly', value: 'monthly' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'privacy',
+    title: 'Privacy & Security',
+    description: 'Control your data and account security with confidence',
     icon: Shield,
     items: [
       {
-        id: 'auto-save',
-        label: 'Auto-save',
-        description: 'Automatically save changes every 30 seconds to prevent data loss.',
+        id: 'two-factor',
+        label: 'Two-Factor Authentication',
+        description: 'Add an extra layer of security to protect your wedding planning data',
         type: 'toggle',
-        defaultValue: true
+        defaultValue: false,
+        instantApply: true
       },
       {
-        id: 'cache',
-        label: 'Clear Cache',
-        description: 'Remove temporary files and cached data to free up storage space.',
+        id: 'privacy-settings',
+        label: 'Privacy Settings',
+        description: 'Control who can see your wedding information and vendor details',
         type: 'button',
-        action: () => console.log('Clear cache clicked')
+        defaultValue: undefined,
+        action: () => console.log('Navigate to privacy settings')
       },
       {
-        id: 'export-data',
+        id: 'data-export',
         label: 'Export Data',
-        description: 'Download all your wedding planning data as a backup file.',
+        description: 'Download all your wedding planning data in various formats',
         type: 'button',
-        action: () => console.log('Export data clicked')
+        defaultValue: undefined,
+        action: () => console.log('Export user data')
       },
       {
-        id: 'reset-settings',
-        label: 'Reset Settings',
-        description: 'Restore all settings to their default values. This action cannot be undone.',
+        id: 'account-deletion',
+        label: 'Delete Account',
+        description: 'Permanently delete your account and all associated data',
         type: 'button',
-        action: () => console.log('Reset settings clicked')
+        defaultValue: undefined,
+        action: () => console.log('Delete account')
       }
     ]
   }
@@ -231,7 +241,7 @@ export default function SettingsPage() {
   // Timezone converter integration
   const {
     currentTimezone,
-    getCurrentTimezoneInfo,
+    currentTimezoneInfo,
     getAvailableTimezones,
     isValidTimezone,
   } = useTimezoneConverter();
@@ -254,45 +264,127 @@ export default function SettingsPage() {
   const [highlightedSettings, setHighlightedSettings] = useState<Set<string>>(new Set());
   const [showFeedback, setShowFeedback] = useState<Record<string, boolean>>({});
 
-  const updateLocalSetting = (settingId: string, value: any) => {
-    const oldValue = localSettings[settingId];
-    setLocalSettings((prev: Record<string, any>) => ({
-      ...prev,
-      [settingId]: value
-    }));
-
-    // Track the change for feedback
-    const change: SettingChange = {
-      id: settingId,
-      oldValue,
-      newValue: value,
-      timestamp: Date.now()
-    };
-    
-    setRecentChanges(prev => [change, ...prev.slice(0, 4)]); // Keep last 5 changes
-    setHighlightedSettings(prev => new Set([...prev, settingId]));
-    setShowFeedback(prev => ({ ...prev, [settingId]: true }));
-
-    // Clear highlight after 2 seconds
+  // Function definitions for type safety
+  const handleThemeChange = (themeId: string) => {
+    setTheme(themeId);
+    setHighlightedSettings((prev: Set<string>) => new Set([...prev, 'theme']));
+    setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, theme: true }));
     setTimeout(() => {
-      setHighlightedSettings(prev => {
+      setHighlightedSettings((prev: Set<string>) => {
         const newSet = new Set(prev);
-        newSet.delete(settingId);
+        newSet.delete('theme');
         return newSet;
       });
     }, 2000);
-
-    // Clear feedback after 1 second
     setTimeout(() => {
-      setShowFeedback(prev => ({ ...prev, [settingId]: false }));
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, theme: false }));
     }, 1000);
+  };
+
+  const handleLanguageChange = async (languageCode: string) => {
+    await changeLanguage(languageCode);
+    setHighlightedSettings((prev: Set<string>) => new Set([...prev, 'language']));
+    setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, language: true }));
+    setTimeout(() => {
+      setHighlightedSettings((prev: Set<string>) => {
+        const newSet = new Set(prev);
+        newSet.delete('language');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, language: false }));
+    }, 1000);
+  };
+
+  const handleCurrencyChange = async (currencyCode: string) => {
+    await changeCurrency(currencyCode);
+    setHighlightedSettings((prev: Set<string>) => new Set([...prev, 'currency']));
+    setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, currency: true }));
+    setTimeout(() => {
+      setHighlightedSettings((prev: Set<string>) => {
+        const newSet = new Set(prev);
+        newSet.delete('currency');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, currency: false }));
+    }, 1000);
+  };
+
+  const handleTimezoneChange = (timezoneCode: string) => {
+    setLocalSettings((prev: Record<string, any>) => ({ ...prev, timezone: timezoneCode }));
+    setHighlightedSettings((prev: Set<string>) => new Set([...prev, 'timezone']));
+    setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, timezone: true }));
+    setTimeout(() => {
+      setHighlightedSettings((prev: Set<string>) => {
+        const newSet = new Set(prev);
+        newSet.delete('timezone');
+        return newSet;
+      });
+    }, 2000);
+    setTimeout(() => {
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, timezone: false }));
+    }, 1000);
+  };
+
+  // Update local setting with instant apply or traditional update
+  const updateLocalSetting = (settingId: string, value: any) => {
+    const oldValue = localSettings[settingId];
+    
+    // Check if setting has instant apply enabled
+    const setting = settingsSections
+      .flatMap(section => section.items)
+      .find(item => item.id === settingId);
+    
+    // Apply instantly or show feedback
+    if (setting?.instantApply) {
+      // Instant apply without confirmation
+      setLocalSettings((prev: Record<string, any>) => ({
+        ...prev,
+        [settingId]: value
+      }));
+      
+      // Track change for feedback
+      const change: SettingChange = {
+        id: settingId,
+        oldValue,
+        newValue: value,
+        timestamp: Date.now()
+      };
+      
+      setRecentChanges(prev => [change, ...prev.slice(0, 4)]); // Keep last 5 changes
+      setHighlightedSettings((prev: Set<string>) => new Set([...prev, settingId]));
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, [settingId]: true }));
+      
+      // Clear highlight after 2 seconds
+      setTimeout(() => {
+        setHighlightedSettings((prev: Set<string>) => {
+          const newSet = new Set(prev);
+          newSet.delete(settingId);
+          return newSet;
+        });
+      }, 2000);
+      
+      // Clear feedback after 1 second
+      setTimeout(() => {
+        setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, [settingId]: false }));
+      }, 1000);
+    } else {
+      // Traditional update with immediate local state update
+      setLocalSettings((prev: Record<string, any>) => ({
+        ...prev,
+        [settingId]: value
+      }));
+    }
   };
 
   // Reset section to defaults
   const resetSectionToDefaults = async (sectionId: string) => {
     const section = settingsSections.find(s => s.id === sectionId);
     if (!section) return;
-
+    
     for (const item of section.items) {
       if (item.defaultValue !== undefined) {
         if (item.id === 'theme') {
@@ -307,49 +399,19 @@ export default function SettingsPage() {
           updateLocalSetting(item.id, item.defaultValue);
         }
       }
-    setHighlightedSettings(prev => new Set([...prev, 'language']));
-    setShowFeedback(prev => ({ ...prev, language: true }));
+    }
+    
+    setHighlightedSettings((prev: Set<string>) => new Set([...prev, 'language']));
+    setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, language: true }));
     setTimeout(() => {
-      setHighlightedSettings(prev => {
+      setHighlightedSettings((prev: Set<string>) => {
         const newSet = new Set(prev);
         newSet.delete('language');
         return newSet;
       });
     }, 2000);
     setTimeout(() => {
-      setShowFeedback(prev => ({ ...prev, language: false }));
-    }, 1000);
-  };
-
-  const handleCurrencyChange = async (currencyCode: string) => {
-    await changeCurrency(currencyCode);
-    setHighlightedSettings(prev => new Set([...prev, 'currency']));
-    setShowFeedback(prev => ({ ...prev, currency: true }));
-    setTimeout(() => {
-      setHighlightedSettings(prev => {
-        const newSet = new Set(prev);
-        newSet.delete('currency');
-        return newSet;
-      });
-    }, 2000);
-    setTimeout(() => {
-      setShowFeedback(prev => ({ ...prev, currency: false }));
-    }, 1000);
-  };
-
-  const handleAnimationToggle = () => {
-    toggleAnimations();
-    setHighlightedSettings(prev => new Set([...prev, 'animations']));
-    setShowFeedback(prev => ({ ...prev, animations: true }));
-    setTimeout(() => {
-      setHighlightedSettings(prev => {
-        const newSet = new Set(prev);
-        newSet.delete('animations');
-        return newSet;
-      });
-    }, 2000);
-    setTimeout(() => {
-      setShowFeedback(prev => ({ ...prev, animations: false }));
+      setShowFeedback((prev: Record<string, boolean>) => ({ ...prev, language: false }));
     }, 1000);
   };
 
@@ -382,22 +444,14 @@ export default function SettingsPage() {
       </AnimatePresence>
       <motion.button
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
-          checked ? 'bg-primary' : 'bg-surface'
-        } ${
+        id={id}
+        className={`bg-surface border border-white/20 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ${
           isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : ''
         }`}
-        id={id}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.02 }}
+        whileFocus={{ scale: 1.02 }}
       >
-        <motion.span
-          className="inline-block h-4 w-4 transform rounded-full bg-white shadow-md"
-          animate={{
-            x: checked ? 24 : 4
-          }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        />
+        {checked ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />}
       </motion.button>
     </div>
   );
@@ -447,11 +501,11 @@ export default function SettingsPage() {
     variant?: 'primary' | 'secondary' | 'danger';
     id: string;
   }) => {
-    const baseClasses = "px-4 py-2 rounded-lg font-medium transition-all duration-200";
+    const baseClasses = "px-6 py-3 rounded-lg font-medium transition-colors duration-200";
     const variantClasses = {
-      primary: "bg-primary text-white hover:bg-primary/90",
+      primary: "bg-primary text-white hover:bg-primary/600",
       secondary: "bg-surface border border-white/20 text-text-primary hover:bg-white/10",
-      danger: "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
+      danger: "bg-red-500 text-white hover:bg-red-600"
     };
 
     return (
@@ -504,16 +558,17 @@ export default function SettingsPage() {
               <div className={`absolute bottom-2 left-2 w-12 h-2 ${theme.preview.accent} rounded-full shadow-sm`}></div>
               {value === theme.id && (
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-1 right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-md"
                 >
-                  <Check size={10} className="text-white" />
+                  ✓
                 </motion.div>
               )}
             </div>
-            <div className="p-2 bg-surface/50 backdrop-blur-sm">
-              <p className="text-xs font-medium text-text-primary truncate">{theme.name}</p>
+            <div className="p-3 text-center">
+              <p className="text-sm font-medium text-text-primary">{theme.name}</p>
             </div>
           </motion.button>
         ))}
@@ -522,126 +577,151 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Settings</h1>
-        <p className="text-text-secondary">Manage your dashboard preferences and configuration</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            Settings
+          </h1>
+          <p className="text-text-secondary">
+            Customize your wedding planning experience with instant preview and smart defaults
+          </p>
+        </motion.div>
 
-      <div className="space-y-8">
-        {settingsSections.map((section, sectionIndex) => (
-          <motion.div
-            key={section.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: sectionIndex * 0.1 }}
-            className="glass-card p-6 rounded-xl"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <section.icon size={24} className="text-primary" />
-                <div>
-                  <h2 className="text-xl font-semibold text-text-primary">{section.title}</h2>
-                  <p className="text-text-secondary text-sm">{section.description}</p>
-                </div>
-              </div>
-              <motion.button
-                onClick={() => resetSectionToDefaults(section.id)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-surface/50 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {settingsSections.map((section) => (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="glass-card p-8"
               >
-                <RefreshCw size={14} />
-                Reset to Default
-              </motion.button>
-            </div>
-
-            <div className="space-y-6">
-              {section.items.map((item, itemIndex) => (
-                <div key={item.id} className={`${
-                  item.type === 'theme-selector' ? 'space-y-4' : 'flex items-center justify-between'
-                } py-3 border-b border-white/10 last:border-0`}>
-                  {item.type !== 'theme-selector' && (
-                    <div className="flex-1">
-                      <label htmlFor={item.id} className="block text-text-primary font-medium mb-1">
-                        {item.label}
-                      </label>
-                      {item.description && (
-                        <p className="text-text-secondary text-sm">{item.description}</p>
-                      )}
-                    </div>
-                  )}
-                  {item.type === 'theme-selector' && (
-                    <div>
-                      <h3 className="text-text-primary font-medium mb-2">{item.label}</h3>
-                      {item.description && (
-                        <p className="text-text-secondary text-sm mb-4">{item.description}</p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className={`${item.type === 'theme-selector' ? 'w-full' : 'ml-4'}`}>
-                    {item.type === 'toggle' && (
-                      <ToggleSwitch
-                        checked={getSettingValue(item.id, item.defaultValue)}
-                        onChange={(value) => {
-                          if (item.id === 'animations') {
-                            handleAnimationToggle();
-                          } else {
-                            updateLocalSetting(item.id, value);
-                          }
-                        }}
-                        id={item.id}
-                        isHighlighted={highlightedSettings.has(item.id)}
-                      />
-                    )}
-                    {item.type === 'select' && item.options && (
-                      <SelectDropdown
-                        value={getSettingValue(item.id, item.defaultValue) || ''}
-                        onChange={(value) => {
-                          if (item.id === 'language') {
-                            handleLanguageChange(value);
-                          } else if (item.id === 'currency') {
-                            handleCurrencyChange(value);
-                          } else if (item.id === 'timezone') {
-                            handleTimezoneChange(value);
-                          } else {
-                            updateLocalSetting(item.id, value);
-                          }
-                        }}
-                        options={item.options}
-                        id={item.id}
-                        isHighlighted={highlightedSettings.has(item.id)}
-                      />
-                    )}
-                    {item.type === 'theme-selector' && (
-                      <ThemeSelector
-                        value={getSettingValue(item.id, item.defaultValue) || 'light'}
-                        onChange={handleThemeChange}
-                        isHighlighted={highlightedSettings.has(item.id)}
-                      />
-                    )}
-                    {item.type === 'button' && (
-                      <ActionButton
-                        onClick={() => {
-                          if (item.id === 'reset-settings') {
-                            resetToDefaults();
-                            setLocalSettings({});
-                          } else {
-                            item.action?.();
-                          }
-                        }}
-                        label={item.label}
-                        variant={item.id === 'reset-settings' ? 'danger' : 'secondary'}
-                        id={item.id}
-                      />
-                    )}
-                  </div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-text-primary">
+                    {section.title}
+                  </h2>
+                  <p className="text-text-secondary text-sm">
+                    {section.description}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+
+                <div className="space-y-4">
+                  {section.items.map((item) => (
+                    <div key={item.id} className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="block text-sm font-medium text-text-primary mb-1">
+                            {item.label}
+                          </label>
+                          {item.description && (
+                            <p className="text-xs text-text-secondary mt-1">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          {item.type === 'toggle' && (
+                            <ToggleSwitch
+                              id={item.id}
+                              checked={getSettingValue(item.id, item.defaultValue)}
+                              onChange={() => updateLocalSetting(item.id, !getSettingValue(item.id, item.defaultValue))}
+                              isHighlighted={highlightedSettings.has(item.id)}
+                            />
+                          )}
+                          {item.type === 'select' && item.options && (
+                            <SelectDropdown
+                              value={getSettingValue(item.id, item.defaultValue) || ''}
+                              onChange={(value) => {
+                                if (item.id === 'language') {
+                                  handleLanguageChange(value);
+                                } else if (item.id === 'currency') {
+                                  handleCurrencyChange(value);
+                                } else if (item.id === 'timezone') {
+                                  handleTimezoneChange(value);
+                                } else {
+                                  updateLocalSetting(item.id, value);
+                                }
+                              }}
+                              options={item.options}
+                              id={item.id}
+                              isHighlighted={highlightedSettings.has(item.id)}
+                            />
+                          )}
+                          {item.type === 'button' && (
+                            <ActionButton
+                              onClick={item.action || (() => {})}
+                              label={item.label}
+                              variant={item.id === 'account-deletion' ? 'danger' : 'secondary'}
+                              id={item.id}
+                            />
+                          )}
+                          {item.type === 'theme-selector' && (
+                            <ThemeSelector
+                              value={getSettingValue('theme', 'dark')}
+                              onChange={(value) => {
+                                handleThemeChange(value);
+                              }}
+                              isHighlighted={highlightedSettings.has('theme')}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reset to Default Button */}
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => resetSectionToDefaults(section.id)}
+                    className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+                  >
+                    Reset to Defaults
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-8">
+            {settingsSections.map((section) => (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="glass-card p-6"
+              >
+                <h3 className="text-lg font-semibold text-text-primary mb-4">
+                  {section.title}
+                </h3>
+                <div className="space-y-4">
+                  {section.items
+                    .filter(item => item.type === 'button')
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={item.action}
+                        className="w-full btn-secondary text-left"
+                        id={item.id}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

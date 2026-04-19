@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format, toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { format as formatDateFns } from 'date-fns';
 
 // Timezone configuration
@@ -80,8 +80,8 @@ export function useTimezoneConverter() {
   // Convert date to specific timezone
   const convertToTimezone = useCallback((date: Date, timezoneCode: string): Date => {
     try {
-      const utcDate = utcToZonedTime(date, timezoneCode);
-      return utcDate;
+      const zonedDate = toZonedTime(date, timezoneCode);
+      return zonedDate;
     } catch (error) {
       console.error('Failed to convert timezone:', error);
       return date;
@@ -91,7 +91,7 @@ export function useTimezoneConverter() {
   // Convert date from timezone to UTC
   const convertFromTimezone = useCallback((date: Date, timezoneCode: string): Date => {
     try {
-      const utcDate = zonedTimeToUtc(date, timezoneCode);
+      const utcDate = fromZonedTime(date, timezoneCode);
       return utcDate;
     } catch (error) {
       console.error('Failed to convert from timezone:', error);

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { initializeTheme } from '../../store/themeStore';
-import { initializeLocalization } from '../../store/localizationStore';
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -10,10 +9,12 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
-    // Initialize theme on app startup
-    initializeTheme();
-    // Initialize localization on app startup
-    initializeLocalization();
+    // Only apply theme changes after hydration is complete
+    const timer = setTimeout(() => {
+      initializeTheme();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return <>{children}</>;
