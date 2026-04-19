@@ -22,7 +22,8 @@ import {
   Info
 } from 'lucide-react';
 import { useThemeSystem } from '../../../hooks/useTheme';
-import { useLocalizationSystem } from '../../../hooks/useLocalization';
+import { useI18nLocalization } from '../../../hooks/useI18nLocalization';
+import { useTimezoneConverter, timezones } from '../../../hooks/useTimezoneConverter';
 import { themes } from '../../../store/themeStore';
 
 interface SettingSection {
@@ -146,16 +147,10 @@ const settingsSections: SettingSection[] = [
       {
         id: 'timezone',
         label: 'Timezone',
-        description: 'Set your local timezone for accurate time display.',
+        description: 'Set your local timezone for accurate time display',
         type: 'select',
         defaultValue: 'utc',
-        options: [
-          { label: 'UTC', value: 'utc' },
-          { label: 'EST (Eastern)', value: 'est' },
-          { label: 'PST (Pacific)', value: 'pst' },
-          { label: 'GMT (London)', value: 'gmt' },
-          { label: 'CET (Central Europe)', value: 'cet' }
-        ]
+        options: timezones.map(tz => ({ label: `${tz.name} (${tz.offset})`, value: tz.code }))
       },
       {
         id: 'date-format',
@@ -223,14 +218,23 @@ export default function SettingsPage() {
   const {
     currentLanguage,
     currentCurrency,
-    languages: availableLanguages,
-    currencies: availableCurrencies,
-    setLanguage,
-    setCurrency,
+    availableLanguages,
+    availableCurrencies,
+    changeLanguage,
+    changeCurrency,
     isLanguageActive,
     isCurrencyActive,
-    formatCurrency
-  } = useLocalizationSystem();
+    formatCurrency,
+    t
+  } = useI18nLocalization();
+
+  // Timezone converter integration
+  const {
+    currentTimezone,
+    getCurrentTimezoneInfo,
+    getAvailableTimezones,
+    isValidTimezone,
+  } = useTimezoneConverter();
 
   // Local state for non-theme settings
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(() => {
@@ -285,46 +289,24 @@ export default function SettingsPage() {
   };
 
   // Reset section to defaults
-  const resetSectionToDefaults = (sectionId: string) => {
+  const resetSectionToDefaults = async (sectionId: string) => {
     const section = settingsSections.find(s => s.id === sectionId);
     if (!section) return;
 
-    section.items.forEach(item => {
+    for (const item of section.items) {
       if (item.defaultValue !== undefined) {
         if (item.id === 'theme') {
           setTheme(item.defaultValue);
         } else if (item.id === 'animations') {
           setAnimations(item.defaultValue);
         } else if (item.id === 'language') {
-          setLanguage(item.defaultValue);
+          await changeLanguage(item.defaultValue);
         } else if (item.id === 'currency') {
-          setCurrency(item.defaultValue);
+          await changeCurrency(item.defaultValue);
         } else {
           updateLocalSetting(item.id, item.defaultValue);
         }
       }
-    });
-  };
-
-  // Handle instant apply for theme and localization
-  const handleThemeChange = (themeId: string) => {
-    setTheme(themeId);
-    setHighlightedSettings(prev => new Set([...prev, 'theme']));
-    setShowFeedback(prev => ({ ...prev, theme: true }));
-    setTimeout(() => {
-      setHighlightedSettings(prev => {
-        const newSet = new Set(prev);
-        newSet.delete('theme');
-        return newSet;
-      });
-    }, 2000);
-    setTimeout(() => {
-      setShowFeedback(prev => ({ ...prev, theme: false }));
-    }, 1000);
-  };
-
-  const handleLanguageChange = (languageCode: string) => {
-    setLanguage(languageCode);
     setHighlightedSettings(prev => new Set([...prev, 'language']));
     setShowFeedback(prev => ({ ...prev, language: true }));
     setTimeout(() => {
@@ -339,8 +321,8 @@ export default function SettingsPage() {
     }, 1000);
   };
 
-  const handleCurrencyChange = (currencyCode: string) => {
-    setCurrency(currencyCode);
+  const handleCurrencyChange = async (currencyCode: string) => {
+    await changeCurrency(currencyCode);
     setHighlightedSettings(prev => new Set([...prev, 'currency']));
     setShowFeedback(prev => ({ ...prev, currency: true }));
     setTimeout(() => {
@@ -621,6 +603,8 @@ export default function SettingsPage() {
                             handleLanguageChange(value);
                           } else if (item.id === 'currency') {
                             handleCurrencyChange(value);
+                          } else if (item.id === 'timezone') {
+                            handleTimezoneChange(value);
                           } else {
                             updateLocalSetting(item.id, value);
                           }

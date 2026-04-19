@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
-import { useLocalizationStore, languages, currencies, type Language, type Currency } from '../store/localizationStore';
+import { useLocalizationStore, currencies, type Language, type Currency } from '../store/localizationStore';
+import { useLanguageConverter, languages as i18nLanguages } from './useLanguageConverter';
+import i18n from '../lib/i18n';
 
 /**
  * Hook for managing localization settings (language and currency)
@@ -29,7 +31,7 @@ export function useLocalization() {
   }, [getCurrentCurrency]);
 
   // Get all available languages
-  const availableLanguages = languages;
+  const availableLanguages = i18nLanguages;
 
   // Get all available currencies
   const availableCurrencies = currencies;
@@ -44,10 +46,15 @@ export function useLocalization() {
     return currentCurrency === currencyCode;
   }, [currentCurrency]);
 
-  // Apply language with optional callback
-  const applyLanguage = useCallback((languageCode: string, callback?: () => void) => {
-    setLanguage(languageCode);
-    callback?.();
+  // Apply language with optional callback using i18next
+  const applyLanguage = useCallback(async (languageCode: string, callback?: () => void) => {
+    try {
+      await i18n.changeLanguage(languageCode);
+      setLanguage(languageCode);
+      callback?.();
+    } catch (error) {
+      console.error('Failed to change language:', error);
+    }
   }, [setLanguage]);
 
   // Apply currency with optional callback

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { useDateFormat } from '../../hooks/useDateFormat';
 
 // TODO: Add task management and checklists
 // TODO: Add document storage and organization
@@ -13,6 +14,7 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 export default function DashboardPage() {
   const { user, wedding, setCurrentPage } = useAppStore();
   const { formatCurrency } = useFormatCurrency();
+  const { formatDateForDisplay } = useDateFormat();
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState<'table' | 'card' | 'graph'>('table');
   const [activeAction, setActiveAction] = useState<'guest' | 'expense' | 'vendor'>('guest');
@@ -150,7 +152,7 @@ export default function DashboardPage() {
                     TODO: Days
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    {wedding?.weddingDate || 'No date set'}
+                    {wedding?.weddingDate ? formatDateForDisplay(new Date(wedding.weddingDate)) : 'No date set'}
                   </p>
                 </motion.div>
 

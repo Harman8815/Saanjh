@@ -148,7 +148,7 @@ interface ThemeState {
   resetToDefaults: () => void;
 }
 
-const defaultTheme = 'system';
+const defaultTheme = 'dark';
 const defaultAnimations = true;
 
 // Function to detect system theme preference

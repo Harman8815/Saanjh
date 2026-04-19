@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import { useDateFormat } from '../../hooks/useDateFormat';
 
 // TODO: Create user profile management page
 // TODO: Add personal information editing
@@ -15,6 +16,7 @@ import { useAppStore } from '../../store/useAppStore';
 
 export default function ProfilePage() {
   const { user, wedding, setCurrentPage } = useAppStore();
+  const { formatDateForDisplay, formatDateForInput } = useDateFormat();
 
   // TODO: Fetch user profile data
   // TODO: Load wedding details
