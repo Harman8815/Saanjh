@@ -229,167 +229,459 @@ const ElegantClassicTemplate = ({ data }: { data: InvitationData }) => {
 // Modern Animated Template Component
 const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 flex items-center justify-center p-8 overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+      {/* Animated Background Layers */}
       <div className="absolute inset-0">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-32 h-32 bg-white/5 rounded-full blur-xl"
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -100, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 10 + i * 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${10 + i * 12}%`,
-            }}
-          />
-        ))}
+        {/* Parallax Layer 1 - Farthest */}
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={`layer1-${i}`}
+              className="absolute w-24 h-24 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"
+              animate={{
+                x: [0, 150, 0],
+                y: [0, -150, 0],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: 15 + i * 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.5,
+              }}
+              style={{
+                left: `${10 + i * 12}%`,
+                top: `${5 + i * 10}%`,
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Parallax Layer 2 - Middle */}
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={`layer2-${i}`}
+              className="absolute w-32 h-32 bg-gradient-to-r from-pink-500/15 to-indigo-500/15 rounded-full blur-2xl"
+              animate={{
+                x: [0, -100, 0],
+                y: [0, 100, 0],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 20 + i * 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.3,
+              }}
+              style={{
+                left: `${15 + i * 15}%`,
+                top: `${10 + i * 15}%`,
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Parallax Layer 3 - Closest */}
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.05 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {[...Array(4)].map((_, i) => (
+            <motion.div
+              key={`layer3-${i}`}
+              className="absolute w-40 h-40 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full blur-xl"
+              animate={{
+                x: [0, 80, 0],
+                y: [0, -80, 0],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 25 + i * 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.7,
+              }}
+              style={{
+                left: `${20 + i * 20}%`,
+                top: `${15 + i * 20}%`,
+              }}
+            />
+          ))}
+        </motion.div>
       </div>
 
-      <div className="max-w-2xl w-full relative z-10">
-        <motion.div
-          initial={{ opacity: 0, rotateY: 90 }}
-          animate={{ opacity: 1, rotateY: 0 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-12 border border-white/20"
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Hero Section - Names */}
+        <motion.section
+          className="flex-1 flex items-center justify-center px-6 py-16 md:py-24"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
         >
-          {/* Modern Header */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-center mb-8"
-          >
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Heart className="w-10 h-10 text-white" />
-            </div>
+          <div className="max-w-6xl w-full">
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 border-2 border-white/30 rounded-full mx-auto"
-            />
-          </motion.div>
-
-          {/* Names with Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-center mb-8"
-          >
-            <motion.h1 
-              className="text-6xl font-bold text-white mb-4"
-              animate={{ textShadow: ["0 0 20px rgba(255,255,255,0.5)", "0 0 30px rgba(255,255,255,0.8)", "0 0 20px rgba(255,255,255,0.5)"] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              initial={{ opacity: 0, y: 100, rotateX: 15 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="text-center space-y-12"
             >
-              {data.brideName}
-            </motion.h1>
-            <motion.div
-              className="text-3xl text-white/80 mb-4"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              &
-            </motion.div>
-            <motion.h1 
-              className="text-6xl font-bold text-white mb-4"
-              animate={{ textShadow: ["0 0 20px rgba(255,255,255,0.5)", "0 0 30px rgba(255,255,255,0.8)", "0 0 20px rgba(255,255,255,0.5)"] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-            >
-              {data.groomName}
-            </motion.h1>
-            <p className="text-xl text-white/70">invite you to celebrate their wedding</p>
-          </motion.div>
-
-          {/* Date with Animation */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex items-center justify-center gap-3 mb-6"
-          >
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
-              <Calendar className="w-6 h-6 text-blue-300" />
-            </motion.div>
-            <p className="text-xl text-white font-medium">
-              {new Date(data.weddingDate).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </motion.div>
-
-          {/* Venue with Animation */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex items-center justify-center gap-3 mb-8"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <MapPin className="w-6 h-6 text-purple-300" />
-            </motion.div>
-            <p className="text-xl text-white font-medium">{data.venue}</p>
-          </motion.div>
-
-          {/* Message with Animation */}
-          {data.message && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-              className="text-center mb-8"
-            >
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <MessageSquare className="w-5 h-5 text-blue-300" />
-                </motion.div>
-                <p className="text-sm text-blue-300 uppercase tracking-wide">A Message</p>
-              </div>
-              <motion.p 
-                className="text-white/90 italic leading-relaxed"
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 3, repeat: Infinity }}
+              {/* Animated Heart */}
+              <motion.div
+                className="relative inline-block"
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
               >
-                "{data.message}"
+                <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full mx-auto flex items-center justify-center shadow-2xl shadow-purple-500/50">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Heart className="w-12 h-12 text-white" />
+                  </motion.div>
+                </div>
+                {/* Glow Effect */}
+                <motion.div
+                  className="absolute inset-0 w-24 h-24 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full blur-xl opacity-50"
+                  animate={{ 
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 0.8, 0.5]
+                  }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                />
+              </motion.div>
+
+              {/* Names with Glowing Effect */}
+              <div className="space-y-8">
+                <motion.h1 
+                  className="text-7xl md:text-8xl font-bold text-white tracking-tight"
+                  initial={{ opacity: 0, x: -100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                  style={{
+                    textShadow: "0 0 40px rgba(255,255,255,0.5)"
+                  }}
+                >
+                  <motion.span
+                    animate={{ 
+                      textShadow: [
+                        "0 0 20px rgba(255,255,255,0.8)",
+                        "0 0 40px rgba(255,255,255,1)",
+                        "0 0 20px rgba(255,255,255,0.8)"
+                      ]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    {data.brideName}
+                  </motion.span>
+                </motion.h1>
+
+                <motion.div
+                  className="text-5xl md:text-6xl text-white/90 font-light tracking-widest"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                >
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    &
+                  </motion.span>
+                </motion.div>
+
+                <motion.h1 
+                  className="text-7xl md:text-8xl font-bold text-white tracking-tight"
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 1, delay: 0.7 }}
+                  style={{
+                    textShadow: "0 0 40px rgba(255,255,255,0.5)"
+                  }}
+                >
+                  <motion.span
+                    animate={{ 
+                      textShadow: [
+                        "0 0 20px rgba(255,255,255,0.8)",
+                        "0 0 40px rgba(255,255,255,1)",
+                        "0 0 20px rgba(255,255,255,0.8)"
+                      ]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
+                  >
+                    {data.groomName}
+                  </motion.span>
+                </motion.h1>
+              </div>
+
+              <motion.p
+                className="text-2xl md:text-3xl text-white/80 font-light"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.9 }}
+              >
+                invite you to celebrate their wedding
               </motion.p>
             </motion.div>
-          )}
+          </div>
+        </motion.section>
 
-          {/* Footer */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1 }}
-            className="text-center"
-          >
+        {/* Event Details Section */}
+        <motion.section
+          className="px-6 py-16 md:py-24 bg-gradient-to-t from-black/20 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="max-w-4xl mx-auto text-center space-y-16">
+            {/* Date */}
             <motion.div
-              className="w-32 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto mb-4"
-              animate={{ scaleX: [0, 1, 0.8, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <p className="text-sm text-white/70">With joy and anticipation</p>
-          </motion.div>
-        </motion.div>
+              className="space-y-6"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                className="flex items-center justify-center gap-4"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                >
+                  <Calendar className="w-8 h-8 text-cyan-400" />
+                </motion.div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">Date</h2>
+                <motion.div
+                  animate={{ rotate: [360, 0] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                >
+                  <Calendar className="w-8 h-8 text-cyan-400" />
+                </motion.div>
+              </motion.div>
+              <motion.p
+                className="text-2xl md:text-3xl text-white/90 font-light"
+                animate={{ 
+                  textShadow: [
+                    "0 0 10px rgba(255,255,255,0.3)",
+                    "0 0 20px rgba(255,255,255,0.6)",
+                    "0 0 10px rgba(255,255,255,0.3)"
+                  ]
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                {new Date(data.weddingDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </motion.p>
+            </motion.div>
+
+            {/* Venue */}
+            <motion.div
+              className="space-y-6"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                className="flex items-center justify-center gap-4"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <MapPin className="w-8 h-8 text-purple-400" />
+                </motion.div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">Venue</h2>
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, -10, 10, 0]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                >
+                  <MapPin className="w-8 h-8 text-purple-400" />
+                </motion.div>
+              </motion.div>
+              <motion.p
+                className="text-2xl md:text-3xl text-white/90 font-light"
+                animate={{ 
+                  textShadow: [
+                    "0 0 10px rgba(255,255,255,0.3)",
+                    "0 0 20px rgba(255,255,255,0.6)",
+                    "0 0 10px rgba(255,255,255,0.3)"
+                  ]
+                }}
+                transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+              >
+                {data.venue}
+              </motion.p>
+            </motion.div>
+          </div>
+        </motion.section>
+
+        {/* Message Section */}
+        {data.message && (
+          <motion.section
+            className="px-6 py-16 md:py-24 bg-gradient-to-b from-black/20 to-transparent"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+          >
+            <div className="max-w-4xl mx-auto text-center space-y-12">
+              <motion.div
+                className="space-y-8"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                <motion.div
+                  className="flex items-center justify-center gap-4"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 15, -15, 0]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <MessageSquare className="w-8 h-8 text-pink-400" />
+                  </motion.div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white">A Message</h2>
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, -15, 15, 0]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                  >
+                    <MessageSquare className="w-8 h-8 text-pink-400" />
+                  </motion.div>
+                </motion.div>
+                
+                <motion.div
+                  className="relative max-w-3xl mx-auto"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  {/* Animated Border */}
+                  <motion.div
+                    className="absolute inset-0 border-2 border-gradient-to-r from-pink-400 to-purple-400 rounded-2xl opacity-30"
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  <motion.p
+                    className="text-xl md:text-2xl text-white/90 italic leading-relaxed px-8 py-6 font-light"
+                    animate={{ 
+                      textShadow: [
+                        "0 0 10px rgba(255,255,255,0.2)",
+                        "0 0 25px rgba(255,255,255,0.5)",
+                        "0 0 10px rgba(255,255,255,0.2)"
+                      ]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, delay: 3 }}
+                  >
+                    "{data.message}"
+                  </motion.p>
+                </motion.div>
+              </motion.div>
+            </div>
+          </motion.section>
+        )}
+
+        {/* Footer */}
+        <motion.footer
+          className="px-6 py-16 md:py-24 bg-gradient-to-t from-black/30 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <motion.div
+              className="flex items-center justify-center gap-6"
+              initial={{ opacity: 0, scale: 0 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                className="w-20 h-0.5 bg-gradient-to-r from-transparent to-pink-400"
+                animate={{ scaleX: [0, 1, 0.8, 1] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  rotate: [0, 360]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              >
+                <Heart className="w-8 h-8 text-pink-400" />
+              </motion.div>
+              <motion.div
+                className="w-20 h-0.5 bg-gradient-to-r from-pink-400 to-transparent"
+                animate={{ scaleX: [0, 1, 0.8, 1] }}
+                transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
+              />
+            </motion.div>
+            
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-xl text-white/80 font-light">With joy and anticipation</p>
+              <motion.p
+                className="text-lg text-white/60"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 4, repeat: Infinity, delay: 4 }}
+              >
+                We look forward to celebrating with you
+              </motion.p>
+            </motion.div>
+          </div>
+        </motion.footer>
       </div>
     </div>
   );
