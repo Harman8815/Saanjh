@@ -114,6 +114,7 @@ const sidebarItems: SidebarItem[] = [
     subItems: [
       { label: 'Invitation Builder', href: '/dashboard/invitation-builder/builder' },
       { label: 'Templates', href: '/dashboard/invitation-builder/templates' },
+      { label: 'Preview', href: '/dashboard/preview' },
       { label: 'Design Gallery', href: '/dashboard/invitation-builder/gallery' },
       { label: 'Share & Send', href: '/dashboard/invitation-builder/share' },
     ],
