@@ -20,7 +20,11 @@ import {
   Check,
   X,
   Info,
-  Settings
+  Settings,
+  Mail,
+  Smartphone,
+  Zap,
+  Lock
 } from 'lucide-react';
 import { useThemeSystem } from '../../../hooks/useTheme';
 import { useI18nLocalization } from '../../../hooks/useI18nLocalization';
@@ -428,33 +432,50 @@ export default function SettingsPage() {
     onChange: (value: boolean) => void; 
     id: string;
     isHighlighted?: boolean;
-  }) => (
-    <div className="relative">
-      <AnimatePresence>
-        {showFeedback[id] && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute -top-8 left-0 bg-primary text-white text-xs px-2 py-1 rounded-md z-10"
-          >
-            Updated!
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <motion.button
-        onClick={() => onChange(!checked)}
-        id={id}
-        className={`bg-surface border border-white/20 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ${
-          isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : ''
-        }`}
-        whileHover={{ scale: 1.02 }}
-        whileFocus={{ scale: 1.02 }}
-      >
-        {checked ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />}
-      </motion.button>
-    </div>
-  );
+  }) => {
+    const getToggleIcon = () => {
+      if (id === 'email-notifications') {
+        return checked ? <Mail className="w-5 h-5 text-green-500" /> : <Mail className="w-5 h-5 text-gray-400" />;
+      } else if (id === 'push-notifications') {
+        return checked ? <Smartphone className="w-5 h-5 text-green-500" /> : <Smartphone className="w-5 h-5 text-gray-400" />;
+      } else if (id === 'animations') {
+        return checked ? <Zap className="w-5 h-5 text-purple-500" /> : <Zap className="w-5 h-5 text-gray-400" />;
+      } else if (id === 'two-factor') {
+        return checked ? <Lock className="w-5 h-5 text-green-500" /> : <Lock className="w-5 h-5 text-gray-400" />;
+      } else {
+        // Default to theme icons for other toggles
+        return checked ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-blue-500" />;
+      }
+    };
+
+    return (
+      <div className="relative">
+        <AnimatePresence>
+          {showFeedback[id] && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute -top-8 left-0 bg-primary text-white text-xs px-2 py-1 rounded-md z-10"
+            >
+              Updated!
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.button
+          onClick={() => onChange(!checked)}
+          id={id}
+          className={`bg-surface border border-white/20 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 ${
+            isHighlighted ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : ''
+          }`}
+          whileHover={{ scale: 1.02 }}
+          whileFocus={{ scale: 1.02 }}
+        >
+          {getToggleIcon()}
+        </motion.button>
+      </div>
+    );
+  };
 
   const SelectDropdown = ({ value, onChange, options, id, isHighlighted }: {
     value: string;
