@@ -26,6 +26,22 @@ interface AppState {
     selectedTemplate?: string;
     budget?: number;
     guestCount?: number;
+    eventSections?: Array<{
+      id: string;
+      title: string;
+      date?: string;
+      time?: string;
+      venue?: string;
+      description?: string;
+      type: 'ceremony' | 'reception' | 'cocktail' | 'dinner' | 'party' | 'other';
+      order: number;
+    }>;
+    customColors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+    fontFamily?: string;
   } | null;
   
   // First-time Modal State
