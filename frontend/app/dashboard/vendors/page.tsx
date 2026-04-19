@@ -1,74 +1,250 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Store, Star } from 'lucide-react';
+import { Search, Filter, Grid3X3, List } from 'lucide-react';
+import CategoryTabs from '../../../components/dashboard/vendors/CategoryTabs';
+import VendorCard from '../../../components/dashboard/vendors/VendorCard';
+import { Vendor, VendorCategory } from '../../../types/vendor';
+
+// Sample vendors data - in production, this would come from an API
+const sampleVendors: Vendor[] = [
+  // Photographers
+  {
+    id: 'photo-1',
+    name: 'Moments Forever Photography',
+    category: 'photographer',
+    rating: 4.9,
+    reviewCount: 128,
+    location: 'Los Angeles, CA',
+    description: 'Capturing timeless moments with a blend of candid and artistic photography. Specializing in luxury weddings and engagement shoots.',
+    phone: '+1 (310) 555-0123',
+    email: 'hello@momentsforever.com',
+    website: 'https://momentsforever.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 3500, priceRange: '$$$' },
+    specialty: ['Wedding', 'Engagement', 'Editorial'],
+    equipment: ['Sony A7R IV', 'Canon EOS R5', 'Drone Photography'],
+    portfolio: [],
+    packages: [],
+    style: ['Documentary', 'Fine Art', 'Editorial'],
+    experienceYears: 8,
+    secondShooterAvailable: true,
+    engagementSessionIncluded: true,
+  },
+  {
+    id: 'photo-2',
+    name: 'Lens & Light Studios',
+    category: 'photographer',
+    rating: 4.7,
+    reviewCount: 89,
+    location: 'New York, NY',
+    description: 'Documentary-style wedding photography that tells your unique love story through authentic moments.',
+    phone: '+1 (212) 555-0456',
+    email: 'bookings@lensandlight.com',
+    website: 'https://lensandlight.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 2800, priceRange: '$$' },
+    specialty: ['Documentary', 'Destination Weddings'],
+    equipment: ['Nikon Z9', 'Fujifilm GFX'],
+    portfolio: [],
+    packages: [],
+    style: ['Documentary', 'Natural'],
+    experienceYears: 5,
+    secondShooterAvailable: true,
+    engagementSessionIncluded: false,
+  },
+  
+  // Catering
+  {
+    id: 'cater-1',
+    name: 'Royal Feast Catering',
+    category: 'catering',
+    rating: 4.8,
+    reviewCount: 215,
+    location: 'Chicago, IL',
+    description: 'Award-winning catering service offering exquisite cuisine from around the world. From intimate gatherings to grand celebrations.',
+    phone: '+1 (312) 555-0789',
+    email: 'events@royalfeast.com',
+    website: 'https://royalfeastcatering.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 85, priceRange: '$$$' },
+    cuisine: ['Italian', 'French', 'Mediterranean', 'Indian'],
+    menu: [],
+    packages: [],
+    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Kosher', 'Halal'],
+    serviceStyle: 'plated',
+    tastingsAvailable: true,
+  },
+  {
+    id: 'cater-2',
+    name: 'Garden Fresh Catering',
+    category: 'catering',
+    rating: 4.6,
+    reviewCount: 156,
+    location: 'San Francisco, CA',
+    description: 'Farm-to-table catering focusing on organic, locally-sourced ingredients. Sustainable and delicious.',
+    phone: '+1 (415) 555-0321',
+    email: 'hello@gardenfreshsf.com',
+    website: 'https://gardenfreshsf.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 65, priceRange: '$$' },
+    cuisine: ['Californian', 'Farm-to-Table', 'Organic'],
+    menu: [],
+    packages: [],
+    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free'],
+    serviceStyle: 'buffet',
+    tastingsAvailable: true,
+  },
+  {
+    id: 'cater-3',
+    name: 'Spice Route Catering',
+    category: 'catering',
+    rating: 4.9,
+    reviewCount: 98,
+    location: 'Austin, TX',
+    description: 'Authentic flavors from India, Thailand, and Mexico. Bold, vibrant cuisine that will wow your guests.',
+    phone: '+1 (512) 555-0654',
+    email: 'spice@spiceroutecatering.com',
+    website: 'https://spiceroutecatering.com',
+    status: 'booked',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 55, priceRange: '$$' },
+    cuisine: ['Indian', 'Thai', 'Mexican', 'Fusion'],
+    menu: [],
+    packages: [],
+    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Spice Levels Customizable'],
+    serviceStyle: 'family-style',
+    tastingsAvailable: true,
+  },
+  
+  // Decoration
+  {
+    id: 'deco-1',
+    name: 'Blooming Dreams Decor',
+    category: 'decoration',
+    rating: 5.0,
+    reviewCount: 172,
+    location: 'Miami, FL',
+    description: 'Luxury floral arrangements and event design that transforms venues into magical spaces.',
+    phone: '+1 (305) 555-0987',
+    email: 'design@bloomingdreams.com',
+    website: 'https://bloomingdreamsdecor.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 2500, priceRange: '$$$' },
+    styles: ['Romantic', 'Luxury', 'Garden', 'Modern'],
+    themes: ['Classic Romance', 'Boho Chic', 'Glamorous Gold', 'Tropical Paradise'],
+    items: [],
+    packages: [],
+    setupIncluded: true,
+    consultationAvailable: true,
+    customDesignAvailable: true,
+  },
+  {
+    id: 'deco-2',
+    name: 'Elegant Events Design',
+    category: 'decoration',
+    rating: 4.5,
+    reviewCount: 87,
+    location: 'Seattle, WA',
+    description: 'Minimalist and elegant event design with a focus on sustainability and eco-friendly materials.',
+    phone: '+1 (206) 555-0143',
+    email: 'hello@elegante.design',
+    website: 'https://elegante.design',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 1800, priceRange: '$$' },
+    styles: ['Minimalist', 'Scandinavian', 'Eco-Friendly'],
+    themes: ['Nordic Elegance', 'Green Wedding', 'Modern Simplicity'],
+    items: [],
+    packages: [],
+    setupIncluded: true,
+    consultationAvailable: true,
+    customDesignAvailable: true,
+  },
+  
+  // Others
+  {
+    id: 'other-1',
+    name: 'VIP Transportation Services',
+    category: 'others',
+    rating: 4.8,
+    reviewCount: 203,
+    location: 'Las Vegas, NV',
+    description: 'Luxury wedding transportation with a fleet of limousines, vintage cars, and party buses.',
+    phone: '+1 (702) 555-0276',
+    email: 'bookings@viptranspo.com',
+    website: 'https://viptranspo.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 450, priceRange: '$$' },
+    subcategory: 'Transportation',
+    services: ['Limousine Service', 'Vintage Car Rental', 'Party Bus', 'Guest Shuttle'],
+    packages: [],
+    certifications: ['Licensed & Insured', 'Professional Chauffeurs'],
+    insuranceAvailable: true,
+  },
+  {
+    id: 'other-2',
+    name: 'Harmony Wedding DJ',
+    category: 'others',
+    rating: 4.7,
+    reviewCount: 134,
+    location: 'Nashville, TN',
+    description: 'Professional DJ services with state-of-the-art sound equipment and lighting. Keeping the dance floor packed!',
+    phone: '+1 (615) 555-0509',
+    email: 'beats@harmonyweddingdj.com',
+    website: 'https://harmonyweddingdj.com',
+    status: 'available',
+    image: '',
+    gallery: [],
+    pricing: { currency: '$', startingPrice: 800, priceRange: '$$' },
+    subcategory: 'Music & Entertainment',
+    services: ['DJ & MC Services', 'Lighting Design', 'Photo Booth', 'Live Musicians'],
+    packages: [],
+    certifications: ['Licensed & Insured'],
+    insuranceAvailable: true,
+  },
+];
 
 export default function VendorsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState<VendorCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // TODO: Fetch vendors from API
-  const vendors = [
-    {
-      id: 1,
-      name: 'Elegant Events',
-      category: 'Venue',
-      rating: 4.8,
-      price: '$$$',
-      image: '/vendors/elegant-events.jpg',
-      services: ['Full Service Planning', 'Decor', 'Coordination'],
-      available: true
-    },
-    {
-      id: 2,
-      name: 'Bloom Florists',
-      category: 'Flowers',
-      rating: 4.9,
-      price: '$$',
-      image: '/vendors/bloom.jpg',
-      services: ['Bridal Bouquets', 'Centerpieces', 'Decorations'],
-      available: true
-    },
-    {
-      id: 3,
-      name: 'Capture Moments',
-      category: 'Photography',
-      rating: 5.0,
-      price: '$$$',
-      image: '/vendors/capture.jpg',
-      services: ['Wedding Photography', 'Videography', 'Photo Albums'],
-      available: true
-    },
-    {
-      id: 4,
-      name: 'Delicious Catering',
-      category: 'Catering',
-      rating: 4.7,
-      price: '$$',
-      image: '/vendors/delicious.jpg',
-      services: ['Full Menu Planning', 'Dietary Options', 'Bar Service'],
-      available: true
-    },
-    {
-      id: 5,
-      name: 'Sweet Harmony',
-      category: 'Music',
-      rating: 4.6,
-      price: '$',
-      image: '/vendors/sweet-harmony.jpg',
-      services: ['DJ Services', 'Live Band', 'Lighting'],
-      available: false
-    }
-  ];
+  // Calculate category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<VendorCategory | 'all', number> = { all: sampleVendors.length, photographer: 0, catering: 0, decoration: 0, others: 0 };
+    sampleVendors.forEach(vendor => {
+      counts[vendor.category]++;
+    });
+    return counts;
+  }, []);
 
-  const categories = ['all', 'Venue', 'Photography', 'Flowers', 'Catering', 'Music', 'Decor'];
-
-  const filteredVendors = vendors.filter(vendor => {
-    const matchesCategory = selectedCategory === 'all' || vendor.category === selectedCategory;
-    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Filter vendors based on category and search
+  const filteredVendors = useMemo(() => {
+    return sampleVendors.filter(vendor => {
+      const matchesCategory = activeCategory === 'all' || vendor.category === activeCategory;
+      const matchesSearch = 
+        vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vendor.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vendor.location.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [activeCategory, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,120 +257,125 @@ export default function VendorsPage() {
           className="mb-8"
         >
           <h1 className="text-4xl font-bold text-text-primary mb-4">
-            <span className="text-glow">Vendor Marketplace</span>
+            <span className="text-glow">Wedding Vendors</span>
           </h1>
-          <p className="text-xl text-text-muted max-w-3xl mx-auto">
-            Find and connect with the perfect wedding vendors
+          <p className="text-xl text-text-muted max-w-3xl">
+            Discover and connect with the perfect vendors for your special day
           </p>
         </motion.div>
 
-        {/* Search and Filters */}
+        {/* Category Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="glass-card p-6 mb-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-text-primary mb-2">Search Vendors</label>
+          <CategoryTabs 
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            counts={categoryCounts}
+          />
+        </motion.div>
+
+        {/* Search & Filters Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="glass-card p-4 mb-8 rounded-2xl"
+        >
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or service..."
-                className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary"
+                placeholder="Search vendors by name, description, or location..."
+                className="w-full pl-12 pr-4 py-3 bg-surface border border-white/20 rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-text-primary mb-2">Category</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary"
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-3 rounded-xl transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-primary text-white'
+                    : 'bg-white/5 text-text-secondary hover:text-text-primary hover:bg-white/10'
+                }`}
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
+                <Grid3X3 size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-3 rounded-xl transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-primary text-white'
+                    : 'bg-white/5 text-text-secondary hover:text-text-primary hover:bg-white/10'
+                }`}
+              >
+                <List size={18} />
+              </button>
             </div>
           </div>
         </motion.div>
 
+        {/* Results Count */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-6"
+        >
+          <p className="text-text-muted">
+            Showing <span className="text-text-primary font-medium">{filteredVendors.length}</span> vendor{filteredVendors.length !== 1 ? 's' : ''}
+            {activeCategory !== 'all' && (
+              <span> in <span className="text-primary font-medium capitalize">{activeCategory}</span></span>
+            )}
+            {searchQuery && (
+              <span> matching <span className="text-primary font-medium">&quot;{searchQuery}&quot;</span></span>
+            )}
+          </p>
+        </motion.div>
+
         {/* Vendor Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className={viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'space-y-4'
+          }
+        >
           {filteredVendors.map((vendor, index) => (
-            <motion.div
-              key={vendor.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 + index * 0.1 }}
-              className="glass-card p-6 cursor-pointer hover:scale-105 transition-transform"
-            >
-              {/* Vendor Image */}
-              <div className="w-full h-48 bg-surface rounded-lg mb-4 flex items-center justify-center">
-                <Store size={48} className="text-text-muted" />
-              </div>
-
-              {/* Vendor Info */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-semibold text-text-primary">{vendor.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <Star size={16} className="text-gold fill-current" />
-                    <span className="text-text-primary">{vendor.rating}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="px-3 py-1 bg-primary/20 text-primary rounded-full">
-                    {vendor.category}
-                  </span>
-                  <span className="text-text-muted">Price Range:</span>
-                  <span className="text-primary font-medium">{vendor.price}</span>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-text-primary font-medium mb-2">Services:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {vendor.services.map((service, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-surface border border-white/20 rounded-full text-xs text-text-muted">
-                        {service}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    vendor.available 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {vendor.available ? 'Available' : 'Unavailable'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 mt-4">
-                <button className="flex-1 btn-secondary">
-                  View Profile
-                </button>
-                <button className="flex-1 btn-primary" disabled={!vendor.available}>
-                  {vendor.available ? 'Contact' : 'Unavailable'}
-                </button>
-              </div>
-            </motion.div>
+            <VendorCard 
+              key={vendor.id} 
+              vendor={vendor} 
+              index={index}
+            />
           ))}
-        </div>
+        </motion.div>
 
-        {/* TODO: Add pagination */}
-        {/* TODO: Add sorting options */}
-        {/* TODO: Add vendor comparison */}
-        {/* TODO: Add saved vendors */}
+        {/* Empty State */}
+        {filteredVendors.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-surface flex items-center justify-center">
+              <Filter size={32} className="text-text-muted" />
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary mb-2">No vendors found</h3>
+            <p className="text-text-muted">
+              Try adjusting your search or category filter
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   );
