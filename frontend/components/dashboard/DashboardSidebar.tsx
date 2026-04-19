@@ -95,10 +95,10 @@ const sidebarItems: SidebarItem[] = [
     label: 'Gallery',
     href: '/dashboard/gallery',
     subItems: [
-      { label: 'Photos', href: '/dashboard/gallery/photos' },
-      { label: 'Videos', href: '/dashboard/gallery/videos' },
-      { label: 'Albums', href: '/dashboard/gallery/albums' },
-      { label: 'Upload', href: '/dashboard/gallery/upload' },
+      { label: 'All Albums', href: '/dashboard/gallery' },
+      { label: 'Featured', href: '/dashboard/gallery?filter=featured' },
+      { label: 'Recent Uploads', href: '/dashboard/gallery?sort=date-desc' },
+      { label: 'Manage Media', href: '/dashboard/gallery/manage' },
     ],
   },
   {
