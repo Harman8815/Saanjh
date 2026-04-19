@@ -1,7 +1,7 @@
 import VenueDetailClient from './VenueDetailClient';
 
 // Generate static params for all venues
-export function generateStaticParams() {
+export async function generateStaticParams() {
   return [
     { id: '1' },
     { id: '2' },
@@ -136,11 +136,11 @@ const venuesData = [
 ];
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
-export default async function VenueDetailPage({ params }: PageProps) {
-  const { id } = await params;
+export default function VenueDetailPage({ params }: PageProps) {
+  const { id } = params;
   const venueId = parseInt(id);
   const venue = venuesData.find(v => v.id === venueId);
 

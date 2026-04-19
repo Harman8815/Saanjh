@@ -56,7 +56,7 @@ const sampleVendors: Vendor[] = [
     rating: 4.8,
     reviewCount: 215,
     location: 'Chicago, IL',
-    description: 'Award-winning catering service offering exquisite cuisine from around the world. From intimate gatherings to grand celebrations.',
+    description: 'Award-winning catering service offering exquisite cuisine from around world. From intimate gatherings to grand celebrations.',
     phone: '+1 (312) 555-0789',
     email: 'events@royalfeast.com',
     website: 'https://royalfeastcatering.com',
@@ -209,7 +209,7 @@ const sampleReviews = [
     userName: 'Sarah Johnson',
     rating: 5,
     title: 'Absolutely Stunning Photos!',
-    content: 'Moments Forever captured our wedding day perfectly. The photos are breathtaking and they really captured the emotion of the day. Highly recommend!',
+    content: 'Moments Forever captured our wedding day perfectly. The photos are breathtaking and they really captured the emotion of day. Highly recommend!',
     date: '2024-03-15',
     helpful: 24,
   },
@@ -244,10 +244,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function VendorDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const vendor = sampleVendors.find(v => v.id === id);
-  const vendorReviews = sampleReviews.filter(r => r.vendorId === id);
+export default function VendorDetailPage({ params }: { params: { id: string } }) {
+  const vendor = sampleVendors.find(v => v.id === params.id);
+  const vendorReviews = sampleReviews.filter(r => r.vendorId === params.id);
 
   if (!vendor) {
     notFound();
