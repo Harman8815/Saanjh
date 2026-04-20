@@ -49,15 +49,27 @@ const templates: Template[] = [
 
 export default function InvitationBuilderPage() {
   const { wedding, setWedding } = useAppStore();
-  const [selectedTemplate, setSelectedTemplate] = useState<string>(wedding?.selectedTemplate || '');
+  
+  // Hard coded values for development phase
+  const hardCodedWedding = {
+    brideName: 'Sarah Johnson',
+    groomName: 'Michael Smith',
+    weddingDate: '2025-06-15',
+    venue: 'Grand Garden Estate',
+    selectedTemplate: 'elegant-classic'
+  };
+  
+  // Use hard coded values instead of store for development
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(hardCodedWedding.selectedTemplate);
   const [showSharingPanel, setShowSharingPanel] = useState(false);
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
-    setWedding({
-      ...wedding,
-      selectedTemplate: templateId
-    });
+    // Commented out for development - using hard coded values
+    // setWedding({
+    //   ...wedding,
+    //   selectedTemplate: templateId
+    // });
   };
 
   const handleShare = () => {
@@ -111,17 +123,46 @@ export default function InvitationBuilderPage() {
               </div>
               
               {/* Preview Frame */}
-              <div className="bg-white rounded-lg shadow-xl aspect-[3/4] max-w-md mx-auto flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <Palette className="w-10 h-10 text-white" />
+              <div className="bg-white rounded-lg shadow-xl aspect-[3/4] max-w-md mx-auto overflow-hidden">
+                {selectedTemplate === 'elegant-classic' ? (
+                  <div className="h-full bg-gradient-to-b from-amber-50 to-white p-8 text-center">
+                    <div className="mb-6">
+                      <div className="w-16 h-16 border-4 border-amber-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-amber-600 font-serif text-2xl">S&M</span>
+                      </div>
+                      <h3 className="text-2xl font-serif text-amber-800 mb-2">Sarah & Michael</h3>
+                      <p className="text-amber-600 italic">Together forever</p>
+                    </div>
+                    <div className="space-y-3 text-gray-700">
+                      <p className="text-sm">Saturday, June 15th, 2025</p>
+                      <p className="text-sm">Grand Garden Estate</p>
+                      <p className="text-xs mt-6 text-gray-500">Join us as we begin our forever</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Your Invitation Preview</h3>
-                  <p className="text-gray-600 mb-4">Select a template to see your invitation design</p>
-                  <button className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-                    Choose Template
-                  </button>
-                </div>
+                ) : selectedTemplate === 'modern-animated' ? (
+                  <div className="h-full bg-gradient-to-br from-purple-600 to-pink-500 p-8 text-white flex flex-col justify-center">
+                    <div className="mb-6">
+                      <h3 className="text-3xl font-bold mb-2">Sarah & Michael</h3>
+                      <div className="w-20 h-1 bg-white mx-auto mb-4"></div>
+                      <p className="text-lg opacity-90">Are getting married!</p>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <p>June 15, 2025</p>
+                      <p>Grand Garden Estate</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-8">
+                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <Palette className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Your Invitation Preview</h3>
+                    <p className="text-gray-600 mb-4">Select a template to see your invitation design</p>
+                    <button className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                      Choose Template
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -272,6 +313,7 @@ export default function InvitationBuilderPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full px-4 py-2 bg-white/10 text-text-primary rounded-lg hover:bg-white/20 transition-all duration-200 hover:shadow-md"
+                  onClick={() => window.open('/dashboard/invitation-preview', '_blank')}
                 >
                   Preview Fullscreen
                 </motion.button>
@@ -285,11 +327,11 @@ export default function InvitationBuilderPage() {
         isOpen={showSharingPanel}
         onClose={() => setShowSharingPanel(false)}
         invitationData={{
-          brideName: wedding?.brideName,
-          groomName: wedding?.groomName,
-          weddingDate: wedding?.weddingDate,
-          venue: wedding?.venue,
-          selectedTemplate: wedding?.selectedTemplate
+          brideName: hardCodedWedding.brideName,
+          groomName: hardCodedWedding.groomName,
+          weddingDate: hardCodedWedding.weddingDate,
+          venue: hardCodedWedding.venue,
+          selectedTemplate: hardCodedWedding.selectedTemplate
         }}
       />
       </motion.div>
