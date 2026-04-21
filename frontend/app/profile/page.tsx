@@ -3,6 +3,9 @@
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
 import { useDateFormat } from '../../hooks/useDateFormat';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 
 // TODO: Create user profile management page
 // TODO: Add personal information editing
@@ -25,6 +28,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -410,11 +414,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* TODO: Add password change modal */}
-      {/* TODO: Implement 2FA setup */}
-      {/* TODO: Add data export functionality */}
-      {/* TODO: Create account deactivation flow */}
+      <Footer />
     </div>
   );
 }
+/* TODO: Add data export functionality */
+/* TODO: Create account deactivation flow */
