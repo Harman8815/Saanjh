@@ -1,6 +1,6 @@
 {
   "name": "wedding-proposal-backend",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Backend for Wedding Proposal Generator",
   "main": "server.js",
   "scripts": {

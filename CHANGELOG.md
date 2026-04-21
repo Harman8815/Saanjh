@@ -13,6 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Real-time collaboration tools
 - Mobile app companion
 
+## [0.5.0] - 2024-04-21
+
+### Added
+- **Dashboard Branch Merge** - Successfully merged dashboard branch into staging
+- **Enhanced Wedding Cards Page** - Improved wedding cards listing and management interface
+- **Updated Pricing Page** - Enhanced pricing structure and presentation
+- **Improved Wedding Card Detail Page** - Better user experience for individual card viewing
+- **Enhanced Dashboard Packages** - Improved package management and display
+- **Updated Venues Page** - Enhanced venue browsing and management features
+
+### Enhanced
+- Improved UI/UX across dashboard pages
+- Enhanced responsive design for better mobile experience
+- Updated component styling and interactions
+- Improved page performance and loading states
+
+### Technical
+- Updated frontend version to 0.5.0
+- Updated backend version to 1.2.0
+- Code cleanup and optimization
+- Enhanced TypeScript type safety
+
 ## [0.4.0] - 2024-04-19
 
 ### Added
