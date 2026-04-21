@@ -4,16 +4,29 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
+import FirstTimeModal from '../../components/common/FirstTimeModal';
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { useDateFormat } from '../../hooks/useDateFormat';
 
 // TODO: Add task management and checklists
 // TODO: Add document storage and organization
 // TODO: Create analytics and insights dashboard
 
 export default function DashboardPage() {
-  const { user, wedding, setCurrentPage } = useAppStore();
+  const { 
+    user, 
+    wedding, 
+    setCurrentPage, 
+    isFirstTimeUser, 
+    showFirstTimeModal, 
+    setShowFirstTimeModal 
+  } = useAppStore();
+  const { formatCurrency } = useFormatCurrency();
+  const { formatDateForDisplay } = useDateFormat();
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState<'table' | 'card' | 'graph'>('table');
   const [activeAction, setActiveAction] = useState<'guest' | 'expense' | 'vendor'>('guest');
+  const [showModal, setShowModal] = useState(false);
 
   // Simulate loading data
   useEffect(() => {
@@ -23,6 +36,26 @@ export default function DashboardPage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // First visit detection - show modal if first time user and no wedding data
+  useEffect(() => {
+    if (!isLoading) {
+      if (isFirstTimeUser && (!wedding || !wedding.brideName || !wedding.groomName)) {
+        setShowModal(true);
+        setShowFirstTimeModal(true);
+      }
+    }
+  }, [isLoading, isFirstTimeUser, wedding, setShowFirstTimeModal]);
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setShowFirstTimeModal(false);
+  };
+
+  const handleEditDetails = () => {
+    setShowModal(true);
+    setShowFirstTimeModal(true);
+  };
 
   // TODO: Fetch dashboard data and analytics
   // TODO: Load wedding progress and timeline
@@ -36,6 +69,30 @@ export default function DashboardPage() {
         <DashboardSkeleton />
       ) : (
         <div className="container mx-auto px-4 py-8">
+          {/* Header with Edit Details Button */}
+          <div className="flex justify-between items-center mb-8 px-4">
+            <div className="text-center flex-1">
+              {wedding?.brideName && wedding?.groomName ? (
+                <h1 className="text-3xl font-bold text-text-primary mb-2">
+                  {wedding.brideName} & {wedding.groomName}
+                </h1>
+              ) : (
+                <h1 className="text-3xl font-bold text-text-primary mb-2">Welcome to Your Wedding Dashboard</h1>
+              )}
+              {wedding?.weddingDate && (
+                <p className="text-text-secondary">
+                  {formatDateForDisplay(new Date(wedding.weddingDate))}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleEditDetails}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-text-primary transition-all text-sm font-medium"
+            >
+              Edit Details
+            </button>
+          </div>
+
           {/* View Toggle Segmented Control */}
           <div className="flex justify-center mb-8 px-4">
             <div className="inline-flex bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-1 shadow-lg max-w-full overflow-hidden">
@@ -148,7 +205,7 @@ export default function DashboardPage() {
                     TODO: Days
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    {wedding?.weddingDate || 'No date set'}
+                    {wedding?.weddingDate ? formatDateForDisplay(new Date(wedding.weddingDate)) : 'No date set'}
                   </p>
                 </motion.div>
 
@@ -166,7 +223,7 @@ export default function DashboardPage() {
                     TODO: %
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    ${wedding?.budget || 0} total budget
+                    {formatCurrency(wedding?.budget || 0)} total budget
                   </p>
                 </motion.div>
 
@@ -549,6 +606,13 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+      
+      {/* First Time Modal */}
+      <FirstTimeModal 
+        isOpen={showModal} 
+        onClose={handleModalClose}
+        isEditMode={!isFirstTimeUser}
+      />
     </>
   );
 }

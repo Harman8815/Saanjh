@@ -129,7 +129,7 @@ export default function Home() {
               className="flex flex-col sm:flex-row gap-6 justify-center"
             >
               <Link
-                href="/venues"
+                href="/dashboard/venues"
                 onClick={() => handleNavClick('venues')}
                 className="btn-primary text-lg px-8 py-4"
               >

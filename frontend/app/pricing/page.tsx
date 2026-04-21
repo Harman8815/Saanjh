@@ -2,6 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import { CheckCircle2, XCircle, Star, Zap, Heart, Crown, Sparkles, Users, Calendar, MapPin, Camera, Phone, MessageCircle, Gift } from 'lucide-react';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 
 // TODO: Create comprehensive pricing and subscription plans page
 // TODO: Add tier comparison features
@@ -26,71 +30,71 @@ export default function PricingPage() {
       name: 'Starter',
       price: '$9',
       period: '/month',
-      description: 'Perfect for simple, intimate proposals',
+      description: 'Perfect for couples beginning their proposal journey',
+      icon: Heart,
+      color: 'from-blue-500 to-cyan-500',
       features: [
-        'Basic AI proposal ideas',
-        '3 proposal suggestions',
-        'Simple speech generator',
-        'Email support',
-        '7-day access'
-      ],
-      notIncluded: [
-        'Vendor recommendations',
-        'Custom location suggestions',
-        'Priority support',
-        'Unlimited revisions'
+        { text: 'AI-powered proposal ideas', icon: Sparkles, included: true },
+        { text: '3 unique proposal concepts', icon: Gift, included: true },
+        { text: 'Basic speech generator', icon: MessageCircle, included: true },
+        { text: 'Email support (48h response)', icon: MessageCircle, included: true },
+        { text: '7-day access', icon: Calendar, included: true },
+        { text: 'Vendor recommendations', icon: Users, included: false },
+        { text: 'Custom location scouting', icon: MapPin, included: false },
+        { text: 'Priority support', icon: Zap, included: false }
       ],
       popular: false,
-      buttonText: 'Get Started'
+      buttonText: 'Start Your Journey'
     },
     {
       id: 'romantic',
       name: 'Romantic',
       price: '$29',
       period: '/month',
-      description: 'Our most popular choice for memorable proposals',
+      description: 'Our most popular choice for unforgettable proposals',
+      icon: Star,
+      color: 'from-purple-500 to-pink-500',
       features: [
-        'Advanced AI proposal ideas',
-        'Unlimited proposal suggestions',
-        'Personalized speech generator',
-        'Vendor recommendations',
-        'Location suggestions',
-        'Priority email support',
-        '30-day access'
-      ],
-      notIncluded: [
-        '1-on-1 consultation',
-        'Photography coordination',
-        'Unlimited access'
+        { text: 'Advanced AI proposal ideas', icon: Sparkles, included: true },
+        { text: 'Unlimited proposal concepts', icon: Gift, included: true },
+        { text: 'Personalized speech generator', icon: MessageCircle, included: true },
+        { text: 'Vendor recommendations', icon: Users, included: true },
+        { text: 'Location suggestions', icon: MapPin, included: true },
+        { text: 'Priority email support (24h)', icon: Zap, included: true },
+        { text: '30-day access', icon: Calendar, included: true },
+        { text: '1-on-1 consultation', icon: Phone, included: false },
+        { text: 'Photography coordination', icon: Camera, included: false }
       ],
       popular: true,
-      buttonText: 'Most Popular'
+      buttonText: 'Choose Romantic'
     },
     {
       id: 'ultimate',
       name: 'Ultimate',
       price: '$79',
       period: '/month',
-      description: 'For the ultimate, once-in-a-lifetime proposal',
+      description: 'The complete premium experience for your dream proposal',
+      icon: Crown,
+      color: 'from-amber-500 to-orange-500',
       features: [
-        'Premium AI proposal ideas',
-        'Unlimited everything',
-        '1-on-1 consultation',
-        'Photography coordination',
-        'Vendor management',
-        'Custom location scouting',
-        'Phone & video support',
-        'Unlimited access',
-        'Proposal day assistance'
+        { text: 'Premium AI proposal ideas', icon: Sparkles, included: true },
+        { text: 'Unlimited everything', icon: Zap, included: true },
+        { text: '1-on-1 consultation', icon: Phone, included: true },
+        { text: 'Photography coordination', icon: Camera, included: true },
+        { text: 'Vendor management', icon: Users, included: true },
+        { text: 'Custom location scouting', icon: MapPin, included: true },
+        { text: '24/7 phone & video support', icon: MessageCircle, included: true },
+        { text: 'Lifetime access', icon: Calendar, included: true },
+        { text: 'Proposal day assistance', icon: Heart, included: true }
       ],
-      notIncluded: [],
       popular: false,
-      buttonText: 'Go Premium'
+      buttonText: 'Go Ultimate'
     }
   ];
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* TODO: Add pricing header */}
         <motion.div
@@ -124,7 +128,7 @@ export default function PricingPage() {
           </div>
         </motion.div>
 
-        {/* TODO: Add pricing cards */}
+        {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {plans.map((plan, index) => (
             <motion.div
@@ -132,61 +136,101 @@ export default function PricingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 + index * 0.1 }}
-              className={`glass-card p-8 relative ${plan.popular ? 'ring-2 ring-primary' : ''}`}
+              className={`relative group ${plan.popular ? 'scale-105' : ''}`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-semibold">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+                  >
+                    <Star className="w-4 h-4 fill-current" />
                     Most Popular
-                  </span>
+                  </motion.div>
                 </div>
               )}
 
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-text-primary mb-2">
-                  {plan.name}
-                </h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-primary">{plan.price}</span>
-                  <span className="text-text-secondary">{plan.period}</span>
-                </div>
-                <p className="text-text-secondary">
-                  {plan.description}
-                </p>
-              </div>
-
-              <div className="mb-8">
-                <h4 className="text-lg font-semibold text-text-primary mb-4">
-                  What&apos;s included:
-                </h4>
-                <ul className="space-y-3">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start">
-                      <span className="text-green-500 mr-3 mt-0.5">TODO: Check</span>
-                      <span className="text-text-secondary">{feature}</span>
-                    </li>
-                  ))}
-                  {plan.notIncluded.map((feature, i) => (
-                    <li key={i} className="flex items-start opacity-50">
-                      <span className="text-gray-500 mr-3 mt-0.5">TODO: Empty</span>
-                      <span className="text-text-secondary">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <button className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                plan.popular
-                  ? 'bg-primary text-white hover:bg-primary/90'
-                  : 'bg-surface text-text-primary hover:bg-white/10'
+              <div className={`glass-card p-8 h-full transition-all duration-300 hover:shadow-2xl hover:shadow-primary/25 ${
+                plan.popular ? 'ring-2 ring-primary bg-gradient-to-br from-purple-500/5 to-pink-500/5' : ''
               }`}>
-                {plan.buttonText}
-              </button>
+                {/* Plan Icon */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                  className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg`}
+                >
+                  <plan.icon className="w-8 h-8 text-white" />
+                </motion.div>
+
+                {/* Plan Name and Price */}
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-bold text-text-primary mb-2">
+                    {plan.name}
+                  </h3>
+                  <div className="mb-4">
+                    <span className={`text-5xl font-bold bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
+                      {plan.price}
+                    </span>
+                    <span className="text-text-secondary ml-1">{plan.period}</span>
+                  </div>
+                  <p className="text-text-secondary leading-relaxed">
+                    {plan.description}
+                  </p>
+                </div>
+
+                {/* Features */}
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-text-primary mb-6">
+                    What&apos;s included:
+                  </h4>
+                  <ul className="space-y-4">
+                    {plan.features.map((feature, i) => (
+                      <motion.li
+                        key={i}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.4 + index * 0.1 + i * 0.05 }}
+                        className={`flex items-start gap-3 ${feature.included ? '' : 'opacity-50'}`}
+                      >
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          feature.included ? 'bg-green-500/20' : 'bg-gray-500/20'
+                        }`}>
+                          {feature.included ? (
+                            <CheckCircle2 className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <XCircle className="w-3 h-3 text-gray-500" />
+                          )}
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <feature.icon className="w-4 h-4 text-text-secondary mt-0.5 flex-shrink-0" />
+                          <span className="text-text-secondary text-sm">{feature.text}</span>
+                        </div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* CTA Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+                    plan.popular
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-purple-500/25'
+                      : 'bg-surface text-text-primary hover:bg-white/10 hover:shadow-lg'
+                  }`}
+                >
+                  {plan.buttonText}
+                </motion.button>
+              </div>
             </motion.div>
           ))}
         </div>
 
-        {/* TODO: Add feature comparison table */}
+        {/* Feature Comparison Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,33 +245,72 @@ export default function PricingPage() {
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="text-left p-4 text-text-primary">Feature</th>
-                  <th className="text-center p-4 text-text-primary">Starter</th>
-                  <th className="text-center p-4 text-text-primary">Romantic</th>
-                  <th className="text-center p-4 text-text-primary">Ultimate</th>
+                  <th className="text-center p-4 text-text-primary">
+                    <div className="flex items-center justify-center gap-2">
+                      <Heart className="w-4 h-4 text-blue-500" />
+                      Starter
+                    </div>
+                  </th>
+                  <th className="text-center p-4 text-text-primary">
+                    <div className="flex items-center justify-center gap-2">
+                      <Star className="w-4 h-4 text-purple-500" />
+                      Romantic
+                    </div>
+                  </th>
+                  <th className="text-center p-4 text-text-primary">
+                    <div className="flex items-center justify-center gap-2">
+                      <Crown className="w-4 h-4 text-amber-500" />
+                      Ultimate
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  'AI Proposal Ideas',
-                  'Speech Generator',
-                  'Vendor Recommendations',
-                  'Priority Support',
-                  '1-on-1 Consultation',
-                  'Photography Coordination',
-                  'Unlimited Access'
+                  { name: 'AI Proposal Ideas', starter: true, romantic: true, ultimate: true, icon: Sparkles },
+                  { name: 'Speech Generator', starter: true, romantic: true, ultimate: true, icon: MessageCircle },
+                  { name: 'Vendor Recommendations', starter: false, romantic: true, ultimate: true, icon: Users },
+                  { name: 'Priority Support', starter: false, romantic: true, ultimate: true, icon: Zap },
+                  { name: '1-on-1 Consultation', starter: false, romantic: false, ultimate: true, icon: Phone },
+                  { name: 'Photography Coordination', starter: false, romantic: false, ultimate: true, icon: Camera },
+                  { name: 'Unlimited Access', starter: false, romantic: false, ultimate: true, icon: Calendar },
+                  { name: 'Proposal Day Assistance', starter: false, romantic: false, ultimate: true, icon: Heart }
                 ].map((feature, i) => (
-                  <tr key={i} className="border-b border-white/10">
-                    <td className="p-4 text-text-secondary">{feature}</td>
-                    <td className="p-4 text-center">
-                      <span className="text-primary">TODO: Icon</span>
+                  <motion.tr
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.6 + i * 0.05 }}
+                    className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <feature.icon className="w-4 h-4 text-text-secondary" />
+                        <span className="text-text-secondary">{feature.name}</span>
+                      </div>
                     </td>
                     <td className="p-4 text-center">
-                      <span className="text-primary">TODO: Icon</span>
+                      {feature.starter ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-500 mx-auto" />
+                      )}
                     </td>
                     <td className="p-4 text-center">
-                      <span className="text-primary">TODO: Icon</span>
+                      {feature.romantic ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-500 mx-auto" />
+                      )}
                     </td>
-                  </tr>
+                    <td className="p-4 text-center">
+                      {feature.ultimate ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-gray-500 mx-auto" />
+                      )}
+                    </td>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -298,11 +381,7 @@ export default function PricingPage() {
           </div>
         </motion.div>
       </div>
-
-      {/* TODO: Add payment processing modal */}
-      {/* TODO: Implement plan upgrade/downgrade */}
-      {/* TODO: Add billing management */}
-      {/* TODO: Create enterprise plan inquiry */}
+      <Footer />
     </div>
   );
 }

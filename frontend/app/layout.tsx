@@ -1,13 +1,13 @@
-'use client';
-
 import type { Metadata } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { usePathname } from "next/navigation";
+import "../styles/theme.css";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import LayoutWrapper from "../components/common/LayoutWrapper";
+import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { metadata } from "./metadata";
+import { LocalizationProvider } from "../components/providers/LocalizationProvider";
 // import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
 // Primary font for data-heavy sections - clean, modern, highly readable
@@ -37,9 +37,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const isHomePage = pathname === '/';
-
   return (
     <html
       lang="en"
@@ -47,11 +44,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
-        <LayoutWrapper>
-          {isHomePage && <Navbar />}
-          {children}
-          {isHomePage && <Footer />}
-        </LayoutWrapper>
+        <LocalizationProvider>
+          <ThemeProvider>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </ThemeProvider>
+        </LocalizationProvider>
       </body>
     </html>
   );

@@ -2,6 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import { useDateFormat } from '../../hooks/useDateFormat';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 
 // TODO: Create user profile management page
 // TODO: Add personal information editing
@@ -15,6 +19,7 @@ import { useAppStore } from '../../store/useAppStore';
 
 export default function ProfilePage() {
   const { user, wedding, setCurrentPage } = useAppStore();
+  const { formatDateForDisplay, formatDateForInput } = useDateFormat();
 
   // TODO: Fetch user profile data
   // TODO: Load wedding details
@@ -23,6 +28,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -129,7 +135,7 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue={wedding?.coupleName || 'TODO: Couple Names'}
+                    defaultValue={wedding?.brideName && wedding?.groomName ? `${wedding.brideName} & ${wedding.groomName}` : 'TODO: Couple Names'}
                     className="w-full p-3 bg-surface border border-white/20 rounded-lg text-text-primary"
                     placeholder="Partner 1 & Partner 2"
                     // TODO: Add form validation and update
@@ -408,11 +414,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* TODO: Add password change modal */}
-      {/* TODO: Implement 2FA setup */}
-      {/* TODO: Add data export functionality */}
-      {/* TODO: Create account deactivation flow */}
+      <Footer />
     </div>
   );
 }
+/* TODO: Add data export functionality */
+/* TODO: Create account deactivation flow */
