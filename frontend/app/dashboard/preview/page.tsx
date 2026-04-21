@@ -6,8 +6,7 @@ import { Monitor, Smartphone, Palette, Type, Calendar, MapPin, MessageSquare, He
 import { useAppStore } from '@/store/useAppStore';
 
 // Import templates
-import ElegantClassicTemplate from '@/app/invite/[uid]/page';
-import ModernAnimatedTemplate from '@/app/invite/[uid]/page';
+import { ElegantClassicTemplate, ModernAnimatedTemplate } from '@/app/invite/[uid]/page';
 
 interface PreviewSettings {
   device: 'desktop' | 'mobile';

@@ -1311,3 +1311,6 @@ export default function InvitationPage() {
     </motion.div>
   );
 }
+
+// Export template components for use in other components
+export { ElegantClassicTemplate, ModernAnimatedTemplate };

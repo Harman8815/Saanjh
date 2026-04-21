@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, Share2, RotateCw, Maximize2, Minimize2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Download, Share2, RotateCw } from 'lucide-react';
 
 // Hardcoded data for image invitation preview
 const weddingData = {
   brideName: 'Sarah Johnson',
   groomName: 'Michael Smith',
-  weddingDate: '2025-06-15',
+  weddingDate: 'June 15, 2025',
   venue: 'Grand Garden Estate',
   ceremonyTime: '4:00 PM',
   receptionTime: '6:00 PM',
@@ -36,39 +35,12 @@ const imageTemplates = [
 ];
 
 export default function ImageInvitationPreview() {
-  const router = useRouter();
   const [currentTemplate, setCurrentTemplate] = useState(weddingData.selectedTemplate);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        toggleFullscreen();
-      }
-      if (e.key === 'f' || e.key === 'F') {
-        toggleFullscreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isFullscreen]);
 
   const switchTemplate = () => {
     const currentIndex = imageTemplates.findIndex(t => t.id === currentTemplate);
     const nextIndex = (currentIndex + 1) % imageTemplates.length;
     setCurrentTemplate(imageTemplates[nextIndex].id);
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
   };
 
   const renderInvitation = () => {
@@ -232,177 +204,58 @@ export default function ImageInvitationPreview() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 ${isFullscreen ? '' : 'p-8'}`}>
-      {/* Header Controls - Only show when not fullscreen */}
-      <AnimatePresence>
-        {!isFullscreen && (
-          <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-gray-800/90 backdrop-blur-md border border-gray-700 rounded-t-xl"
-          >
-            <div className="container mx-auto px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.back()}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-white"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </motion.button>
-                  <div>
-                    <h1 className="text-xl font-semibold text-white">Image Invitation Preview</h1>
-                    <p className="text-sm text-gray-400">See how your invitation will look</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={switchTemplate}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                    Switch Template
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={toggleFullscreen}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-white"
-                  >
-                    <Maximize2 className="w-5 h-5" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </motion.header>
-        )}
-      </AnimatePresence>
-
-      {/* Main Preview Area */}
-      <div className={`flex items-center justify-center ${isFullscreen ? 'h-screen' : 'min-h-[calc(100vh-200px)]'}`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentTemplate}
-            initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
-            transition={{ duration: 0.6 }}
-            className="relative"
-          >
-            {/* Invitation Frame */}
-            <div 
-              className={`bg-white shadow-2xl overflow-hidden ${
-                isFullscreen 
-                  ? 'w-full h-full max-w-4xl max-h-screen mx-auto' 
-                  : 'w-[400px] h-[600px] rounded-xl'
-              }`}
-            >
-              {renderInvitation()}
-            </div>
-
-            {/* Floating Controls - Always visible */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className={`absolute bottom-4 right-4 flex gap-2 ${
-                isFullscreen ? 'bg-gray-800/90 backdrop-blur-md p-2 rounded-lg' : ''
-              }`}
-            >
-              {isFullscreen && (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={switchTemplate}
-                    className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    title="Switch Template (F)"
-                  >
-                    <RotateCw className="w-5 h-5" />
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={toggleFullscreen}
-                    className="p-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    title="Exit Fullscreen (ESC)"
-                  >
-                    <Minimize2 className="w-5 h-5" />
-                  </motion.button>
-                </>
-              )}
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                title="Download"
-              >
-                <Download className="w-5 h-5" />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                title="Share"
-              >
-                <Share2 className="w-5 h-5" />
-              </motion.button>
-            </motion.div>
-
-            {/* Template Info Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-              className={`absolute top-4 left-4 bg-gray-800/90 backdrop-blur-md px-3 py-2 rounded-lg ${
-                isFullscreen ? '' : ''
-              }`}
-            >
-              <p className="text-white text-sm font-medium">
-                {imageTemplates.find(t => t.id === currentTemplate)?.name}
-              </p>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Instructions - Only show when not fullscreen */}
-      {!isFullscreen && (
+    <div className="min-h-screen bg-gradient-to-br from-rose-100 via-purple-50 to-indigo-100 flex items-center justify-center p-8">
+      <AnimatePresence mode="wait">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 text-center"
+          key={currentTemplate}
+          initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
+          transition={{ duration: 0.6 }}
+          className="relative"
         >
-          <div className="bg-gray-800/90 backdrop-blur-md border border-gray-700 rounded-xl p-6 max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-white mb-4">Preview Controls</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-white">F</kbd>
-                <span>Toggle fullscreen</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <RotateCw className="w-4 h-4" />
-                <span>Switch templates</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-white">ESC</kbd>
-                <span>Exit fullscreen</span>
-              </div>
-            </div>
+          {/* Invitation Frame */}
+          <div className="bg-white shadow-2xl overflow-hidden w-[400px] h-[600px] rounded-xl">
+            {renderInvitation()}
           </div>
+
+          {/* Floating Controls */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="absolute bottom-4 right-4 flex gap-2"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={switchTemplate}
+              className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+              title="Switch Template"
+            >
+              <RotateCw className="w-5 h-5" />
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+              title="Download"
+            >
+              <Download className="w-5 h-5" />
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+              title="Share"
+            >
+              <Share2 className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
         </motion.div>
-      )}
+      </AnimatePresence>
     </div>
   );
 }

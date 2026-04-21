@@ -48,10 +48,7 @@ export function useDateFormat() {
       // If date is string, parse it first
       const dateObj = typeof date === 'string' ? parseISO(date) : date;
       
-      return formatDate(dateObj, formatString || 'PPP', {
-        locale: currentLanguage === 'hi' ? 'hi-IN' : 'en-US',
-        timeZone: timezoneCode || undefined,
-      });
+      return formatDateFns(dateObj, formatString || 'PPP');
     } catch (error) {
       console.error('Failed to format date:', error);
       return typeof date === 'string' ? date : date.toLocaleDateString();
@@ -104,6 +101,7 @@ export function useDateFormat() {
 
   // Get current date format info
   const getCurrentDateFormat = useCallback((): DateFormat => {
+    if (typeof window === 'undefined') return dateFormats[0];
     const storedFormat = localStorage.getItem('date-format');
     const format = dateFormats.find(df => df.code === storedFormat) || dateFormats[0];
     return format;
@@ -111,7 +109,9 @@ export function useDateFormat() {
 
   // Set date format
   const setDateFormat = useCallback((formatCode: string) => {
-    localStorage.setItem('date-format', formatCode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('date-format', formatCode);
+    }
   }, []);
 
   // Format date for display

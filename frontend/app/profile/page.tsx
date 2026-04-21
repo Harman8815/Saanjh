@@ -131,7 +131,7 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue={wedding?.coupleName || 'TODO: Couple Names'}
+                    defaultValue={wedding?.brideName && wedding?.groomName ? `${wedding.brideName} & ${wedding.groomName}` : 'TODO: Couple Names'}
                     className="w-full p-3 bg-surface border border-white/20 rounded-lg text-text-primary"
                     placeholder="Partner 1 & Partner 2"
                     // TODO: Add form validation and update

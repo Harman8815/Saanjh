@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, Share2, RotateCw, Maximize2, Minimize2, Heart, Star, Calendar, MapPin, Image } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Download, Share2, RotateCw, Heart, Star, Calendar, MapPin, Image } from 'lucide-react';
 
 // Hardcoded data for website invitation preview
 const websiteData = {
@@ -54,58 +53,12 @@ const websiteTemplates = [
 ];
 
 export default function WebsiteInvitationPreview() {
-  const router = useRouter();
   const [currentTemplate, setCurrentTemplate] = useState('elegant-website');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [currentSection, setCurrentSection] = useState('hero');
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        toggleFullscreen();
-      }
-      if (e.key === 'f' || e.key === 'F') {
-        toggleFullscreen();
-      }
-      if (e.key === 'ArrowDown' && !isFullscreen) {
-        navigateSection('next');
-      }
-      if (e.key === 'ArrowUp' && !isFullscreen) {
-        navigateSection('prev');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isFullscreen, currentSection]);
 
   const switchTemplate = () => {
     const currentIndex = websiteTemplates.findIndex(t => t.id === currentTemplate);
     const nextIndex = (currentIndex + 1) % websiteTemplates.length;
     setCurrentTemplate(websiteTemplates[nextIndex].id);
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const navigateSection = (direction: 'next' | 'prev') => {
-    const sections = ['hero', 'story', 'details', 'gallery', 'registry'];
-    const currentIndex = sections.indexOf(currentSection);
-    
-    if (direction === 'next') {
-      const nextIndex = (currentIndex + 1) % sections.length;
-      setCurrentSection(sections[nextIndex]);
-    } else {
-      const prevIndex = currentIndex === 0 ? sections.length - 1 : currentIndex - 1;
-      setCurrentSection(sections[prevIndex]);
-    }
   };
 
   const renderWebsiteContent = () => {
@@ -409,171 +362,55 @@ export default function WebsiteInvitationPreview() {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-900 ${isFullscreen ? '' : 'p-8'}`}>
-      {/* Header Controls - Only show when not fullscreen */}
-      <AnimatePresence>
-        {!isFullscreen && (
-          <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-gray-800/90 backdrop-blur-md border border-gray-700 rounded-t-xl"
-          >
-            <div className="container mx-auto px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.back()}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-white"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </motion.button>
-                  <div>
-                    <h1 className="text-xl font-semibold text-white">Website Invitation Preview</h1>
-                    <p className="text-sm text-gray-400">Interactive invitation experience</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={switchTemplate}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    <RotateCw className="w-4 h-4" />
-                    Switch Template
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={toggleFullscreen}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-white"
-                  >
-                    <Maximize2 className="w-5 h-5" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </motion.header>
-        )}
+    <div className="h-screen bg-gray-100">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentTemplate}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.6 }}
+          className="h-full"
+        >
+          {renderWebsiteContent()}
+        </motion.div>
       </AnimatePresence>
 
-      {/* Main Preview Area */}
-      <div className={`${isFullscreen ? 'h-screen' : 'min-h-[calc(100vh-200px)]'}`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentTemplate}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.6 }}
-            className="h-full"
-          >
-            {renderWebsiteContent()}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Floating Controls - Always visible */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className={`fixed bottom-4 right-4 flex gap-2 z-50 ${
-            isFullscreen ? 'bg-gray-800/90 backdrop-blur-md p-2 rounded-lg' : ''
-          }`}
+      {/* Floating Controls */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="fixed bottom-4 right-4 flex gap-2 z-50"
+      >
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={switchTemplate}
+          className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+          title="Switch Template"
         >
-          {isFullscreen && (
-            <>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={switchTemplate}
-                className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                title="Switch Template (F)"
-              >
-                <RotateCw className="w-5 h-5" />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleFullscreen}
-                className="p-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                title="Exit Fullscreen (ESC)"
-              >
-                <Minimize2 className="w-5 h-5" />
-              </motion.button>
-            </>
-          )}
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            title="Download"
-          >
-            <Download className="w-5 h-5" />
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            title="Share"
-          >
-            <Share2 className="w-5 h-5" />
-          </motion.button>
-        </motion.div>
-
-        {/* Template Info Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          className={`fixed top-4 left-4 bg-gray-800/90 backdrop-blur-md px-3 py-2 rounded-lg z-50 ${
-            isFullscreen ? '' : 'mt-16'
-          }`}
+          <RotateCw className="w-5 h-5" />
+        </motion.button>
+        
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+          title="Download"
         >
-          <p className="text-white text-sm font-medium">
-            {websiteTemplates.find(t => t.id === currentTemplate)?.name}
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Instructions - Only show when not fullscreen */}
-      {!isFullscreen && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 text-center"
+          <Download className="w-5 h-5" />
+        </motion.button>
+        
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+          title="Share"
         >
-          <div className="bg-gray-800/90 backdrop-blur-md border border-gray-700 rounded-xl p-6 max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-white mb-4">Preview Controls</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-white">F</kbd>
-                <span>Toggle fullscreen</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-white">ESC</kbd>
-                <span>Exit fullscreen</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <RotateCw className="w-4 h-4" />
-                <span>Switch templates</span>
-              </div>
-            </div>
-            <div className="mt-4 text-sm text-gray-400">
-              <p>Scroll to navigate through sections or use arrow keys</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+          <Share2 className="w-5 h-5" />
+        </motion.button>
+      </motion.div>
     </div>
   );
 }

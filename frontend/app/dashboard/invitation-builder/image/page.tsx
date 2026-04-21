@@ -193,7 +193,7 @@ export default function ImageInvitationBuilder() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/dashboard/invitation-preview/image')}
+                onClick={() => router.push('/invitation-preview/image')}
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <Eye className="w-4 h-4" />
