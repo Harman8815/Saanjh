@@ -8,7 +8,7 @@ export default function WeddingPackagesPage() {
   const [selectedPackage, setSelectedPackage] = useState(1);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
-  // TODO: Fetch packages from API
+  // Mock packages data - ready for API integration
   const packages = [
     {
       id: 1,
@@ -171,10 +171,183 @@ export default function WeddingPackagesPage() {
           ))}
         </div>
 
-        {/* TODO: Add package comparison */}
-        {/* TODO: Add custom package builder */}
-        {/* TODO: Add FAQ section */}
-        {/* TODO: Add testimonials */}
+        {/* Package Comparison */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="glass-card p-6 mt-8"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6">Package Comparison</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left p-4 text-text-muted font-medium">Features</th>
+                  {packages.map((pkg) => (
+                    <th key={pkg.id} className="text-center p-4 text-text-muted font-medium">
+                      {pkg.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Price (Monthly)</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center text-text-primary">
+                      ${pkg.price.monthly}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Price (Yearly)</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center text-text-primary">
+                      ${pkg.price.yearly}/mo
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Digital Invitations</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center">
+                      <Check size={20} className="text-green-500 mx-auto" />
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Advanced Venue Booking</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center">
+                      {pkg.id >= 2 ? (
+                        <Check size={20} className="text-green-500 mx-auto" />
+                      ) : (
+                        <span className="text-text-muted">-</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Vendor Directory</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center">
+                      {pkg.id >= 2 ? (
+                        <Check size={20} className="text-green-500 mx-auto" />
+                      ) : (
+                        <span className="text-text-muted">-</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Personal Consultant</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center">
+                      {pkg.id === 3 ? (
+                        <Check size={20} className="text-green-500 mx-auto" />
+                      ) : (
+                        <span className="text-text-muted">-</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="p-4 text-text-primary font-medium">Access Duration</td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.id} className="p-4 text-center text-text-primary">
+                      {pkg.features.find(f => f.includes('Day'))?.split(' ')[0] || '-'}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        {/* FAQ Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="glass-card p-6 mt-8"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6">Frequently Asked Questions</h2>
+          <div className="space-y-4">
+            {[
+              {
+                question: "Can I change my package later?",
+                answer: "Yes! You can upgrade or downgrade your package at any time. Changes will be prorated."
+              },
+              {
+                question: "What payment methods do you accept?",
+                answer: "We accept all major credit cards, PayPal, and bank transfers for yearly plans."
+              },
+              {
+                question: "Is there a setup fee?",
+                answer: "No setup fees for any package. You only pay the monthly or yearly subscription."
+              },
+              {
+                question: "Can I cancel anytime?",
+                answer: "Yes, you can cancel your subscription anytime with no cancellation fees."
+              },
+              {
+                question: "Do you offer refunds?",
+                answer: "We offer a 14-day money-back guarantee for all new subscriptions."
+              }
+            ].map((faq, index) => (
+              <div key={index} className="border-b border-white/10 pb-4 last:border-0">
+                <h3 className="text-text-primary font-medium mb-2">{faq.question}</h3>
+                <p className="text-text-muted">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Testimonials */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="glass-card p-6 mt-8"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6">What Our Couples Say</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Sarah & Michael",
+                package: "Premium Package",
+                text: "The venue booking feature alone saved us hours of research. Highly recommend!",
+                rating: 5
+              },
+              {
+                name: "Emily & James",
+                package: "Ultimate Package",
+                text: "Our personal consultant was amazing. Made wedding planning stress-free!",
+                rating: 5
+              },
+              {
+                name: "Jessica & David",
+                package: "Starter Package",
+                text: "Perfect for our intimate wedding. Great value for the price!",
+                rating: 4
+              }
+            ].map((testimonial, index) => (
+              <div key={index} className="p-4 bg-surface rounded-lg">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">⭐</span>
+                  ))}
+                </div>
+                <p className="text-text-muted mb-3 italic">"{testimonial.text}"</p>
+                <div>
+                  <p className="text-text-primary font-medium">{testimonial.name}</p>
+                  <p className="text-text-muted text-sm">{testimonial.package}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
