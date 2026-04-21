@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +27,9 @@ urlpatterns = [
     path('api/expenses/', include('expenses.urls')),
     path('api/wedding-cards/', include('wedding_cards.urls')),
     path('api/public/cards/<str:shareable_link>/', include('wedding_cards.public_urls')),
+    # Fake data generation endpoints (admin only)
+    path('api/admin/generate-fake-data/', views.generate_fake_data, name='generate-fake-data'),
+    path('api/admin/generate-sample-wedding/', views.generate_sample_wedding, name='generate-sample-wedding'),
+    path('api/admin/clear-fake-data/', views.clear_fake_data, name='clear-fake-data'),
+    path('api/admin/data-statistics/', views.data_statistics, name='data-statistics'),
 ]

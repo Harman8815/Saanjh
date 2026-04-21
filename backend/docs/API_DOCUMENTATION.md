@@ -506,6 +506,123 @@ Authorization: Token your_auth_token_here
 }
 ```
 
+### Admin Fake Data Generation (`/api/admin/`)
+
+**Note**: All admin endpoints require admin privileges and authentication.
+
+#### Generate Complete Fake Dataset
+- **POST** `/api/admin/generate-fake-data/`
+- **Description**: Generate a complete fake dataset with multiple users, weddings, guests, vendors, expenses, and wedding cards
+- **Request Body**:
+```json
+{
+  "user_count": 3,
+  "guests_per_wedding": 30,
+  "vendors_per_wedding": 8,
+  "expenses_per_wedding": 15
+}
+```
+- **Response**:
+```json
+{
+  "message": "Fake data generated successfully",
+  "summary": {
+    "users_created": 3,
+    "weddings_created": 3,
+    "guests_created": 90,
+    "vendors_created": 24,
+    "expenses_created": 45,
+    "wedding_cards_created": 3
+  },
+  "details": {
+    "users": [
+      {"id": 1, "username": "testuser1", "email": "testuser1@example.com"}
+    ]
+  }
+}
+```
+
+#### Generate Sample Wedding
+- **POST** `/api/admin/generate-sample-wedding/`
+- **Description**: Generate a single sample wedding for testing
+- **Request Body**:
+```json
+{
+  "user_id": 1,
+  "guest_count": 25,
+  "vendor_count": 6,
+  "expense_count": 12
+}
+```
+- **Response**:
+```json
+{
+  "message": "Sample wedding created successfully",
+  "user": {
+    "id": 1,
+    "username": "testuser1",
+    "email": "testuser1@example.com"
+  },
+  "wedding": {
+    "id": 1,
+    "couple_names": "Sarah & Michael",
+    "wedding_date": "2024-08-15",
+    "venue": "Grand Ballroom",
+    "budget": 25000.00
+  },
+  "created_counts": {
+    "guests": 25,
+    "vendors": 6,
+    "expenses": 12,
+    "wedding_cards": 1
+  }
+}
+```
+
+#### Clear All Fake Data
+- **DELETE** `/api/admin/clear-fake-data/`
+- **Description**: Clear all data from the database (use with caution!)
+- **Response**:
+```json
+{
+  "message": "All fake data cleared successfully",
+  "deleted_counts": {
+    "users": 5,
+    "weddings": 5,
+    "guests": 150,
+    "vendors": 40,
+    "expenses": 75,
+    "wedding_cards": 5
+  }
+}
+```
+
+#### Get Data Statistics
+- **GET** `/api/admin/data-statistics/`
+- **Description**: Get statistics about current data in the database
+- **Response**:
+```json
+{
+  "statistics": {
+    "users": 5,
+    "weddings": 5,
+    "guests": 150,
+    "vendors": 40,
+    "expenses": 75,
+    "wedding_cards": 5,
+    "total_budget": 125000.00,
+    "total_expenses": 118750.00
+  },
+  "averages": {
+    "guests_per_wedding": 30,
+    "vendors_per_wedding": 8,
+    "expenses_per_wedding": 15,
+    "budget_per_wedding": 25000.00,
+    "expenses_per_budget": 95.0
+  }
+}
+```
+
 ## Error Responses
 
 All endpoints return consistent error responses:
@@ -522,7 +639,7 @@ Common HTTP status codes:
 - 201: Created
 - 400: Bad Request
 - 401: Unauthorized
-- 403: Forbidden
+- 403: Forbidden (Admin required for admin endpoints)
 - 404: Not Found
 - 500: Internal Server Error
 
