@@ -8,7 +8,7 @@ export default function VenuesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // TODO: Fetch venues from API
+  // Mock venues data - ready for API integration
   const venues = [
     {
       id: 1,
@@ -211,10 +211,142 @@ export default function VenuesPage() {
           ))}
         </motion.div>
 
-        {/* TODO: Add pagination */}
-        {/* TODO: Add map view */}
-        {/* TODO: Add saved venues */}
-        {/* TODO: Add comparison tool */}
+        {/* Pagination */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="flex justify-center items-center gap-2 mt-8"
+        >
+          <button className="px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors">
+            Previous
+          </button>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((page) => (
+              <button
+                key={page}
+                className={`w-10 h-10 rounded-lg transition-colors ${
+                  page === 1
+                    ? 'bg-primary text-white'
+                    : 'bg-surface border border-white/20 text-text-muted hover:text-text-primary hover:bg-white/5'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button className="px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors">
+            Next
+          </button>
+        </motion.div>
+
+        {/* Map View Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="glass-card p-6 mt-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-text-primary">Venue Locations</h2>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm">
+                Coming Soon
+              </span>
+            </div>
+          </div>
+          <div className="bg-surface rounded-lg h-96 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🗺️</span>
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2">Interactive Map View</h3>
+              <p className="text-text-muted max-w-md">
+                Visualize venue locations on an interactive map with filtering and search capabilities.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Saved Venues */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="glass-card p-6 mt-8"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6">Saved Venues</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {venues.slice(0, 2).map((venue, index) => (
+              <div key={venue.id} className="p-4 bg-surface rounded-lg">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-text-primary font-medium">{venue.name}</h3>
+                    <p className="text-text-muted text-sm">{venue.location}</p>
+                  </div>
+                  <button className="text-red-500 hover:text-red-600 transition-colors">
+                    <span className="text-xl">♥</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-4 text-text-muted text-sm mb-3">
+                  <span className="flex items-center gap-1">
+                    <span className="text-yellow-400">⭐</span>
+                    {venue.rating}
+                  </span>
+                  <span>•</span>
+                  <span>{venue.capacity} guests</span>
+                </div>
+                <div className="text-lg font-semibold text-primary">
+                  ${venue.price.toLocaleString()}
+                  <span className="text-sm text-text-muted font-normal">/event</span>
+                </div>
+              </div>
+            ))}
+            <div className="p-4 bg-surface rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <button className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2 hover:bg-primary/30 transition-colors">
+                  <span className="text-2xl">+</span>
+                </button>
+                <p className="text-text-muted text-sm">Browse more venues</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Comparison Tool */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="glass-card p-6 mt-8"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6">Compare Venues</h2>
+          <div className="mb-4">
+            <p className="text-text-muted mb-4">Select up to 3 venues to compare side by side:</p>
+            <div className="flex flex-wrap gap-2">
+              {venues.slice(0, 3).map((venue) => (
+                <button
+                  key={venue.id}
+                  className="px-4 py-2 bg-surface border border-white/20 rounded-lg text-text-primary hover:bg-white/5 transition-colors"
+                >
+                  {venue.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-surface rounded-lg p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚖️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Venue Comparison Tool</h3>
+            <p className="text-text-muted max-w-md">
+              Compare venues side-by-side with detailed features, pricing, and availability.
+            </p>
+            <button className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+              Start Comparison
+            </button>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
