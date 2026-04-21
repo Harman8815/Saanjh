@@ -2,6 +2,9 @@
 
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 
 // TODO: Create comprehensive pricing and subscription plans page
 // TODO: Add tier comparison features
@@ -91,6 +94,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* TODO: Add pricing header */}
         <motion.div
@@ -298,11 +302,7 @@ export default function PricingPage() {
           </div>
         </motion.div>
       </div>
-
-      {/* TODO: Add payment processing modal */}
-      {/* TODO: Implement plan upgrade/downgrade */}
-      {/* TODO: Add billing management */}
-      {/* TODO: Create enterprise plan inquiry */}
+      <Footer />
     </div>
   );
 }
