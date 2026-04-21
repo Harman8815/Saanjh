@@ -1,0 +1,65 @@
+# Core Django Framework
+Django==5.2.8
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+django-filter==25.2
+
+# Database and ORM
+psycopg2-binary==2.9.10  # PostgreSQL adapter
+python-decouple==3.8     # Environment variable management
+
+# Performance and Caching
+redis==5.2.1             # Redis client for caching
+django-redis==5.4.0     # Django Redis integration
+
+# Security and Authentication
+djangorestframework-simplejwt==5.4.0  # JWT authentication
+cryptography==44.0.1    # Cryptographic functions
+
+# Development and Testing
+pytest-django==4.9.0    # Testing framework
+pytest-cov==5.0.0       # Coverage reporting
+factory-boy==3.3.1      # Test data generation
+django-extensions==4.1  # Development utilities
+
+# Production and Monitoring
+gunicorn==23.0.0        # WSGI server
+whitenoise==6.8.2       # Static file serving
+sentry-sdk==2.19.2      # Error monitoring
+
+# Documentation
+drf-yasg==1.21.8        # API documentation
+coreapi==2.0.15         # API schema support
+
+# Image and File Processing (for future photo upload features)
+Pillow==10.4.0           # Image processing
+django-storages==1.14.4  # File storage backends
+
+# Date and Time utilities
+python-dateutil==2.9.0  # Date manipulation
+pytz==2024.2            # Timezone handling
+
+# Validation and Serialization
+marshmallow==3.23.1     # Advanced serialization
+jsonschema==4.23.0      # JSON validation
+
+# HTTP Client (for external API integrations)
+requests==2.32.3         # HTTP library
+urllib3==2.3.0          # HTTP library dependency
+
+# Email services (for invitations and reminders)
+django-anymail==11.1.0  # Email service integration
+
+# Background tasks (for future enhancements)
+celery==5.4.0           # Background task processing
+kombu==5.4.2            # Message queue library
+
+# Data export/import
+openpyxl==3.1.5         # Excel file handling
+csv233==0.3.2           # Enhanced CSV handling
+
+# Utilities
+click==8.1.8             # Command line interface
+tqdm==4.67.1            # Progress bars
+python-slugify==8.0.4   # URL slug generation
+bleach==6.2.0           # HTML sanitization
