@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocalizationStore, currencies, type Currency } from '../store/localizationStore';
 import { languages as i18nLanguages, getLanguageByCode } from './useLanguageConverter';
-import { useTimezoneConverter, timezones } from './useTimezoneConverter';
+import { useTimezoneConverter, timezones, type Timezone } from './useTimezoneConverter';
 import i18n from '../lib/i18n';
 
 /**

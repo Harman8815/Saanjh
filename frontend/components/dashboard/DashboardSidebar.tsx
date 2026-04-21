@@ -109,13 +109,14 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     icon: Globe,
-    label: 'Website',
-    href: '/dashboard/website',
+    label: 'Invitation Builder',
+    href: '/dashboard/invitation-builder',
     subItems: [
-      { label: 'Website Builder', href: '/dashboard/website/builder' },
-      { label: 'Pages', href: '/dashboard/website/pages' },
-      { label: 'Domain', href: '/dashboard/website/domain' },
-      { label: 'Analytics', href: '/dashboard/website/analytics' },
+      { label: 'Invitation Builder', href: '/dashboard/invitation-builder/builder' },
+      { label: 'Templates', href: '/dashboard/invitation-builder/templates' },
+      { label: 'Preview', href: '/dashboard/preview' },
+      { label: 'Design Gallery', href: '/dashboard/invitation-builder/gallery' },
+      { label: 'Share & Send', href: '/dashboard/invitation-builder/share' },
     ],
   },
   {

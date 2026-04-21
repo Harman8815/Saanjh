@@ -229,6 +229,7 @@ export function useTimezoneConverter() {
     // Current state
     currentTimezone: detectUserTimezone(),
     currentTimezoneInfo: getCurrentTimezoneInfo(),
+    getCurrentTimezoneInfo,
     
     // Conversion functions
     convertToTimezone,

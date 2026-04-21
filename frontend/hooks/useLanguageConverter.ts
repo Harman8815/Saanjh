@@ -140,11 +140,13 @@ export function useLanguageConverter() {
 
   // Sync language with localStorage
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('i18nextLng');
-    if (savedLanguage && savedLanguage !== currentLanguage) {
-      changeLanguage(savedLanguage);
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('i18nextLng');
+      if (savedLanguage && savedLanguage !== currentLanguage) {
+        changeLanguage(savedLanguage);
+      }
     }
-  }, []);
+  }, [currentLanguage, changeLanguage]);
 
   // Update document direction when language changes
   useEffect(() => {
