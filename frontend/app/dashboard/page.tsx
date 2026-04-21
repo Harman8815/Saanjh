@@ -221,8 +221,7 @@ export default function DashboardPage() {
 
           {activeView === 'table' ? (
             <>
-              {/* Table Cards View */}
-              {/* TODO: Add wedding overview cards */}
+              {/* Table Cards View - Wedding Overview Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
