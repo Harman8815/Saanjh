@@ -8,9 +8,6 @@ import FirstTimeModal from '../../components/common/FirstTimeModal';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { useDateFormat } from '../../hooks/useDateFormat';
 
-// TODO: Add task management and checklists
-// TODO: Add document storage and organization
-// TODO: Create analytics and insights dashboard
 
 export default function DashboardPage() {
   const { 
@@ -57,11 +54,47 @@ export default function DashboardPage() {
     setShowFirstTimeModal(true);
   };
 
-  // TODO: Fetch dashboard data and analytics
-  // TODO: Load wedding progress and timeline
-  // TODO: Get budget and expense data
-  // TODO: Fetch vendor information and communications
-  // TODO: Get upcoming tasks and deadlines
+  // Calculate days until wedding
+  const calculateDaysUntilWedding = () => {
+    if (!wedding?.weddingDate) return 0;
+    const weddingDate = new Date(wedding.weddingDate);
+    const today = new Date();
+    const diffTime = weddingDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Mock data for demonstration (replace with actual data fetching when backend is ready)
+  const mockData = {
+    budgetUsed: 65,
+    guestRSVPs: { confirmed: 45, pending: 30, declined: 5 },
+    tasks: { completed: 24, inProgress: 8, pending: 12 },
+    expenses: 6500,
+    vendors: [
+      { name: 'Venue', status: 'Confirmed' },
+      { name: 'Photographer', status: 'In Progress' },
+      { name: 'Caterer', status: 'Pending' },
+      { name: 'Florist', status: 'Confirmed' }
+    ],
+    timeline: [
+      { event: 'Venue Booking', description: 'Final venue contract signed and deposit paid', date: '2024-01-15' },
+      { event: 'Photography Session', description: 'Engagement photoshoot scheduled', date: '2024-02-20' },
+      { event: 'Catering Tasting', description: 'Menu tasting with selected caterer', date: '2024-03-10' },
+      { event: 'Dress Fitting', description: 'Final dress fitting and alterations', date: '2024-04-05' },
+      { event: 'Final Guest Count', description: 'Confirm final guest count with venue', date: '2024-05-01' }
+    ],
+    activities: [
+      { activity: 'Venue deposit paid', description: 'Initial deposit for wedding venue transferred', time: '2 hours ago' },
+      { activity: 'Guest list updated', description: 'Added 10 new guests to the invitation list', time: '1 day ago' },
+      { activity: 'Vendor meeting scheduled', description: 'Meeting with photographer next week', time: '2 days ago' },
+      { activity: 'Budget review completed', description: 'Monthly budget tracking and expense review', time: '3 days ago' }
+    ],
+    upcomingTasks: [
+      { task: 'Send save-the-dates', description: 'Mail save-the-date cards to all guests', due: '2024-06-01' },
+      { task: 'Final dress fitting', description: 'Final wedding dress fitting appointment', due: '2024-06-15' },
+      { task: 'Cake tasting', description: 'Schedule and attend cake tasting session', due: '2024-07-01' }
+    ]
+  };
 
   return (
     <>
@@ -202,7 +235,7 @@ export default function DashboardPage() {
                     <span className="text-emotional-2xl text-primary">Wedding</span>
                   </div>
                   <div className="text-data-3xl font-bold text-primary mb-2">
-                    TODO: Days
+                    {calculateDaysUntilWedding()}
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
                     {wedding?.weddingDate ? formatDateForDisplay(new Date(wedding.weddingDate)) : 'No date set'}
@@ -220,7 +253,7 @@ export default function DashboardPage() {
                     <span className="text-emotional-2xl text-primary">Budget</span>
                   </div>
                   <div className="text-data-3xl font-bold text-primary mb-2">
-                    TODO: %
+                    {mockData.budgetUsed}%
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
                     {formatCurrency(wedding?.budget || 0)} total budget
@@ -238,7 +271,7 @@ export default function DashboardPage() {
                     <span className="text-emotional-2xl text-primary">Guests</span>
                   </div>
                   <div className="text-data-3xl font-bold text-primary mb-2">
-                    TODO: Count
+                    {mockData.guestRSVPs.confirmed}
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
                     {wedding?.guestCount || 0} invited
@@ -256,10 +289,10 @@ export default function DashboardPage() {
                     <span className="text-2xl">Tasks</span>
                   </div>
                   <div className="text-3xl font-bold text-primary mb-2">
-                    TODO: %
+                    {Math.round((mockData.tasks.completed / (mockData.tasks.completed + mockData.tasks.inProgress + mockData.tasks.pending)) * 100)}%
                   </div>
                   <p className="text-text-secondary text-sm">
-                    TODO: Total tasks
+                    {mockData.tasks.completed + mockData.tasks.inProgress + mockData.tasks.pending} total tasks
                   </p>
                 </motion.div>
               </div>
@@ -267,7 +300,6 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
-                  {/* TODO: Add wedding timeline */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -278,20 +310,19 @@ export default function DashboardPage() {
                       Wedding Timeline
                     </h2>
                     <div className="space-y-4">
-                      {[1, 2, 3, 4, 5].map((i) => (
+                      {mockData.timeline.map((item, i) => (
                         <div key={i} className="flex items-center gap-4">
                           <div className="w-4 h-4 bg-primary rounded-full"></div>
                           <div className="flex-1">
-                            <h4 className="text-text-primary">Timeline Event {i}</h4>
-                            <p className="text-text-secondary text-sm">TODO: Event description</p>
+                            <h4 className="text-text-primary">{item.event}</h4>
+                            <p className="text-text-secondary text-sm">{item.description}</p>
                           </div>
-                          <span className="text-text-secondary text-sm">TODO: Date</span>
+                          <span className="text-text-secondary text-sm">{formatDateForDisplay(new Date(item.date))}</span>
                         </div>
                       ))}
                     </div>
                   </motion.div>
 
-                  {/* TODO: Add recent activity */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -302,22 +333,21 @@ export default function DashboardPage() {
                       Recent Activity
                     </h2>
                     <div className="space-y-4">
-                      {[1, 2, 3, 4].map((i) => (
+                      {mockData.activities.map((item, i) => (
                         <div key={i} className="flex items-center gap-4 pb-4 border-b border-white/10">
                           <div className="w-10 h-10 bg-surface rounded-full flex items-center justify-center">
-                            <span className="text-text-secondary text-xs">TODO</span>
+                            <span className="text-text-secondary text-xs">✓</span>
                           </div>
                           <div className="flex-1">
-                            <p className="text-text-primary">Activity {i}</p>
-                            <p className="text-text-secondary text-sm">TODO: Activity description</p>
+                            <p className="text-text-primary">{item.activity}</p>
+                            <p className="text-text-secondary text-sm">{item.description}</p>
                           </div>
-                          <span className="text-text-secondary text-xs">TODO: Time</span>
+                          <span className="text-text-secondary text-xs">{item.time}</span>
                         </div>
                       ))}
                     </div>
                   </motion.div>
 
-                  {/* TODO: Add upcoming tasks */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -333,14 +363,14 @@ export default function DashboardPage() {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
+                      {mockData.upcomingTasks.map((item, i) => (
                         <div key={i} className="flex items-center gap-4">
                           <input type="checkbox" className="toggle" />
                           <div className="flex-1">
-                            <h4 className="text-text-primary">Task {i}</h4>
-                            <p className="text-text-secondary text-sm">TODO: Task description</p>
+                            <h4 className="text-text-primary">{item.task}</h4>
+                            <p className="text-text-secondary text-sm">{item.description}</p>
                           </div>
-                          <span className="text-primary text-sm">TODO: Due</span>
+                          <span className="text-primary text-sm">{formatDateForDisplay(new Date(item.due))}</span>
                         </div>
                       ))}
                     </div>
@@ -349,7 +379,6 @@ export default function DashboardPage() {
 
                 {/* Sidebar */}
                 <div className="space-y-8">
-                  {/* TODO: Add budget overview */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -366,19 +395,18 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Spent</span>
-                        <span className="text-primary font-semibold">TODO: $X,XXX</span>
+                        <span className="text-primary font-semibold">{formatCurrency(mockData.expenses)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Remaining</span>
-                        <span className="text-primary font-semibold">TODO: $X,XXX</span>
+                        <span className="text-primary font-semibold">{formatCurrency((wedding?.budget || 0) - mockData.expenses)}</span>
                       </div>
                       <div className="w-full bg-surface rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full" style={{ width: 'TODO: %' }}></div>
+                        <div className="bg-primary h-2 rounded-full" style={{ width: `${mockData.budgetUsed}%` }}></div>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* TODO: Add vendor status */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -389,16 +417,15 @@ export default function DashboardPage() {
                       Vendor Status
                     </h3>
                     <div className="space-y-3">
-                      {['Venue', 'Photographer', 'Caterer', 'Florist'].map((vendor, i) => (
+                      {mockData.vendors.map((vendor, i) => (
                         <div key={i} className="flex justify-between items-center">
-                          <span className="text-text-secondary">{vendor}</span>
-                          <span className="text-primary text-sm">TODO: Status</span>
+                          <span className="text-text-secondary">{vendor.name}</span>
+                          <span className="text-primary text-sm">{vendor.status}</span>
                         </div>
                       ))}
                     </div>
                   </motion.div>
 
-                  {/* TODO: Add quick actions */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -424,7 +451,6 @@ export default function DashboardPage() {
                     </div>
                   </motion.div>
 
-                  {/* TODO: Add wedding website link */}
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -440,7 +466,7 @@ export default function DashboardPage() {
                           <span className="text-text-secondary">Site</span>
                         </div>
                         <p className="text-text-secondary text-sm mb-4">
-                          TODO: wedding-site-url.com
+                          saanjh-wedding.com
                         </p>
                         <button className="btn-primary w-full">
                           View Website
