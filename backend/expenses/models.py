@@ -1,49 +1,62 @@
 from django.db import models
 
+
+class ExpenseStatus(models.Model):
+    """Expense status model"""
+    
+    name = models.CharField(max_length=20, unique=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        db_table = 'expenses_expense_status'
+
+
+class BudgetCategory(models.Model):
+    """Budget category model"""
+    
+    wedding = models.ForeignKey(
+        'weddings.Wedding',
+        on_delete=models.CASCADE,
+        related_name='budget_categories'
+    )
+    name = models.CharField(max_length=100)
+    allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.name} - {self.wedding.get_couple_name() or 'Wedding'}"
+    
+    def spent_amount(self):
+        """Calculate total spent in this category"""
+        return sum(
+            expense.amount for expense in self.expenses.all()
+        )
+    
+    def remaining_amount(self):
+        """Calculate remaining budget for this category"""
+        return self.allocated_amount - self.spent_amount()
+    
+    class Meta:
+        db_table = 'expenses_budget_category'
+        unique_together = ['wedding', 'name']
+
+
 class Expense(models.Model):
     """Expense model for wedding budget tracking"""
     
-    CATEGORIES = [
-        ('venue', 'Venue'),
-        ('catering', 'Catering'),
-        ('photography', 'Photography'),
-        ('videography', 'Videography'),
-        ('florist', 'Florist'),
-        ('music', 'Music/Entertainment'),
-        ('cake', 'Cake'),
-        ('decorations', 'Decorations'),
-        ('attire', 'Attire'),
-        ('rings', 'Rings'),
-        ('transportation', 'Transportation'),
-        ('accommodation', 'Accommodation'),
-        ('invitations', 'Invitations'),
-        ('gifts', 'Gifts'),
-        ('other', 'Other'),
-    ]
-    
-    PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('partial', 'Partial'),
-        ('paid', 'Paid'),
-        ('overdue', 'Overdue'),
-    ]
-    
-    # Basic information
     wedding = models.ForeignKey(
         'weddings.Wedding', 
         on_delete=models.CASCADE, 
         related_name='expenses'
     )
-    description = models.CharField(max_length=200)
-    category = models.CharField(max_length=20, choices=CATEGORIES)
-    
-    # Financial details
-    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    actual_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    
-    # Vendor association
+    budget_category = models.ForeignKey(
+        BudgetCategory,
+        on_delete=models.PROTECT,
+        related_name='expenses',
+        null=True,
+        blank=True
+    )
     vendor = models.ForeignKey(
         'vendors.Vendor', 
         on_delete=models.SET_NULL, 
@@ -51,6 +64,16 @@ class Expense(models.Model):
         null=True,
         related_name='expenses'
     )
+    status = models.ForeignKey(
+        ExpenseStatus,
+        on_delete=models.PROTECT,
+        default=1  # Will be set to 'pending'
+    )
+    
+    # Basic information
+    title = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     # Date information
     expense_date = models.DateField(blank=True, null=True)
@@ -66,16 +89,15 @@ class Expense(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.description} - {self.get_category_display()} (${self.actual_cost or self.estimated_cost})"
+        return f"{self.title} - {self.budget_category.name} (${self.amount})"
     
     def remaining_balance(self):
         """Calculate remaining balance"""
-        cost = self.actual_cost if self.actual_cost is not None else self.estimated_cost
-        return cost - self.amount_paid
+        return self.amount - self.paid_amount
     
     def is_overdue(self):
         """Check if payment is overdue"""
-        if self.payment_status == 'paid':
+        if self.status.name == 'paid':
             return False
         if not self.due_date:
             return False
@@ -84,4 +106,4 @@ class Expense(models.Model):
     
     class Meta:
         db_table = 'expenses_expense'
-        ordering = ['-expense_date', 'category', 'description']
+        ordering = ['-expense_date', 'budget_category', 'title']
