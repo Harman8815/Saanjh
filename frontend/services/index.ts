@@ -5,3 +5,4 @@ export { apiClient } from './api';
 export { AuthService } from './auth';
 export { WeddingService } from './weddings';
 export { GuestService } from './guests';
+export { VendorService } from './vendors';
