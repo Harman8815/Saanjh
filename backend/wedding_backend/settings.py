@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'vendors',
     'expenses',
     'wedding_cards',
+    'timeline',
 ]
 
 MIDDLEWARE = [

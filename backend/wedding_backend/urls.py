@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/vendors/', include('vendors.urls')),
     path('api/expenses/', include('expenses.urls')),
     path('api/wedding-cards/', include('wedding_cards.urls')),
+    path('api/timeline/', include('timeline.urls')),
     path('api/public/cards/<str:shareable_link>/', include('wedding_cards.public_urls')),
     # Fake data generation endpoints (admin only)
     path('api/admin/generate-fake-data/', views.generate_fake_data, name='generate-fake-data'),
