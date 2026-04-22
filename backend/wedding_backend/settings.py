@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'expenses',
     'wedding_cards',
     'timeline',
+    'media',
 ]
 
 MIDDLEWARE = [
