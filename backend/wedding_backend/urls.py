@@ -32,6 +32,7 @@ urlpatterns = [
     # Fake data generation endpoints (admin only)
     path('api/admin/generate-fake-data/', views.generate_fake_data, name='generate-fake-data'),
     path('api/admin/generate-sample-wedding/', views.generate_sample_wedding, name='generate-sample-wedding'),
+    path('api/admin/create-default-accounts/', views.create_default_accounts, name='create-default-accounts'),
     path('api/admin/clear-fake-data/', views.clear_fake_data, name='clear-fake-data'),
     path('api/admin/data-statistics/', views.data_statistics, name='data-statistics'),
 ]
