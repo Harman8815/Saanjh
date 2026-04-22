@@ -7,3 +7,4 @@ export { WeddingService } from './weddings';
 export { GuestService } from './guests';
 export { VendorService } from './vendors';
 export { ExpenseService } from './expenses';
+export { WeddingCardService } from './weddingCards';
