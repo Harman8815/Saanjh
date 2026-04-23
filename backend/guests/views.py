@@ -1,17 +1,140 @@
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import Guest
+from .models import Guest, RsvpStatus, Table, Meal, GuestMeal
 from .serializers import (
     GuestSerializer, GuestCreateSerializer, GuestUpdateSerializer,
-    GuestBulkCreateSerializer, GuestRSVPUpdateSerializer
+    GuestBulkCreateSerializer, GuestRSVPUpdateSerializer,
+    RsvpStatusSerializer, TableSerializer, TableCreateSerializer,
+    MealSerializer
 )
 
+class RsvpStatusViewSet(viewsets.ModelViewSet):
+    """ViewSet for RsvpStatus model"""
+    queryset = RsvpStatus.objects.all()
+    serializer_class = RsvpStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class MealViewSet(viewsets.ModelViewSet):
+    """ViewSet for Meal model"""
+    queryset = Meal.objects.all()
+    serializer_class = MealSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class TableViewSet(viewsets.ModelViewSet):
+    """ViewSet for Table model"""
+    queryset = Table.objects.all()
+    serializer_class = TableSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return Table.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return TableCreateSerializer
+        return TableSerializer
+    
+    @action(detail=True, methods=['post'])
+    def assign_guest(self, request, pk=None):
+        """Assign a guest to this table"""
+        table = self.get_object()
+        guest_id = request.data.get('guest_id')
+        
+        if not guest_id:
+            return Response(
+                {'error': 'guest_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            guest = Guest.objects.get(
+                id=guest_id,
+                wedding=self.request.user.wedding
+            )
+            
+            # Check if table has capacity
+            if table.assigned_guests.count() >= table.capacity:
+                return Response(
+                    {'error': 'Table is at full capacity'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            guest.table = table
+            guest.save()
+            
+            return Response({'message': 'Guest assigned to table successfully'})
+        except Guest.DoesNotExist:
+            return Response(
+                {'error': 'Guest not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class GuestViewSet(viewsets.ModelViewSet):
+    """ViewSet for Guest model"""
+    queryset = Guest.objects.all()
+    serializer_class = GuestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['rsvp_status', 'relationship', 'table']
+    search_fields = ['first_name', 'last_name', 'email', 'phone']
+    ordering_fields = ['last_name', 'first_name', 'added_date']
+    ordering = ['last_name', 'first_name']
+    
+    def get_queryset(self):
+        return Guest.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return GuestCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return GuestUpdateSerializer
+        return GuestSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(wedding=self.request.user.wedding)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Bulk create guests"""
+        serializer = GuestBulkCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            guests = serializer.save()
+            return Response(GuestSerializer(guests, many=True).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_rsvp_update(self, request):
+        """Bulk update RSVP status"""
+        guest_ids = request.data.get('guest_ids', [])
+        rsvp_status_id = request.data.get('rsvp_status_id')
+        rsvp_date = request.data.get('rsvp_date')
+        
+        if not guest_ids or not rsvp_status_id:
+            return Response(
+                {'error': 'guest_ids and rsvp_status_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_count = Guest.objects.filter(
+            id__in=guest_ids,
+            wedding=request.user.wedding
+        ).update(rsvp_status_id=rsvp_status_id, rsvp_date=rsvp_date)
+        
+        return Response({
+            'message': f'Updated {updated_count} guests',
+            'updated_count': updated_count
+        })
+
+
 class GuestListCreateView(generics.ListCreateAPIView):
-    """Guest list and create endpoint"""
+    """Guest list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['rsvp_status', 'relationship', 'invitation_sent']
@@ -159,3 +282,35 @@ def guest_export(request):
         })
     
     return Response(export_data)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def seating_chart(request):
+    """Get seating chart data"""
+    try:
+        wedding = request.user.wedding
+        tables = wedding.tables.all().prefetch_related('assigned_guests')
+        
+        seating_data = []
+        for table in tables:
+            guests = table.assigned_guests.all()
+            seating_data.append({
+                'table': TableSerializer(table).data,
+                'guests': GuestSerializer(guests, many=True).data
+            })
+        
+        # Get unassigned guests
+        unassigned_guests = Guest.objects.filter(
+            wedding=wedding,
+            table__isnull=True
+        )
+        
+        return Response({
+            'tables': seating_data,
+            'unassigned_guests': GuestSerializer(unassigned_guests, many=True).data
+        })
+    except:
+        return Response({
+            'tables': [],
+            'unassigned_guests': []
+        })

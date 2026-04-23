@@ -1,16 +1,104 @@
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import Vendor
+from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
 from .serializers import (
     VendorSerializer, VendorCreateSerializer, VendorUpdateSerializer,
-    VendorStatusUpdateSerializer
+    VendorStatusUpdateSerializer, VendorCategorySerializer,
+    VendorStatusSerializer, VendorCatalogSerializer,
+    VendorCatalogCreateSerializer
 )
 
+class VendorCategoryViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorCategory model"""
+    queryset = VendorCategory.objects.all()
+    serializer_class = VendorCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class VendorStatusViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorStatus model"""
+    queryset = VendorStatus.objects.all()
+    serializer_class = VendorStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class VendorCatalogViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorCatalog model"""
+    queryset = VendorCatalog.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return VendorCatalogCreateSerializer
+        return VendorCatalogSerializer
+    
+    @action(detail=False, methods=['get'])
+    def by_category(self, request):
+        """Get vendors by category"""
+        category_id = request.GET.get('category_id')
+        if not category_id:
+            return Response(
+                {'error': 'category_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        vendors = self.get_queryset().filter(category_id=category_id)
+        serializer = self.get_serializer(vendors, many=True)
+        return Response(serializer.data)
+
+
+class VendorViewSet(viewsets.ModelViewSet):
+    """ViewSet for Vendor model"""
+    queryset = Vendor.objects.all()
+    serializer_class = VendorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'vendor_catalog__category']
+    search_fields = ['vendor_catalog__name', 'vendor_catalog__contact']
+    ordering_fields = ['vendor_catalog__name', 'created_at']
+    ordering = ['vendor_catalog__category', 'vendor_catalog__name']
+    
+    def get_queryset(self):
+        return Vendor.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return VendorCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return VendorUpdateSerializer
+        return VendorSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(wedding=self.request.user.wedding)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_status_update(self, request):
+        """Bulk update vendor status"""
+        vendor_ids = request.data.get('vendor_ids', [])
+        status_id = request.data.get('status_id')
+        
+        if not vendor_ids or not status_id:
+            return Response(
+                {'error': 'vendor_ids and status_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_count = Vendor.objects.filter(
+            id__in=vendor_ids,
+            wedding=request.user.wedding
+        ).update(status_id=status_id)
+        
+        return Response({
+            'message': f'Updated {updated_count} vendors',
+            'updated_count': updated_count
+        })
+
+
 class VendorListCreateView(generics.ListCreateAPIView):
-    """Vendor list and create endpoint"""
+    """Vendor list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['vendor_type', 'status', 'contract_signed']
