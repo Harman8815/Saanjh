@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../store/authStore';
+import { RegisterRequest } from '../../types/api';
 
 const signupSchema = z.object({
   username: z.string()
@@ -45,8 +47,8 @@ const ROLES = [
 ];
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { register: registerUser, isLoading, error, clearError } = useAuthStore();
 
   const {
     register,
@@ -58,21 +60,52 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: SignupFormData) => {
-    setIsLoading(true);
+    clearError();
     try {
-      // TODO: Replace with actual API call
-      console.log('Signup data:', data);
+      // Map form data to API request format
+      const registerData: RegisterRequest = {
+        username: data.username,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || undefined,
+        password: data.password,
+        password_confirm: data.password_confirm,
+        role_id: data.role_id,
+      };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await registerUser(registerData);
+      console.log('Registration successful');
       
-      // For now, just redirect to login
-      router.push('/login');
-    } catch (error) {
+      // Redirect to dashboard after successful registration
+      router.push('/dashboard');
+    } catch (error: any) {
       console.error('Signup error:', error);
-      setError('root', { message: 'An error occurred during signup' });
-    } finally {
-      setIsLoading(false);
+      
+      // Handle API errors
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle field-specific errors
+        if (typeof errorData === 'object') {
+          Object.keys(errorData).forEach((field) => {
+            if (Array.isArray(errorData[field])) {
+              setError(field as keyof SignupFormData, {
+                message: errorData[field][0],
+              });
+            }
+          });
+        }
+        
+        // Handle non-field errors
+        if (errorData.non_field_errors) {
+          setError('root', { message: errorData.non_field_errors[0] });
+        } else if (errorData.detail) {
+          setError('root', { message: errorData.detail });
+        }
+      } else {
+        setError('root', { message: 'An error occurred during signup. Please try again.' });
+      }
     }
   };
 
@@ -104,6 +137,12 @@ export default function SignupPage() {
             {errors.root && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {errors.root.message}
+              </div>
+            )}
+            
+            {error && !errors.root && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
               </div>
             )}
 

@@ -8,6 +8,7 @@ import LayoutWrapper from "../components/common/LayoutWrapper";
 import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { metadata } from "./metadata";
 import { LocalizationProvider } from "../components/providers/LocalizationProvider";
+import AuthProvider from "../components/providers/AuthProvider";
 // import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
 // Primary font for data-heavy sections - clean, modern, highly readable
@@ -46,9 +47,11 @@ export default function RootLayout({
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
         <LocalizationProvider>
           <ThemeProvider>
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
+            <AuthProvider>
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
+            </AuthProvider>
           </ThemeProvider>
         </LocalizationProvider>
       </body>

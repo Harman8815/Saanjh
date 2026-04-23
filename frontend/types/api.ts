@@ -19,8 +19,26 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  date_joined: string;
+  phone?: string;
+  role?: Role;
+  role_id?: number;
   is_active: boolean;
+  settings?: Settings;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+}
+
+export interface Settings {
+  id: number;
+  theme: string;
+  language: string;
+  currency: string;
+  timezone: string;
 }
 
 export interface LoginRequest {
@@ -31,15 +49,17 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   email: string;
-  password: string;
   first_name: string;
   last_name: string;
+  phone?: string;
+  password: string;
+  password_confirm: string;
+  role_id: number;
 }
 
 export interface AuthResponse {
-  access: string;
-  refresh: string;
   user: User;
+  token: string;
 }
 
 // Wedding types

@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../store/authStore';
+import { LoginRequest } from '../../types/api';
 
 const loginSchema = z.object({
   username: z.string()
@@ -19,8 +21,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const {
     register,
@@ -32,21 +34,46 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    clearError();
     try {
-      // TODO: Replace with actual API call
-      console.log('Login data:', data);
+      // Map form data to API request format
+      const loginData: LoginRequest = {
+        username: data.username,
+        password: data.password,
+      };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await login(loginData.username, loginData.password);
+      console.log('Login successful');
       
-      // For now, just redirect to dashboard
+      // Redirect to dashboard after successful login
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      setError('root', { message: 'Invalid username or password' });
-    } finally {
-      setIsLoading(false);
+      
+      // Handle API errors
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle field-specific errors
+        if (typeof errorData === 'object') {
+          Object.keys(errorData).forEach((field) => {
+            if (Array.isArray(errorData[field])) {
+              setError(field as keyof LoginFormData, {
+                message: errorData[field][0],
+              });
+            }
+          });
+        }
+        
+        // Handle non-field errors
+        if (errorData.non_field_errors) {
+          setError('root', { message: errorData.non_field_errors[0] });
+        } else if (errorData.detail) {
+          setError('root', { message: errorData.detail });
+        }
+      } else {
+        setError('root', { message: 'Invalid username or password' });
+      }
     }
   };
 
@@ -78,6 +105,12 @@ export default function LoginPage() {
             {errors.root && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {errors.root.message}
+              </div>
+            )}
+            
+            {error && !errors.root && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
               </div>
             )}
 

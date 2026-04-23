@@ -10,38 +10,112 @@ import {
 export class AuthService {
   // Login user
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/login/', credentials);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/login/', credentials);
+      
+      // Store token and user data
+      if (response.token) {
+        apiClient.setAuthToken(response.token);
+        this.storeUser(response.user);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   }
 
   // Register new user
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/register/', userData);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/register/', userData);
+      
+      // Store token and user data
+      if (response.token) {
+        apiClient.setAuthToken(response.token);
+        this.storeUser(response.user);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   }
 
   // Logout user
   static async logout(): Promise<void> {
-    return apiClient.post('/auth/logout/');
+    try {
+      await apiClient.post('/auth/logout/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear stored data
+      this.clearStoredUser();
+    }
   }
 
   // Get user profile
   static async getProfile(): Promise<User> {
-    return apiClient.get<User>('/auth/profile/');
+    try {
+      const user = await apiClient.get<User>('/auth/profile/');
+      this.storeUser(user);
+      return user;
+    } catch (error) {
+      console.error('Get profile error:', error);
+      throw error;
+    }
   }
 
   // Update user profile
   static async updateProfile(userData: Partial<User>): Promise<User> {
-    return apiClient.patch<User>('/auth/profile/', userData);
+    try {
+      const updatedUser = await apiClient.patch<User>('/auth/profile/', userData);
+      this.storeUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
   }
 
   // Get user statistics
   static async getUserStats(): Promise<any> {
-    return apiClient.get('/auth/stats/');
+    try {
+      return await apiClient.get('/auth/stats/');
+    } catch (error) {
+      console.error('Get user stats error:', error);
+      throw error;
+    }
+  }
+
+  // Get user settings
+  static async getUserSettings(): Promise<any> {
+    try {
+      return await apiClient.get('/auth/settings-detail/');
+    } catch (error) {
+      console.error('Get user settings error:', error);
+      throw error;
+    }
+  }
+
+  // Update user settings
+  static async updateUserSettings(settings: any): Promise<any> {
+    try {
+      return await apiClient.post('/auth/settings-detail/', settings);
+    } catch (error) {
+      console.error('Update user settings error:', error);
+      throw error;
+    }
   }
 
   // Check if user is authenticated
   static isAuthenticated(): boolean {
     if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token');
+      const user = localStorage.getItem('user_data');
+      return !!(token && user);
     }
     return false;
   }
@@ -68,6 +142,20 @@ export class AuthService {
       localStorage.removeItem('user_data');
       localStorage.removeItem('auth_token');
     }
+  }
+
+  // Initialize auth state from localStorage
+  static initializeAuth(): User | null {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      const user = this.getStoredUser();
+      
+      if (token && user) {
+        apiClient.setAuthToken(token);
+        return user;
+      }
+    }
+    return null;
   }
 }
 
