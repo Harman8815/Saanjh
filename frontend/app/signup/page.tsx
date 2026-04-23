@@ -77,126 +77,132 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-surface via-background to-surface py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Ambient Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-primary opacity-10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-secondary opacity-10 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="max-w-md w-full space-y-8 relative z-10">
         <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-pink-100">
-            <svg className="h-8 w-8 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg">
+            <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900" style={{ fontFamily: 'var(--font-emotional)' }}>
-            Create Your Account
+          <h2 className="mt-8 text-center text-4xl md:text-5xl font-bold text-text-primary heading-emotional">
+            <span className="text-glow">Create Your Account</span>
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join us to plan your perfect wedding
+          <p className="mt-4 text-center text-xl text-text-muted body-emotional max-w-sm mx-auto">
+            Begin your journey to the perfect wedding
           </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="bg-white shadow-xl rounded-lg p-6 space-y-4">
+          <div className="glass-card p-8 space-y-6">
             {errors.root && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {errors.root.message}
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="username" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Username *
                 </label>
                 <input
                   {...register('username')}
                   type="text"
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.username ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                   placeholder="johndoe"
                 />
                 {errors.username && (
-                  <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.username.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Email Address *
                 </label>
                 <input
                   {...register('email')}
                   type="email"
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                   placeholder="john@example.com"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="first_name" className="block text-sm font-medium text-text-primary label-ui mb-2">
                     First Name *
                   </label>
                   <input
                     {...register('first_name')}
                     type="text"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                      errors.first_name ? 'border-red-300' : 'border-gray-300'
+                    className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                      errors.first_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                     }`}
                     placeholder="John"
                   />
                   {errors.first_name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.first_name.message}</p>
+                    <p className="mt-2 text-sm text-red-600 body-data">{errors.first_name.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="last_name" className="block text-sm font-medium text-text-primary label-ui mb-2">
                     Last Name *
                   </label>
                   <input
                     {...register('last_name')}
                     type="text"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                      errors.last_name ? 'border-red-300' : 'border-gray-300'
+                    className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                      errors.last_name ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                     }`}
                     placeholder="Doe"
                   />
                   {errors.last_name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.last_name.message}</p>
+                    <p className="mt-2 text-sm text-red-600 body-data">{errors.last_name.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="phone" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Phone Number
                 </label>
                 <input
                   {...register('phone')}
                   type="tel"
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                   placeholder="+1 (555) 123-4567"
                 />
                 {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.phone.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="role_id" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="role_id" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Role *
                 </label>
                 <select
                   {...register('role_id', { valueAsNumber: true })}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.role_id ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.role_id ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                 >
                   <option value="">Select your role</option>
@@ -207,41 +213,41 @@ export default function SignupPage() {
                   ))}
                 </select>
                 {errors.role_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role_id.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.role_id.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Password *
                 </label>
                 <input
                   {...register('password')}
                   type="password"
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                   placeholder="••••••••"
                 />
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.password.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="password_confirm" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password_confirm" className="block text-sm font-medium text-text-primary label-ui mb-2">
                   Confirm Password *
                 </label>
                 <input
                   {...register('password_confirm')}
                   type="password"
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 ${
-                    errors.password_confirm ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
+                    errors.password_confirm ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white/80'
                   }`}
                   placeholder="••••••••"
                 />
                 {errors.password_confirm && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password_confirm.message}</p>
+                  <p className="mt-2 text-sm text-red-600 body-data">{errors.password_confirm.message}</p>
                 )}
               </div>
             </div>
@@ -250,7 +256,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="group relative w-full flex justify-center py-4 px-6 border border-transparent text-sm font-semibold rounded-full text-white bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
                 {isLoading ? (
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -263,10 +269,10 @@ export default function SignupPage() {
               </button>
             </div>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
+            <div className="text-center pt-4 border-t border-gray-200">
+              <p className="text-sm text-text-muted body-data">
                 Already have an account?{' '}
-                <Link href="/login" className="font-medium text-pink-600 hover:text-pink-500">
+                <Link href="/login" className="font-semibold text-primary hover:text-secondary transition-colors">
                   Sign in
                 </Link>
               </p>
