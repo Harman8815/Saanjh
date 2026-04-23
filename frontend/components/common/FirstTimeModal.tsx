@@ -3,35 +3,32 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Calendar, MapPin, MessageSquare } from 'lucide-react';
-import { useAppStore } from '../../store/useAppStore';
+import { Wedding } from '../../types/api';
 
 interface FirstTimeModalProps {
   isOpen: boolean;
   onClose: () => void;
   isEditMode?: boolean;
+  wedding?: Wedding | null;
+  onSave?: (weddingData: Partial<Wedding>) => Promise<void>;
 }
 
-export default function FirstTimeModal({ isOpen, onClose, isEditMode = false }: FirstTimeModalProps) {
-  const { wedding, setWedding, setFirstTimeUser, setShowFirstTimeModal } = useAppStore();
-  
+export default function FirstTimeModal({ isOpen, onClose, isEditMode = false, wedding, onSave }: FirstTimeModalProps) {
   const [formData, setFormData] = useState({
-    brideName: wedding?.brideName || '',
-    groomName: wedding?.groomName || '',
-    weddingDate: wedding?.weddingDate || '',
-    venue: wedding?.venue || '',
-    message: wedding?.message || ''
+    wedding_date: wedding?.wedding_date || '',
+    theme: wedding?.theme || '',
+    venue_catalog_id: wedding?.venue?.id || ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && wedding) {
       setFormData({
-        brideName: wedding?.brideName || '',
-        groomName: wedding?.groomName || '',
-        weddingDate: wedding?.weddingDate || '',
-        venue: wedding?.venue || '',
-        message: wedding?.message || ''
+        wedding_date: wedding.wedding_date || '',
+        theme: wedding.theme || '',
+        venue_catalog_id: wedding.venue?.id || ''
       });
       setErrors({});
     }
@@ -40,50 +37,41 @@ export default function FirstTimeModal({ isOpen, onClose, isEditMode = false }: 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.brideName.trim()) {
-      newErrors.brideName = 'Bride name is required';
+    if (!formData.wedding_date.trim()) {
+      newErrors.wedding_date = 'Wedding date is required';
     }
 
-    if (!formData.groomName.trim()) {
-      newErrors.groomName = 'Groom name is required';
-    }
-
-    if (!formData.weddingDate.trim()) {
-      newErrors.weddingDate = 'Wedding date is required';
-    }
-
-    if (!formData.venue.trim()) {
-      newErrors.venue = 'Venue is required';
+    if (!formData.theme.trim()) {
+      newErrors.theme = 'Wedding theme is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    // Update wedding data in store
-    setWedding({
-      ...wedding,
-      ...formData
-    });
-
-    // Mark as not first-time user anymore
-    if (!isEditMode) {
-      setFirstTimeUser(false);
+    setIsSaving(true);
+    
+    try {
+      if (onSave) {
+        await onSave(formData);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error saving wedding data:', error);
+      setErrors({ submit: 'Failed to save wedding details. Please try again.' });
+    } finally {
+      setIsSaving(false);
     }
-
-    // Close modal
-    onClose();
   };
 
   const handleClose = () => {
-    setShowFirstTimeModal(false);
     onClose();
   };
 
@@ -139,111 +127,84 @@ export default function FirstTimeModal({ isOpen, onClose, isEditMode = false }: 
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bride Name */}
-              <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  Bride Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.brideName}
-                  onChange={(e) => setFormData({ ...formData, brideName: e.target.value })}
-                  className={`w-full px-4 py-3 bg-white/10 border ${errors.brideName ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                  placeholder="Enter bride's name"
-                />
-                {errors.brideName && (
-                  <p className="mt-1 text-sm text-red-500">{errors.brideName}</p>
-                )}
-              </div>
-
-              {/* Groom Name */}
-              <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  Groom Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.groomName}
-                  onChange={(e) => setFormData({ ...formData, groomName: e.target.value })}
-                  className={`w-full px-4 py-3 bg-white/10 border ${errors.groomName ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                  placeholder="Enter groom's name"
-                />
-                {errors.groomName && (
-                  <p className="mt-1 text-sm text-red-500">{errors.groomName}</p>
-                )}
-              </div>
-
               {/* Wedding Date */}
               <div>
                 <label className="block text-text-primary font-medium mb-2">
                   Wedding Date <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                  <input
-                    type="date"
-                    value={formData.weddingDate}
-                    onChange={(e) => setFormData({ ...formData, weddingDate: e.target.value })}
-                    className={`w-full pl-12 pr-4 py-3 bg-white/10 border ${errors.weddingDate ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                  />
-                </div>
-                {errors.weddingDate && (
-                  <p className="mt-1 text-sm text-red-500">{errors.weddingDate}</p>
+                <input
+                  type="date"
+                  value={formData.wedding_date}
+                  onChange={(e) => setFormData({ ...formData, wedding_date: e.target.value })}
+                  className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    errors.wedding_date ? 'border-red-500' : ''
+                  }`}
+                  placeholder="Select your wedding date"
+                />
+                {errors.wedding_date && (
+                  <p className="mt-1 text-sm text-red-500">{errors.wedding_date}</p>
                 )}
               </div>
 
-              {/* Venue */}
+              {/* Wedding Theme */}
               <div>
                 <label className="block text-text-primary font-medium mb-2">
-                  Venue <span className="text-red-500">*</span>
+                  Wedding Theme <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                  <input
-                    type="text"
-                    value={formData.venue}
-                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    className={`w-full pl-12 pr-4 py-3 bg-white/10 border ${errors.venue ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
-                    placeholder="Enter venue name or location"
-                  />
-                </div>
-                {errors.venue && (
-                  <p className="mt-1 text-sm text-red-500">{errors.venue}</p>
+                <input
+                  type="text"
+                  value={formData.theme}
+                  onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                  className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all ${
+                    errors.theme ? 'border-red-500' : ''
+                  }`}
+                  placeholder="e.g., Rustic, Modern, Traditional"
+                />
+                {errors.theme && (
+                  <p className="mt-1 text-sm text-red-500">{errors.theme}</p>
                 )}
               </div>
-            </div>
 
-            {/* Message (Optional) */}
-            <div className="mt-6">
-              <label className="block text-text-primary font-medium mb-2">
-                Personal Message <span className="text-text-muted">(Optional)</span>
-              </label>
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-text-muted" />
-                <textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  rows={4}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-                  placeholder="Add a personal message to your wedding invitations..."
-                />
+              {/* Venue Selection */}
+              <div className="md:col-span-2">
+                <label className="block text-text-primary font-medium mb-2">
+                  Venue (Optional)
+                </label>
+                <select
+                  value={formData.venue_catalog_id}
+                  onChange={(e) => setFormData({ ...formData, venue_catalog_id: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                >
+                  <option value="">Select a venue</option>
+                  <option value="1">Grand Ballroom</option>
+                  <option value="2">Garden Paradise</option>
+                  <option value="3">Beach Resort</option>
+                </select>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex gap-4 justify-end">
+            {/* Error Message */}
+            {errors.submit && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-500 text-sm">{errors.submit}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-4 mt-8">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-3 bg-white/10 text-text-primary rounded-lg hover:bg-white/20 transition-colors font-medium"
+                className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-text-primary font-medium transition-all"
               >
-                {isEditMode ? 'Cancel' : 'Skip for Now'}
+                Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:from-primary/90 hover:to-secondary/90 transition-all font-medium shadow-lg shadow-primary/25"
+                disabled={isSaving}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 rounded-lg text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isEditMode ? 'Save Changes' : 'Get Started'}
+                {isSaving ? 'Saving...' : (isEditMode ? 'Update Details' : 'Continue')}
               </button>
             </div>
           </form>
