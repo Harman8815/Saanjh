@@ -65,15 +65,40 @@ export interface AuthResponse {
 // Wedding types
 export interface Wedding {
   id: number;
-  couple_name: string;
-  wedding_date: string;
-  venue: string;
-  budget: number;
-  guest_count: number;
-  theme: string;
-  status: 'planning' | 'confirmed' | 'completed' | 'cancelled';
+  user: number;
+  venue?: Venue;
+  status: WeddingStatus;
+  wedding_date?: string;
+  theme?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface WeddingStatus {
+  id: number;
+  name: string;
+}
+
+export interface Venue {
+  id: number;
+  venue_catalog: VenueCatalog;
+}
+
+export interface VenueCatalog {
+  id: number;
+  name: string;
+  type: 'hotel' | 'restaurant' | 'outdoor' | 'church' | 'beach' | 'garden' | 'ballroom' | 'other';
+  address: string;
+  capacity_min: number;
+  capacity_max: number;
+  price: number;
+  rating: number;
+  amenities?: VenueAmenity[];
+}
+
+export interface VenueAmenity {
+  id: number;
+  name: string;
 }
 
 export interface WeddingDashboard {
@@ -86,32 +111,81 @@ export interface WeddingDashboard {
   upcoming_payments: number;
 }
 
+export interface WeddingTimeline {
+  events: TimelineEvent[];
+}
+
+// Timeline types
+export interface Timeline {
+  id: number;
+  wedding: number;
+  events: TimelineEvent[];
+}
+
 export interface TimelineEvent {
   id: number;
+  timeline?: number;
+  wedding?: number;
   title: string;
-  description: string;
+  description?: string;
   date: string;
-  time: string;
-  type: 'meeting' | 'payment' | 'deadline' | 'event';
-  status: 'pending' | 'completed' | 'overdue';
+  time?: string;
+  type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
+  status: 'pending' | 'completed' | 'overdue' | 'cancelled';
+  priority?: 'low' | 'medium' | 'high';
+  location?: string;
+  attendees?: string[];
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TimelineStatus {
+  id: number;
+  name: string;
 }
 
 // Guest types
 export interface Guest {
   id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  rsvp_status: 'pending' | 'confirmed' | 'declined';
-  plus_one: boolean;
-  plus_one_name?: string;
+  wedding: number;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  rsvp_status: RsvpStatus;
+  rsvp_date?: string;
+  table?: Table;
+  relationship: 'family' | 'friend' | 'colleague' | 'other';
+  address?: string;
   dietary_restrictions?: string;
-  table_number?: number;
+  notes?: string;
   invitation_sent: boolean;
   invitation_sent_date?: string;
-  created_at: string;
+  reminder_sent: boolean;
+  reminder_sent_date?: string;
+  added_date: string;
   updated_at: string;
+  
+  // Computed properties
+  full_name?: string;
+}
+
+export interface RsvpStatus {
+  id: number;
+  name: string;
+}
+
+export interface Table {
+  id: number;
+  wedding: number;
+  table_number: number;
+  capacity: number;
+}
+
+export interface Meal {
+  id: number;
+  name: string;
 }
 
 export interface GuestStatistics {
@@ -121,55 +195,87 @@ export interface GuestStatistics {
   pending: number;
   plus_ones: number;
   dietary_restrictions: number;
+  by_relationship: Record<string, number>;
+  by_rsvp_status: Record<string, number>;
 }
 
 // Vendor types
 export interface Vendor {
   id: number;
+  wedding: number;
+  vendor_catalog?: VendorCatalog;
+  status: VendorStatus;
+  cost_estimate?: number;
+  actual_cost?: number;
+}
+
+export interface VendorCatalog {
+  id: number;
+  category: VendorCategory;
   name: string;
-  category: 'catering' | 'photography' | 'decoration' | 'music' | 'venue' | 'other';
-  contact_person: string;
-  email: string;
-  phone: string;
-  website?: string;
-  cost: number;
-  status: 'pending' | 'contacted' | 'booked' | 'rejected';
-  notes?: string;
-  last_contacted?: string;
-  created_at: string;
-  updated_at: string;
+  contact: string;
+  price_range: number;
+  rating: number;
+}
+
+export interface VendorCategory {
+  id: number;
+  name: string;
+}
+
+export interface VendorStatus {
+  id: number;
+  name: string;
 }
 
 export interface VendorStatistics {
   total_vendors: number;
-  booked: number;
-  contacted: number;
-  pending: number;
-  total_cost: number;
+  by_status: Record<string, number>;
+  by_category: Record<string, number>;
+  total_estimated_cost: number;
+  total_actual_cost: number;
 }
 
 // Expense types
 export interface Expense {
   id: number;
-  title: string;
-  category: 'venue' | 'catering' | 'decoration' | 'photography' | 'music' | 'clothing' | 'other';
-  amount: number;
-  due_date: string;
-  paid: boolean;
-  paid_date?: string;
+  wedding: number;
+  budget_category?: BudgetCategory;
   vendor?: Vendor;
+  status: ExpenseStatus;
+  title: string;
+  amount: number;
+  paid_amount: number;
+  expense_date?: string;
+  due_date?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
 }
 
+export interface BudgetCategory {
+  id: number;
+  wedding: number;
+  name: string;
+  allocated_amount: number;
+  spent_amount?: number;
+  remaining_amount?: number;
+}
+
+export interface ExpenseStatus {
+  id: number;
+  name: string;
+}
+
 export interface ExpenseStatistics {
   total_expenses: number;
-  paid_expenses: number;
-  unpaid_expenses: number;
+  total_budget: number;
+  spent_amount: number;
+  remaining_budget: number;
+  by_status: Record<string, number>;
+  by_category: Record<string, number>;
   overdue_count: number;
   upcoming_count: number;
-  by_category: Record<string, number>;
 }
 
 // Wedding Card types
@@ -177,7 +283,7 @@ export interface WeddingCard {
   id: number;
   title: string;
   shareable_link: string;
-  wedding: Wedding;
+  wedding: number;
   is_public: boolean;
   allow_photo_upload: boolean;
   message: string;
@@ -187,8 +293,8 @@ export interface WeddingCard {
 
 export interface WeddingCardGuest {
   id: number;
-  guest: Guest;
-  wedding_card: WeddingCard;
+  guest: number;
+  wedding_card: number;
   photo_url?: string;
   photo_uploaded_at?: string;
   notes?: string;
@@ -202,25 +308,105 @@ export interface WeddingCardAnalytics {
   last_activity: string;
 }
 
+// Media types
+export interface Media {
+  id: number;
+  wedding: number;
+  media_type: MediaType;
+  title?: string;
+  description?: string;
+  file_url: string;
+  thumbnail_url?: string;
+  file_size: number;
+  upload_date: string;
+  is_public: boolean;
+  tags?: string[];
+}
+
+export interface MediaType {
+  id: number;
+  name: string;
+  mime_types: string[];
+}
+
+export interface MediaStatistics {
+  total_files: number;
+  total_size: number;
+  by_type: Record<string, number>;
+  recent_uploads: Media[];
+}
+
 // Bulk operation types
 export interface BulkGuestCreate {
-  guests: Omit<Guest, 'id' | 'created_at' | 'updated_at'>[];
+  guests: Omit<Guest, 'id' | 'added_date' | 'updated_at'>[];
 }
 
 export interface BulkRSVPUpdate {
   guest_ids: number[];
-  rsvp_status: 'confirmed' | 'declined';
+  rsvp_status: number; // RSVP status ID
 }
 
 export interface BulkVendorStatusUpdate {
   vendor_ids: number[];
-  status: 'pending' | 'contacted' | 'booked' | 'rejected';
+  status: number; // Vendor status ID
 }
 
 export interface BulkPaymentUpdate {
   expense_ids: number[];
-  paid: boolean;
+  paid_amount: number;
   paid_date?: string;
+}
+
+// Request types
+export interface WeddingCreateRequest {
+  wedding_date?: string;
+  theme?: string;
+  venue_catalog_id?: number;
+}
+
+export interface GuestCreateRequest {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  relationship: 'family' | 'friend' | 'colleague' | 'other';
+  address?: string;
+  dietary_restrictions?: string;
+  notes?: string;
+}
+
+export interface VendorCreateRequest {
+  vendor_catalog_id: number;
+  cost_estimate?: number;
+}
+
+export interface ExpenseCreateRequest {
+  budget_category_id?: number;
+  vendor_id?: number;
+  title: string;
+  amount: number;
+  expense_date?: string;
+  due_date?: string;
+  notes?: string;
+}
+
+export interface WeddingCardCreateRequest {
+  title: string;
+  is_public: boolean;
+  allow_photo_upload: boolean;
+  message: string;
+}
+
+export interface TimelineEventCreateRequest {
+  title: string;
+  description?: string;
+  date: string;
+  time?: string;
+  type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
+  priority?: 'low' | 'medium' | 'high';
+  location?: string;
+  attendees?: string[];
+  notes?: string;
 }
 
 // Error types

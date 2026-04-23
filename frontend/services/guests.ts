@@ -1,74 +1,128 @@
 import { apiClient } from './api';
 import { 
   Guest, 
+  RsvpStatus,
+  Table,
+  Meal,
   GuestStatistics,
   BulkGuestCreate,
   BulkRSVPUpdate,
+  GuestCreateRequest,
   PaginatedResponse 
 } from '../types/api';
 
 export class GuestService {
-  // Get all guests
+  // Guest CRUD operations
   static async getGuests(page = 1, pageSize = 20): Promise<PaginatedResponse<Guest>> {
     return apiClient.get<PaginatedResponse<Guest>>(`/guests/?page=${page}&page_size=${pageSize}`);
   }
 
-  // Create single guest
-  static async createGuest(guestData: Omit<Guest, 'id' | 'created_at' | 'updated_at'>): Promise<Guest> {
+  static async createGuest(guestData: GuestCreateRequest): Promise<Guest> {
     return apiClient.post<Guest>('/guests/', guestData);
   }
 
-  // Bulk create guests
   static async bulkCreateGuests(bulkData: BulkGuestCreate): Promise<Guest[]> {
     return apiClient.post<Guest[]>('/guests/bulk/', bulkData);
   }
 
-  // Get guest by ID
   static async getGuest(guestId: number): Promise<Guest> {
     return apiClient.get<Guest>(`/guests/${guestId}/`);
   }
 
-  // Update guest
   static async updateGuest(guestId: number, guestData: Partial<Guest>): Promise<Guest> {
     return apiClient.patch<Guest>(`/guests/${guestId}/`, guestData);
   }
 
-  // Delete guest
   static async deleteGuest(guestId: number): Promise<void> {
     return apiClient.delete(`/guests/${guestId}/`);
   }
 
-  // Bulk RSVP update
+  // RSVP operations
   static async bulkRSVPUpdate(bulkData: BulkRSVPUpdate): Promise<void> {
     return apiClient.post('/guests/bulk-rsvp-update/', bulkData);
   }
 
-  // Send invitations
+  // Invitation operations
   static async sendInvitations(guestIds?: number[]): Promise<void> {
     const data = guestIds ? { guest_ids: guestIds } : {};
     return apiClient.post('/guests/send-invitations/', data);
   }
 
-  // Get guest statistics
+  // Statistics and analytics
   static async getStatistics(): Promise<GuestStatistics> {
     return apiClient.get<GuestStatistics>('/guests/statistics/');
   }
 
-  // Export guests
+  // Export operations
   static async exportGuests(format = 'csv'): Promise<Blob> {
     return apiClient.get(`/guests/export/?format=${format}`, {
       responseType: 'blob'
     });
   }
 
-  // Search guests
-  static async searchGuests(query: string): Promise<Guest[]> {
-    return apiClient.get<Guest[]>(`/guests/?search=${query}`);
+  // Seating chart operations
+  static async getSeatingChart(): Promise<Table[]> {
+    return apiClient.get<Table[]>('/guests/seating-chart/');
   }
 
-  // Filter guests by RSVP status
-  static async filterGuestsByRSVP(rsvpStatus: string): Promise<Guest[]> {
-    return apiClient.get<Guest[]>(`/guests/?rsvp_status=${rsvpStatus}`);
+  static async createTable(tableData: Omit<Table, 'id'>): Promise<Table> {
+    return apiClient.post<Table>('/guests/tables/', tableData);
+  }
+
+  static async updateTable(tableId: number, tableData: Partial<Table>): Promise<Table> {
+    return apiClient.patch<Table>(`/guests/tables/${tableId}/`, tableData);
+  }
+
+  static async deleteTable(tableId: number): Promise<void> {
+    return apiClient.delete(`/guests/tables/${tableId}/`);
+  }
+
+  // Meal operations
+  static async getMeals(): Promise<Meal[]> {
+    return apiClient.get<Meal[]>('/guests/meals/');
+  }
+
+  static async createMeal(mealData: Omit<Meal, 'id'>): Promise<Meal> {
+    return apiClient.post<Meal>('/guests/meals/', mealData);
+  }
+
+  // RSVP Status operations
+  static async getRsvpStatuses(): Promise<RsvpStatus[]> {
+    return apiClient.get<RsvpStatus[]>('/guests/rsvp-status/');
+  }
+
+  // Search and filter operations
+  static async searchGuests(query: string): Promise<PaginatedResponse<Guest>> {
+    return apiClient.get<PaginatedResponse<Guest>>(`/guests/?search=${query}`);
+  }
+
+  static async filterGuestsByRSVP(rsvpStatus: number): Promise<PaginatedResponse<Guest>> {
+    return apiClient.get<PaginatedResponse<Guest>>(`/guests/?rsvp_status=${rsvpStatus}`);
+  }
+
+  static async filterGuestsByRelationship(relationship: string): Promise<PaginatedResponse<Guest>> {
+    return apiClient.get<PaginatedResponse<Guest>>(`/guests/?relationship=${relationship}`);
+  }
+
+  static async filterGuestsByTable(tableId: number): Promise<PaginatedResponse<Guest>> {
+    return apiClient.get<PaginatedResponse<Guest>>(`/guests/?table=${tableId}`);
+  }
+
+  // ViewSet operations for advanced usage
+  static async getAllGuests(): Promise<Guest[]> {
+    return apiClient.get<Guest[]>('/guests/guests/');
+  }
+
+  static async getAllRsvpStatuses(): Promise<RsvpStatus[]> {
+    return apiClient.get<RsvpStatus[]>('/guests/rsvp-status/');
+  }
+
+  static async getAllTables(): Promise<Table[]> {
+    return apiClient.get<Table[]>('/guests/tables/');
+  }
+
+  static async getAllMeals(): Promise<Meal[]> {
+    return apiClient.get<Meal[]>('/guests/meals/');
   }
 }
 
