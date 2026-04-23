@@ -103,37 +103,37 @@ def wedding_dashboard(request):
         guests = wedding.guests.all()
         guest_stats = {
             'total': guests.count(),
-            'confirmed': guests.filter(rsvp_status='confirmed').count(),
-            'pending': guests.filter(rsvp_status='pending').count(),
-            'declined': guests.filter(rsvp_status='declined').count(),
+            'confirmed': guests.filter(rsvp_status__name='confirmed').count(),
+            'pending': guests.filter(rsvp_status__name='pending').count(),
+            'declined': guests.filter(rsvp_status__name='declined').count(),
         }
         
         # Get vendor statistics
         vendors = wedding.vendors.all()
         vendor_stats = {
             'total': vendors.count(),
-            'confirmed': vendors.filter(status='confirmed').count(),
-            'pending': vendors.filter(status='pending').count(),
-            'contacted': vendors.filter(status='contacted').count(),
+            'confirmed': vendors.filter(status__name='confirmed').count(),
+            'pending': vendors.filter(status__name='pending').count(),
+            'contacted': vendors.filter(status__name='contacted').count(),
         }
         
         # Get expense statistics
         expenses = wedding.expenses.all()
-        total_expenses = sum(expense.actual_cost or expense.estimated_cost for expense in expenses)
-        total_paid = sum(expense.amount_paid for expense in expenses)
+        total_expenses = sum(expense.amount for expense in expenses)
+        total_paid = sum(expense.paid_amount for expense in expenses)
         
         expense_stats = {
-            'total_estimated': sum(expense.estimated_cost for expense in expenses),
+            'total_estimated': total_expenses,
             'total_actual': total_expenses,
             'total_paid': total_paid,
             'remaining': total_expenses - total_paid,
-            'budget_used': (total_expenses / wedding.budget * 100) if wedding.budget else 0,
+            'budget_used': 0,  # Placeholder - budget field not available in Wedding model
         }
         
         # Get recent activities
         recent_guests = guests.order_by('-added_date')[:5]
         recent_expenses = expenses.order_by('-created_at')[:5]
-        recent_vendors = vendors.order_by('-updated_at')[:5]
+        recent_vendors = vendors.order_by('-id')[:5]  # Vendor model doesn't have updated_at field
         
         return Response({
             'wedding': WeddingSerializer(wedding).data,
@@ -141,10 +141,10 @@ def wedding_dashboard(request):
             'vendor_stats': vendor_stats,
             'expense_stats': expense_stats,
             'recent_activities': {
-                'guests': [{'name': g.name, 'date': g.added_date, 'type': 'guest_added'} for g in recent_guests],
-                'expenses': [{'description': e.description, 'date': e.created_at, 'type': 'expense_logged'} for e in recent_expenses],
-                'vendors': [{'name': v.name, 'date': v.updated_at, 'type': 'vendor_updated'} for v in recent_vendors],
-            }
+                'guests': [{'name': f"{g.first_name} {g.last_name}".strip(), 'date': g.added_date, 'type': 'guest_added'} for g in recent_guests],
+                'expenses': [{'description': e.title, 'date': e.created_at, 'type': 'expense_logged'} for e in recent_expenses],
+                'vendors': [{'name': v.vendor_catalog.name if v.vendor_catalog else 'Unknown', 'date': None, 'type': 'vendor_updated'} for v in recent_vendors],
+            },
         })
     except Wedding.DoesNotExist:
         return Response({'error': 'No wedding found'}, status=status.HTTP_404_NOT_FOUND)
