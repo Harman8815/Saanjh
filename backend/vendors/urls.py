@@ -1,5 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+router = DefaultRouter()
+router.register(r'vendors', views.VendorViewSet)
+router.register(r'vendor-categories', views.VendorCategoryViewSet)
+router.register(r'vendor-status', views.VendorStatusViewSet)
+router.register(r'vendor-catalog', views.VendorCatalogViewSet)
 
 urlpatterns = [
     path('', views.VendorListCreateView.as_view(), name='vendor-list-create'),
@@ -8,4 +15,5 @@ urlpatterns = [
     path('statistics/', views.vendor_statistics, name='vendor-statistics'),
     path('follow-ups/', views.vendor_follow_ups, name='vendor-follow-ups'),
     path('<int:pk>/mark-contacted/', views.vendor_mark_contacted, name='vendor-mark-contacted'),
+    path('', include(router.urls)),
 ]

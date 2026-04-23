@@ -1,9 +1,75 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from django.shortcuts import get_object_or_404
-from .models import Wedding
-from .serializers import WeddingSerializer, WeddingCreateSerializer, WeddingUpdateSerializer
+from .models import (
+    Wedding, WeddingStatus, Venue, VenueCatalog, 
+    VenueAmenity, VenueAmenityMap
+)
+from .serializers import (
+    WeddingSerializer, WeddingCreateSerializer, WeddingUpdateSerializer,
+    WeddingStatusSerializer, VenueSerializer, VenueCatalogSerializer,
+    VenueCatalogCreateSerializer, VenueAmenitySerializer
+)
+
+class WeddingStatusViewSet(viewsets.ModelViewSet):
+    """ViewSet for WeddingStatus model"""
+    queryset = WeddingStatus.objects.all()
+    serializer_class = WeddingStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class VenueAmenityViewSet(viewsets.ModelViewSet):
+    """ViewSet for VenueAmenity model"""
+    queryset = VenueAmenity.objects.all()
+    serializer_class = VenueAmenitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class VenueCatalogViewSet(viewsets.ModelViewSet):
+    """ViewSet for VenueCatalog model"""
+    queryset = VenueCatalog.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return VenueCatalogCreateSerializer
+        return VenueCatalogSerializer
+
+
+class VenueViewSet(viewsets.ModelViewSet):
+    """ViewSet for Venue model"""
+    queryset = Venue.objects.all()
+    serializer_class = VenueSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class WeddingViewSet(viewsets.ModelViewSet):
+    """ViewSet for Wedding model"""
+    queryset = Wedding.objects.all()
+    serializer_class = WeddingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return Wedding.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return WeddingCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return WeddingUpdateSerializer
+        return WeddingSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def my_wedding(self, request):
+        """Get current user's wedding"""
+        wedding, created = Wedding.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(wedding)
+        return Response(serializer.data)
+
 
 class WeddingDetailView(generics.RetrieveUpdateAPIView):
     """Wedding detail view and update endpoint"""
@@ -126,3 +192,23 @@ def wedding_timeline(request):
         return Response(events[:20])  # Return last 20 events
     except Wedding.DoesNotExist:
         return Response([], status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def venue_search(request):
+    """Search venues by capacity and type"""
+    capacity_min = request.GET.get('capacity_min', 0)
+    capacity_max = request.GET.get('capacity_max', 1000)
+    venue_type = request.GET.get('type', None)
+    
+    venues = VenueCatalog.objects.filter(
+        capacity_min__lte=capacity_max,
+        capacity_max__gte=capacity_min
+    )
+    
+    if venue_type:
+        venues = venues.filter(type=venue_type)
+    
+    serializer = VenueCatalogSerializer(venues, many=True)
+    return Response(serializer.data)
