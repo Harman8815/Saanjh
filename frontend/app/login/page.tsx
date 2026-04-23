@@ -30,6 +30,7 @@ export default function LoginPage() {
     formState: { errors },
     setError,
     setValue,
+    reset,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -168,6 +169,7 @@ export default function LoginPage() {
                   </label>
                   <input
                     {...register('username')}
+                    id="username"
                     type="text"
                     autoComplete="username"
                     className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
@@ -186,6 +188,7 @@ export default function LoginPage() {
                   </label>
                   <input
                     {...register('password')}
+                    id="password"
                     type="password"
                     autoComplete="current-password"
                     className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 body-data ${
@@ -231,20 +234,76 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setValue('username', 'bride_demo');
-                        setValue('password', 'Demo123!@#');
+                        console.log('Bride button clicked');
+                        try {
+                          // Method 1: Use setValue
+                          setValue('username', 'bride_demo', { shouldValidate: true });
+                          setValue('password', 'Demo123!@#', { shouldValidate: true });
+                          
+                          // Method 2: Also try reset as fallback
+                          reset({
+                            username: 'bride_demo',
+                            password: 'Demo123!@#'
+                          });
+                          
+                          // Show visual feedback
+                          const button = event.currentTarget as HTMLButtonElement;
+                          button.classList.add('ring-2', 'ring-pink-400', 'ring-offset-2');
+                          setTimeout(() => {
+                            button.classList.remove('ring-2', 'ring-pink-400', 'ring-offset-2');
+                          }, 500);
+                          
+                          // Focus on username field to show the change
+                          setTimeout(() => {
+                            const usernameField = document.getElementById('username') as HTMLInputElement;
+                            if (usernameField) {
+                              usernameField.focus();
+                              usernameField.select();
+                            }
+                          }, 100);
+                        } catch (error) {
+                          console.error('Error setting form values:', error);
+                        }
                       }}
-                      className="px-3 py-2 bg-pink-100 hover:bg-pink-200 text-pink-700 rounded-lg text-xs font-medium transition-colors"
+                      className="px-3 py-2 bg-pink-100 hover:bg-pink-200 text-pink-700 rounded-lg text-xs font-medium transition-all duration-200"
                     >
                       👰 Bride Demo
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        setValue('username', 'groom_demo');
-                        setValue('password', 'Demo123!@#');
+                        console.log('Groom button clicked');
+                        try {
+                          // Method 1: Use setValue
+                          setValue('username', 'groom_demo', { shouldValidate: true });
+                          setValue('password', 'Demo123!@#', { shouldValidate: true });
+                          
+                          // Method 2: Also try reset as fallback
+                          reset({
+                            username: 'groom_demo',
+                            password: 'Demo123!@#'
+                          });
+                          
+                          // Show visual feedback
+                          const button = event.currentTarget as HTMLButtonElement;
+                          button.classList.add('ring-2', 'ring-blue-400', 'ring-offset-2');
+                          setTimeout(() => {
+                            button.classList.remove('ring-2', 'ring-blue-400', 'ring-offset-2');
+                          }, 500);
+                          
+                          // Focus on username field to show the change
+                          setTimeout(() => {
+                            const usernameField = document.getElementById('username') as HTMLInputElement;
+                            if (usernameField) {
+                              usernameField.focus();
+                              usernameField.select();
+                            }
+                          }, 100);
+                        } catch (error) {
+                          console.error('Error setting form values:', error);
+                        }
                       }}
-                      className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-colors"
+                      className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-all duration-200"
                     >
                       🤵 Groom Demo
                     </button>
