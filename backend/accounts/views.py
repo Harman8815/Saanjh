@@ -36,7 +36,10 @@ class UserLoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        login(request, user)
+        
+        # For API, we don't need to use login() since we use token authentication
+        # login(request, user)  # This causes issues with API requests
+        
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'user': UserSerializer(user).data,
