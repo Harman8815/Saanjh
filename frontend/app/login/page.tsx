@@ -233,7 +233,7 @@ export default function LoginPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={(event) => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         console.log('Bride button clicked');
                         try {
                           // Method 1: Use setValue
@@ -247,7 +247,7 @@ export default function LoginPage() {
                           });
                           
                           // Show visual feedback
-                          const button = event.currentTarget as HTMLButtonElement;
+                          const button = e.currentTarget as HTMLButtonElement;
                           if (button) {
                             button.classList.add('ring-2', 'ring-pink-400', 'ring-offset-2');
                             setTimeout(() => {
@@ -273,7 +273,7 @@ export default function LoginPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={(event) => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         console.log('Groom button clicked');
                         try {
                           // Method 1: Use setValue
@@ -287,7 +287,7 @@ export default function LoginPage() {
                           });
                           
                           // Show visual feedback
-                          const button = event.currentTarget as HTMLButtonElement;
+                          const button = e.currentTarget as HTMLButtonElement;
                           if (button) {
                             button.classList.add('ring-2', 'ring-blue-400', 'ring-offset-2');
                             setTimeout(() => {

@@ -11,7 +11,7 @@ export class AuthService {
   // Login user
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/login/', credentials);
+      const response = await apiClient.post<AuthResponse>('auth/login/', credentials);
       
       // Store token and user data
       if (response.token) {
@@ -29,7 +29,7 @@ export class AuthService {
   // Register new user
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/register/', userData);
+      const response = await apiClient.post<AuthResponse>('auth/register/', userData);
       
       // Store token and user data
       if (response.token) {
@@ -47,7 +47,7 @@ export class AuthService {
   // Logout user
   static async logout(): Promise<void> {
     try {
-      await apiClient.post('/auth/logout/');
+      await apiClient.post('auth/logout/');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -59,7 +59,7 @@ export class AuthService {
   // Get user profile
   static async getProfile(): Promise<User> {
     try {
-      const user = await apiClient.get<User>('/auth/profile/');
+      const user = await apiClient.get<User>('auth/profile/');
       this.storeUser(user);
       return user;
     } catch (error) {
@@ -71,7 +71,7 @@ export class AuthService {
   // Update user profile
   static async updateProfile(userData: Partial<User>): Promise<User> {
     try {
-      const updatedUser = await apiClient.patch<User>('/auth/profile/', userData);
+      const updatedUser = await apiClient.patch<User>('auth/profile/', userData);
       this.storeUser(updatedUser);
       return updatedUser;
     } catch (error) {
@@ -83,7 +83,7 @@ export class AuthService {
   // Get user statistics
   static async getUserStats(): Promise<any> {
     try {
-      return await apiClient.get('/auth/stats/');
+      return await apiClient.get('auth/stats/');
     } catch (error) {
       console.error('Get user stats error:', error);
       throw error;
@@ -93,7 +93,7 @@ export class AuthService {
   // Get user settings
   static async getUserSettings(): Promise<any> {
     try {
-      return await apiClient.get('/auth/settings-detail/');
+      return await apiClient.get('auth/settings-detail/');
     } catch (error) {
       console.error('Get user settings error:', error);
       throw error;
@@ -103,7 +103,7 @@ export class AuthService {
   // Update user settings
   static async updateUserSettings(settings: any): Promise<any> {
     try {
-      return await apiClient.post('/auth/settings-detail/', settings);
+      return await apiClient.post('auth/settings-detail/', settings);
     } catch (error) {
       console.error('Update user settings error:', error);
       throw error;
