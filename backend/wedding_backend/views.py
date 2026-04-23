@@ -214,3 +214,255 @@ def data_statistics(request):
             {'error': f'Failed to get statistics: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_default_accounts(request):
+    """Create two default accounts with comprehensive sample data"""
+    try:
+        from django.utils import timezone
+        from datetime import date, timedelta
+        import random
+        
+        # Create first user (bride)
+        bride_user = User.objects.create_user(
+            username='bride_demo',
+            email='bride@weddingdemo.com',
+            password='Demo123!@#',
+            first_name='Sarah',
+            last_name='Johnson',
+            is_active=True
+        )
+        
+        # Create second user (groom)
+        groom_user = User.objects.create_user(
+            username='groom_demo',
+            email='groom@weddingdemo.com',
+            password='Demo123!@#',
+            first_name='Michael',
+            last_name='Johnson',
+            is_active=True
+        )
+        
+        # Assign roles
+        from accounts.models import Role
+        bride_role = Role.objects.get(name='bride')
+        groom_role = Role.objects.get(name='groom')
+        
+        bride_user.role = bride_role
+        bride_user.save()
+        
+        groom_user.role = groom_role
+        groom_user.save()
+        
+        # Create settings for both users
+        from accounts.models import Settings
+        Settings.objects.create(user=bride_user)
+        Settings.objects.create(user=groom_user)
+        
+        # Create wedding for bride user
+        from weddings.models import Wedding, WeddingStatus
+        wedding_status = WeddingStatus.objects.get(name='planning')
+        
+        bride_wedding = Wedding.objects.create(
+            user=bride_user,
+            wedding_date=date(2024, 6, 15),
+            theme='Garden Romance',
+            status=wedding_status
+        )
+        
+        # Create venue for the wedding
+        from weddings.models import Venue, VenueCatalog
+        
+        # Get or create a venue catalog entry
+        venue_catalog, created = VenueCatalog.objects.get_or_create(
+            name='Garden Paradise Venue',
+            defaults={
+                'type': 'garden',
+                'address': '123 Garden Lane, Bloomfield, NJ 07003',
+                'capacity_min': 50,
+                'capacity_max': 200,
+                'price': 5000.00,
+                'rating': 4.8
+            }
+        )
+        
+        venue = Venue.objects.create(
+            venue_catalog=venue_catalog
+        )
+        
+        # Update wedding with venue
+        bride_wedding.venue = venue
+        bride_wedding.save()
+        
+        # Create guests
+        from guests.models import Guest, RsvpStatus
+        rsvp_status = RsvpStatus.objects.get(name='pending')
+        
+        guests = []
+        guest_names = [
+            ('Emily', 'Davis', 'friend'),
+            ('James', 'Wilson', 'family'),
+            ('Jessica', 'Brown', 'colleague'),
+            ('Robert', 'Miller', 'family'),
+            ('Amanda', 'Taylor', 'friend'),
+            ('David', 'Anderson', 'colleague'),
+            ('Lisa', 'Thomas', 'family'),
+            ('Christopher', 'Jackson', 'friend'),
+            ('Michelle', 'White', 'colleague'),
+            ('Daniel', 'Harris', 'family')
+        ]
+        
+        for first, last, relationship in guest_names:
+            guest = Guest.objects.create(
+                wedding=bride_wedding,
+                first_name=first,
+                last_name=last,
+                relationship=relationship,
+                email=f'{first.lower()}.{last.lower()}@email.com',
+                phone=f'555-01{random.randint(100, 999)}',
+                rsvp_status=rsvp_status
+            )
+            guests.append(guest)
+        
+        # Create vendors
+        from vendors.models import Vendor, VendorStatus, VendorCatalog, VendorCategory
+        vendor_status = VendorStatus.objects.get(name='pending')
+        vendor_categories = VendorCategory.objects.all()
+        photography_cat = vendor_categories.get(name='Photography')
+        catering_cat = vendor_categories.get(name='Catering')
+        florist_cat = vendor_categories.get(name='Florist')
+        
+        # Create sample vendors
+        photo_vendor = VendorCatalog.objects.filter(category=photography_cat).first()
+        catering_vendor = VendorCatalog.objects.filter(category=catering_cat).first()
+        florist_vendor = VendorCatalog.objects.filter(category=florist_cat).first()
+        
+        vendors = []
+        if photo_vendor:
+            vendors.append(Vendor.objects.create(
+                wedding=bride_wedding,
+                vendor_catalog=photo_vendor,
+                status=vendor_status,
+                cost_estimate=2500.00,
+                actual_cost=2800.00
+            ))
+        
+        if catering_vendor:
+            vendors.append(Vendor.objects.create(
+                wedding=bride_wedding,
+                vendor_catalog=catering_vendor,
+                status=vendor_status,
+                cost_estimate=5000.00,
+                actual_cost=5200.00
+            ))
+        
+        if florist_vendor:
+            vendors.append(Vendor.objects.create(
+                wedding=bride_wedding,
+                vendor_catalog=florist_vendor,
+                status=vendor_status,
+                cost_estimate=1500.00,
+                actual_cost=1600.00
+            ))
+        
+        # Create timeline
+        from timeline.models import Timeline, TimelineEvent, TimelineStatus
+        timeline_status = TimelineStatus.objects.get(name='pending')
+        
+        timeline = Timeline.objects.create(
+            wedding=bride_wedding,
+            name='Sarah & Michael Wedding Timeline'
+        )
+        
+        # Create timeline events
+        events = [
+            ('Venue Booking', date(2024, 1, 15), '09:00', '10:00'),
+            ('Dress Fitting', date(2024, 2, 20), '14:00', '15:00'),
+            ('Cake Tasting', date(2024, 3, 10), '11:00', '13:00'),
+            ('Final Guest Count', date(2024, 5, 1), '16:00', '17:00'),
+            ('Rehearsal Dinner', date(2024, 6, 14), '18:00', '21:00'),
+            ('Wedding Day!', date(2024, 6, 15), '16:00', '23:59')
+        ]
+        
+        for title, event_date, start_time, end_time in events:
+            TimelineEvent.objects.create(
+                timeline=timeline,
+                title=title,
+                event_date=event_date,
+                start_time=start_time,
+                end_time=end_time,
+                status=timeline_status
+            )
+        
+        # Create budget categories and expenses
+        from expenses.models import BudgetCategory, Expense, ExpenseStatus
+        expense_status = ExpenseStatus.objects.get(name='pending')
+        
+        budget_categories = []
+        category_data = [
+            ('Venue', 5000.00),
+            ('Catering', 8000.00),
+            ('Photography', 3000.00),
+            ('Florist', 2000.00),
+            ('Music', 1500.00)
+        ]
+        
+        for name, amount in category_data:
+            budget_categories.append(BudgetCategory.objects.create(
+                wedding=bride_wedding,
+                name=name,
+                allocated_amount=amount
+            ))
+        
+        # Create expenses
+        expenses = []
+        expense_data = [
+            ('Venue Deposit', 1, 2500.00, 2500.00, date(2024, 1, 15)),
+            ('Photography Package', 1, 3000.00, 2800.00, date(2024, 2, 1)),
+            ('Floral Arrangements', 4, 2000.00, 1600.00, date(2024, 3, 15)),
+            ('Catering Final Payment', 2, 5000.00, 5200.00, date(2024, 5, 15))
+        ]
+        
+        for title, cat_idx, amount, paid, expense_date in expense_data:
+            expenses.append(Expense.objects.create(
+                wedding=bride_wedding,
+                budget_category=budget_categories[cat_idx],
+                vendor=vendors[0] if cat_idx < len(vendors) else None,
+                status=expense_status,
+                title=title,
+                amount=amount,
+                paid_amount=paid,
+                expense_date=expense_date
+            ))
+        
+        return Response({
+            'message': 'Default accounts created successfully',
+            'accounts': [
+                {
+                    'username': 'bride_demo',
+                    'email': 'bride@weddingdemo.com',
+                    'password': 'Demo123!@#',
+                    'role': 'bride',
+                    'wedding_id': bride_wedding.id,
+                    'guests_count': len(guests),
+                    'vendors_count': len(vendors),
+                    'expenses_count': len(expenses),
+                    'timeline_events_count': len(events)
+                },
+                {
+                    'username': 'groom_demo',
+                    'email': 'groom@weddingdemo.com',
+                    'password': 'Demo123!@#',
+                    'role': 'groom',
+                    'wedding_id': None
+                }
+            ]
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to create default accounts: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

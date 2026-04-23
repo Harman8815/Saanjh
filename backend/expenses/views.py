@@ -1,17 +1,95 @@
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Sum, Q
-from .models import Expense
+from .models import Expense, BudgetCategory, ExpenseStatus
 from .serializers import (
     ExpenseSerializer, ExpenseCreateSerializer, ExpenseUpdateSerializer,
-    ExpensePaymentUpdateSerializer
+    ExpensePaymentUpdateSerializer, BudgetCategorySerializer,
+    BudgetCategoryCreateSerializer, BudgetCategoryUpdateSerializer,
+    ExpenseStatusSerializer
 )
 
+class ExpenseStatusViewSet(viewsets.ModelViewSet):
+    """ViewSet for ExpenseStatus model"""
+    queryset = ExpenseStatus.objects.all()
+    serializer_class = ExpenseStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class BudgetCategoryViewSet(viewsets.ModelViewSet):
+    """ViewSet for BudgetCategory model"""
+    queryset = BudgetCategory.objects.all()
+    serializer_class = BudgetCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return BudgetCategory.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return BudgetCategoryCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return BudgetCategoryUpdateSerializer
+        return BudgetCategorySerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(wedding=self.request.user.wedding)
+
+
+class ExpenseViewSet(viewsets.ModelViewSet):
+    """ViewSet for Expense model"""
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['budget_category', 'status', 'vendor']
+    search_fields = ['title', 'notes']
+    ordering_fields = ['expense_date', 'due_date', 'created_at', 'title']
+    ordering = ['-expense_date']
+    
+    def get_queryset(self):
+        return Expense.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ExpenseCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return ExpenseUpdateSerializer
+        return ExpenseSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(wedding=self.request.user.wedding)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_payment_update(self, request):
+        """Bulk update payment status for multiple expenses"""
+        expense_ids = request.data.get('expense_ids', [])
+        paid_amount = request.data.get('paid_amount')
+        status_id = request.data.get('status_id')
+        paid_date = request.data.get('paid_date')
+        
+        if not expense_ids or not status_id:
+            return Response(
+                {'error': 'expense_ids and status_id are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        updated_count = Expense.objects.filter(
+            id__in=expense_ids,
+            wedding=request.user.wedding
+        ).update(paid_amount=paid_amount, status_id=status_id, paid_date=paid_date)
+        
+        return Response({
+            'message': f'Updated {updated_count} expenses',
+            'updated_count': updated_count
+        })
+
+
 class ExpenseListCreateView(generics.ListCreateAPIView):
-    """Expense list and create endpoint"""
+    """Expense list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'payment_status', 'vendor']

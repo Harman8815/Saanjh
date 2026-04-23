@@ -1,32 +1,61 @@
 from rest_framework import serializers
-from .models import Vendor
+from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
+
+class VendorCategorySerializer(serializers.ModelSerializer):
+    """Serializer for VendorCategory model"""
+    
+    class Meta:
+        model = VendorCategory
+        fields = ['id', 'name']
+        read_only_fields = ['id']
+
+
+class VendorStatusSerializer(serializers.ModelSerializer):
+    """Serializer for VendorStatus model"""
+    
+    class Meta:
+        model = VendorStatus
+        fields = ['id', 'name']
+        read_only_fields = ['id']
+
+
+class VendorCatalogSerializer(serializers.ModelSerializer):
+    """Serializer for VendorCatalog model"""
+    
+    category = VendorCategorySerializer(read_only=True)
+    category_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = VendorCatalog
+        fields = [
+            'id', 'name', 'contact', 'price_range', 'rating',
+            'category', 'category_id'
+        ]
+        read_only_fields = ['id']
+
 
 class VendorSerializer(serializers.ModelSerializer):
     """Serializer for Vendor model"""
-    vendor_type_display = serializers.CharField(source='get_vendor_type_display', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    vendor_catalog = VendorCatalogSerializer(read_only=True)
+    vendor_catalog_id = serializers.IntegerField(write_only=True)
+    status = VendorStatusSerializer(read_only=True)
+    status_id = serializers.IntegerField(write_only=True, required=False)
     
     class Meta:
         model = Vendor
         fields = [
-            'id', 'name', 'vendor_type', 'vendor_type_display', 'status',
-            'status_display', 'contact_person', 'email', 'phone', 'website',
-            'address', 'cost', 'deposit_paid', 'booking_date', 'contract_signed',
-            'contract_signed_date', 'services_provided', 'notes',
-            'last_contact_date', 'next_follow_up', 'created_at', 'updated_at'
+            'id', 'vendor_catalog', 'vendor_catalog_id', 'status', 'status_id',
+            'cost_estimate', 'actual_cost'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id']
 
 class VendorCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating vendors"""
     
     class Meta:
         model = Vendor
-        fields = [
-            'name', 'vendor_type', 'contact_person', 'email', 'phone',
-            'website', 'address', 'cost', 'deposit_paid', 'booking_date',
-            'contract_signed', 'services_provided', 'notes'
-        ]
+        fields = ['vendor_catalog_id', 'cost_estimate', 'actual_cost']
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
@@ -38,16 +67,20 @@ class VendorUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Vendor
-        fields = [
-            'name', 'vendor_type', 'status', 'contact_person', 'email', 'phone',
-            'website', 'address', 'cost', 'deposit_paid', 'booking_date',
-            'contract_signed', 'contract_signed_date', 'services_provided',
-            'notes', 'last_contact_date', 'next_follow_up'
-        ]
+        fields = ['vendor_catalog_id', 'status_id', 'cost_estimate', 'actual_cost']
+
 
 class VendorStatusUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating vendor status"""
     
     class Meta:
         model = Vendor
-        fields = ['status', 'last_contact_date', 'next_follow_up']
+        fields = ['status_id']
+
+
+class VendorCatalogCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating vendor catalog entries"""
+    
+    class Meta:
+        model = VendorCatalog
+        fields = ['name', 'contact', 'price_range', 'rating', 'category_id']
