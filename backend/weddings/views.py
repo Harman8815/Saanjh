@@ -11,6 +11,8 @@ from .serializers import (
     WeddingStatusSerializer, VenueSerializer, VenueCatalogSerializer,
     VenueCatalogCreateSerializer, VenueAmenitySerializer
 )
+from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError
+from utils.api_exceptions import handle_api_exceptions, log_api_calls, APIErrorHandler
 
 class WeddingStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for WeddingStatus model"""
@@ -45,8 +47,7 @@ class VenueViewSet(viewsets.ModelViewSet):
 
 
 class WeddingViewSet(viewsets.ModelViewSet):
-    """ViewSet for Wedding model"""
-    queryset = Wedding.objects.all()
+    """ViewSet for Wedding model with standardized responses"""
     serializer_class = WeddingSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -63,12 +64,131 @@ class WeddingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     
+    def list(self, request, *args, **kwargs):
+        """List weddings with standardized response"""
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return APIResponse.success(
+                data=serializer.data,
+                message="Weddings retrieved successfully"
+            )
+        except Exception as e:
+            raise APIException(
+                error_code="WEDDING_LIST_ERROR",
+                message="Failed to retrieve weddings",
+                details={'original_error': str(e)}
+            )
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve single wedding with standardized response"""
+        try:
+            instance = self.get_object()
+            # Check ownership
+            APIErrorHandler.handle_ownership_check(instance, request.user, "wedding")
+            serializer = self.get_serializer(instance)
+            return APIResponse.success(
+                data=serializer.data,
+                message="Wedding retrieved successfully"
+            )
+        except Wedding.DoesNotExist:
+            raise NotFoundError(resource="Wedding")
+        except APIException:
+            raise
+        except Exception as e:
+            raise APIException(
+                error_code="WEDDING_RETRIEVE_ERROR",
+                message="Failed to retrieve wedding",
+                details={'original_error': str(e)}
+            )
+    
+    def create(self, request, *args, **kwargs):
+        """Create wedding with standardized response"""
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if not serializer.is_valid():
+                raise ValidationError(
+                    errors=serializer.errors,
+                    message="Wedding creation validation failed"
+                )
+            self.perform_create(serializer)
+            return APIResponse.created(
+                data=serializer.data,
+                message="Wedding created successfully"
+            )
+        except APIException:
+            raise
+        except Exception as e:
+            raise APIException(
+                error_code="WEDDING_CREATE_ERROR",
+                message="Failed to create wedding",
+                details={'original_error': str(e)}
+            )
+    
+    def update(self, request, *args, **kwargs):
+        """Update wedding with standardized response"""
+        try:
+            instance = self.get_object()
+            APIErrorHandler.handle_ownership_check(instance, request.user, "wedding")
+            serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
+            if not serializer.is_valid():
+                raise ValidationError(
+                    errors=serializer.errors,
+                    message="Wedding update validation failed"
+                )
+            self.perform_update(serializer)
+            return APIResponse.success(
+                data=serializer.data,
+                message="Wedding updated successfully"
+            )
+        except Wedding.DoesNotExist:
+            raise NotFoundError(resource="Wedding")
+        except APIException:
+            raise
+        except Exception as e:
+            raise APIException(
+                error_code="WEDDING_UPDATE_ERROR",
+                message="Failed to update wedding",
+                details={'original_error': str(e)}
+            )
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete wedding with standardized response"""
+        try:
+            instance = self.get_object()
+            APIErrorHandler.handle_ownership_check(instance, request.user, "wedding")
+            self.perform_destroy(instance)
+            return APIResponse.no_content(
+                message="Wedding deleted successfully"
+            )
+        except Wedding.DoesNotExist:
+            raise NotFoundError(resource="Wedding")
+        except APIException:
+            raise
+        except Exception as e:
+            raise APIException(
+                error_code="WEDDING_DELETE_ERROR",
+                message="Failed to delete wedding",
+                details={'original_error': str(e)}
+            )
+    
     @action(detail=False, methods=['get'])
     def my_wedding(self, request):
-        """Get current user's wedding"""
-        wedding, created = Wedding.objects.get_or_create(user=request.user)
-        serializer = self.get_serializer(wedding)
-        return Response(serializer.data)
+        """Get current user's wedding with standardized response"""
+        try:
+            wedding, created = Wedding.objects.get_or_create(user=request.user)
+            serializer = self.get_serializer(wedding)
+            message = "Wedding retrieved successfully" if not created else "Wedding created successfully"
+            return APIResponse.success(
+                data=serializer.data,
+                message=message
+            )
+        except Exception as e:
+            raise APIException(
+                error_code="MY_WEDDING_ERROR",
+                message="Failed to retrieve/create wedding",
+                details={'original_error': str(e)}
+            )
 
 
 class WeddingDetailView(generics.RetrieveUpdateAPIView):
@@ -94,10 +214,22 @@ class WeddingCreateView(generics.CreateAPIView):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@handle_api_exceptions
+@log_api_calls
 def wedding_dashboard(request):
     """Get wedding dashboard data"""
     try:
-        wedding = request.user.wedding
+        # Get user's wedding or raise NotFoundError
+        try:
+            wedding = request.user.wedding
+        except Wedding.DoesNotExist:
+            raise NotFoundError(
+                resource="Wedding",
+                message="No wedding found for this user. Please create a wedding first."
+            )
+        
+        # Check if user has permission to access this wedding
+        APIErrorHandler.handle_ownership_check(wedding, request.user, "wedding")
         
         # Get guest statistics
         guests = wedding.guests.all()
@@ -123,10 +255,10 @@ def wedding_dashboard(request):
         total_paid = sum(expense.paid_amount for expense in expenses)
         
         expense_stats = {
-            'total_estimated': total_expenses,
-            'total_actual': total_expenses,
-            'total_paid': total_paid,
-            'remaining': total_expenses - total_paid,
+            'total_estimated': float(total_expenses),
+            'total_actual': float(total_expenses),
+            'total_paid': float(total_paid),
+            'remaining': float(total_expenses - total_paid),
             'budget_used': 0,  # Placeholder - budget field not available in Wedding model
         }
         
@@ -135,19 +267,53 @@ def wedding_dashboard(request):
         recent_expenses = expenses.order_by('-created_at')[:5]
         recent_vendors = vendors.order_by('-id')[:5]  # Vendor model doesn't have updated_at field
         
-        return Response({
+        # Prepare dashboard data
+        dashboard_data = {
             'wedding': WeddingSerializer(wedding).data,
             'guest_stats': guest_stats,
             'vendor_stats': vendor_stats,
             'expense_stats': expense_stats,
             'recent_activities': {
-                'guests': [{'name': f"{g.first_name} {g.last_name}".strip(), 'date': g.added_date, 'type': 'guest_added'} for g in recent_guests],
-                'expenses': [{'description': e.title, 'date': e.created_at, 'type': 'expense_logged'} for e in recent_expenses],
-                'vendors': [{'name': v.vendor_catalog.name if v.vendor_catalog else 'Unknown', 'date': None, 'type': 'vendor_updated'} for v in recent_vendors],
+                'guests': [
+                    {
+                        'name': f"{g.first_name} {g.last_name}".strip(),
+                        'date': g.added_date.isoformat() if g.added_date else None,
+                        'type': 'guest_added'
+                    } for g in recent_guests
+                ],
+                'expenses': [
+                    {
+                        'description': e.title,
+                        'date': e.created_at.isoformat() if e.created_at else None,
+                        'type': 'expense_logged'
+                    } for e in recent_expenses
+                ],
+                'vendors': [
+                    {
+                        'name': v.vendor_catalog.name if v.vendor_catalog else 'Unknown',
+                        'date': None,
+                        'type': 'vendor_updated'
+                    } for v in recent_vendors
+                ],
             },
-        })
-    except Wedding.DoesNotExist:
-        return Response({'error': 'No wedding found'}, status=status.HTTP_404_NOT_FOUND)
+        }
+        
+        return APIResponse.success(
+            data=dashboard_data,
+            message="Dashboard data retrieved successfully"
+        )
+        
+    except APIException:
+        # Re-raise API exceptions to be handled by decorator
+        raise
+    except Exception as e:
+        # Handle unexpected errors
+        raise APIException(
+            error_code="DASHBOARD_ERROR",
+            message="Failed to retrieve dashboard data",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            details={'original_error': str(e)}
+        )
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -196,19 +362,58 @@ def wedding_timeline(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@handle_api_exceptions
+@log_api_calls
 def venue_search(request):
-    """Search venues by capacity and type"""
-    capacity_min = request.GET.get('capacity_min', 0)
-    capacity_max = request.GET.get('capacity_max', 1000)
-    venue_type = request.GET.get('type', None)
-    
-    venues = VenueCatalog.objects.filter(
-        capacity_min__lte=capacity_max,
-        capacity_max__gte=capacity_min
-    )
-    
-    if venue_type:
-        venues = venues.filter(type=venue_type)
-    
-    serializer = VenueCatalogSerializer(venues, many=True)
-    return Response(serializer.data)
+    """Search venues by capacity and type with standardized response"""
+    try:
+        # Get and validate query parameters
+        try:
+            capacity_min = int(request.GET.get('capacity_min', 0))
+            capacity_max = int(request.GET.get('capacity_max', 1000))
+            venue_type = request.GET.get('type', None)
+        except ValueError as e:
+            raise ValidationError(
+                errors={'capacity': 'Invalid capacity values provided'},
+                message='Invalid search parameters'
+            )
+        
+        # Validate capacity range
+        if capacity_min < 0 or capacity_max < 0 or capacity_min > capacity_max:
+            raise ValidationError(
+                errors={'capacity': 'Invalid capacity range'},
+                message='Capacity minimum must be less than or equal to maximum'
+            )
+        
+        # Query venues
+        venues = VenueCatalog.objects.filter(
+            capacity_min__lte=capacity_max,
+            capacity_max__gte=capacity_min
+        )
+        
+        if venue_type:
+            venues = venues.filter(type=venue_type)
+        
+        # Serialize and return
+        serializer = VenueCatalogSerializer(venues, many=True)
+        return APIResponse.success(
+            data={
+                'venues': serializer.data,
+                'filters': {
+                    'capacity_min': capacity_min,
+                    'capacity_max': capacity_max,
+                    'type': venue_type
+                },
+                'count': len(serializer.data)
+            },
+            message=f"Found {len(serializer.data)} venues matching your criteria"
+        )
+        
+    except APIException:
+        raise
+    except Exception as e:
+        raise APIException(
+            error_code="VENUE_SEARCH_ERROR",
+            message="Failed to search venues",
+            details={'original_error': str(e)}
+        )
