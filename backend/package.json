@@ -15,12 +15,7 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": [
-    "wedding",
-    "proposal",
-    "generator",
-    "api"
-  ],
+  "keywords": ["wedding", "proposal", "generator", "api"],
   "author": "Harman",
   "license": "MIT"
 }
