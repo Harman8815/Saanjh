@@ -584,14 +584,65 @@
             // Add active class to clicked item
             event.target.classList.add('active');
             
-            // For now, just log - actual Swagger navigation will be implemented later
-            console.log(`Navigate to: ${endpoint.method} ${endpoint.path}`);
+            // Switch to API Docs tab if not already active
+            const apiDocsTab = document.querySelector('.tab[data-tab="api-docs"]');
+            if (apiDocsTab && !apiDocsTab.classList.contains('active')) {
+                apiDocsTab.click();
+            }
+            
+            // Navigate to the endpoint in Swagger UI
+            const swaggerFrame = document.getElementById('swaggerFrame');
+            if (swaggerFrame && openAPISchema) {
+                // Find the operationId from the OpenAPI schema
+                let operationId = null;
+                let tag = null;
+                
+                // Search through paths in the schema
+                for (const [path, methods] of Object.entries(openAPISchema.paths || {})) {
+                    if (path === endpoint.path) {
+                        // Get the method (GET, POST, etc.)
+                        const method = endpoint.method.toLowerCase();
+                        if (methods[method]) {
+                            operationId = methods[method].operationId;
+                            tag = methods[method].tags && methods[method].tags[0];
+                            break;
+                        }
+                    }
+                }
+                
+                if (operationId) {
+                    // Use Swagger UI's hash-based navigation
+                    // Format: #/{tag}/{operationId}
+                    const baseUrl = '/api/swagger/';
+                    const hash = `#/${tag || 'default'}/${operationId}`;
+                    swaggerFrame.src = baseUrl + hash;
+                } else {
+                    // Fallback: try to construct hash from path
+                    const tag = endpoint.path.split('/')[2] || 'default';
+                    const fallbackId = endpoint.name.toLowerCase().replace(/\s+/g, '_');
+                    const baseUrl = '/api/swagger/';
+                    const hash = `#/${tag}/${fallbackId}`;
+                    swaggerFrame.src = baseUrl + hash;
+                }
+            }
         }
 
         // Initialize sidebar
         document.addEventListener('DOMContentLoaded', () => {
             populateSidebar();
+            loadOpenAPISchema();
         });
+
+        let openAPISchema = null;
+
+        async function loadOpenAPISchema() {
+            try {
+                const response = await fetch('/api/schema/');
+                openAPISchema = await response.json();
+            } catch (error) {
+                console.error('Error loading OpenAPI schema:', error);
+            }
+        }
 
         // Tab switching functionality
         const tabs = document.querySelectorAll('.tab');
