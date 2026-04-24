@@ -485,6 +485,75 @@
         swaggerContainer.innerHTML = `
             <iframe src="/api/swagger/" style="width: 100%; height: 100%; border: none;" id="swaggerFrame"></iframe>
         `;
+
+        // Load table schemas data
+        loadTableSchemas();
+
+        async function loadTableSchemas() {
+            try {
+                const response = await fetch('/api/table-schemas/');
+                const schemaData = await response.json();
+                displayTableSchemas(schemaData);
+            } catch (error) {
+                console.error('Error loading table schemas:', error);
+                document.getElementById('tableSchemasContainer').innerHTML = '<p style="color: #999;">Error loading table schemas</p>';
+            }
+        }
+
+        function displayTableSchemas(schemaData) {
+            const container = document.getElementById('tableSchemasContainer');
+            container.innerHTML = '';
+
+            for (const [appName, models] of Object.entries(schemaData)) {
+                const section = document.createElement('div');
+                section.className = 'module-section';
+
+                const title = document.createElement('h2');
+                title.className = 'module-title';
+                title.textContent = appName.charAt(0).toUpperCase() + appName.slice(1);
+                section.appendChild(title);
+
+                models.forEach(model => {
+                    const card = document.createElement('div');
+                    card.className = 'model-card';
+
+                    const modelName = document.createElement('div');
+                    modelName.className = 'model-name';
+                    modelName.textContent = `${model.name} (${model.table_name})`;
+                    card.appendChild(modelName);
+
+                    const fieldList = document.createElement('div');
+                    fieldList.className = 'field-list';
+
+                    model.fields.forEach(field => {
+                        const fieldItem = document.createElement('div');
+                        fieldItem.className = 'field-item';
+
+                        const fieldName = document.createElement('div');
+                        fieldName.className = 'field-name';
+                        fieldName.textContent = field.name;
+
+                        const fieldType = document.createElement('div');
+                        fieldType.className = 'field-type';
+                        fieldType.textContent = field.type;
+
+                        const fieldRelation = document.createElement('div');
+                        fieldRelation.className = 'field-relation';
+                        fieldRelation.textContent = field.relation || '';
+
+                        fieldItem.appendChild(fieldName);
+                        fieldItem.appendChild(fieldType);
+                        fieldItem.appendChild(fieldRelation);
+                        fieldList.appendChild(fieldItem);
+                    });
+
+                    card.appendChild(fieldList);
+                    section.appendChild(card);
+                });
+
+                container.appendChild(section);
+            }
+        }
     </script>
 </body>
 </html>
