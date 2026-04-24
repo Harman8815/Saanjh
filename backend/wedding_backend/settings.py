@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'wedding_cards',
     'timeline',
     'media',
+    'internal_admin',
 ]
 
 MIDDLEWARE = [
