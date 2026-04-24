@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils import timezone
 from accounts.models import User, Role, Settings
 from weddings.models import Wedding, WeddingStatus, VenueCatalog, Venue
 from guests.models import Guest, RsvpStatus, Table, Meal
@@ -178,10 +179,27 @@ class GuestAdmin(admin.ModelAdmin):
     readonly_fields = ['added_date', 'updated_at']
     date_hierarchy = 'added_date'
     list_per_page = 50
+    actions = ['mark_rsvp_confirmed', 'send_invitation_reminder']
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('wedding', 'rsvp_status', 'table')
+
+    def mark_rsvp_confirmed(self, request, queryset):
+        """Mark selected guests as RSVP confirmed"""
+        confirmed_status = RsvpStatus.objects.filter(name='confirmed').first()
+        if confirmed_status:
+            updated = queryset.update(rsvp_status=confirmed_status, rsvp_date=timezone.now().date())
+            self.message_user(request, f'{updated} guests marked as RSVP confirmed.')
+        else:
+            self.message_user(request, 'RSVP confirmed status not found.', level='error')
+    mark_rsvp_confirmed.short_description = 'Mark selected guests as RSVP confirmed'
+
+    def send_invitation_reminder(self, request, queryset):
+        """Mark selected guests as reminder sent"""
+        updated = queryset.update(reminder_sent=True, reminder_sent_date=timezone.now())
+        self.message_user(request, f'{updated} guests marked as reminder sent.')
+    send_invitation_reminder.short_description = 'Send invitation reminder to selected guests'
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
@@ -259,10 +277,27 @@ class ExpenseAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'remaining_balance', 'is_overdue']
     date_hierarchy = 'expense_date'
     list_per_page = 50
+    actions = ['mark_as_paid']
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('wedding', 'budget_category', 'vendor', 'status')
+
+    def mark_as_paid(self, request, queryset):
+        """Mark selected expenses as fully paid"""
+        paid_status = ExpenseStatus.objects.filter(name='paid').first()
+        if paid_status:
+            updated_count = 0
+            for expense in queryset:
+                expense.paid_amount = expense.amount
+                expense.status = paid_status
+                expense.paid_date = timezone.now().date()
+                expense.save()
+                updated_count += 1
+            self.message_user(request, f'{updated_count} expenses marked as fully paid.')
+        else:
+            self.message_user(request, 'Paid status not found.', level='error')
+    mark_as_paid.short_description = 'Mark selected expenses as fully paid'
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
