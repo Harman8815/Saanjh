@@ -40,16 +40,31 @@ def table_schemas_data(request):
                 field_info = {
                     'name': field.name,
                     'type': field.__class__.__name__,
-                    'relation': None
+                    'relation': None,
+                    'is_primary_key': False,
+                    'is_foreign_key': False,
+                    'is_required': False
                 }
+                
+                # Check for primary key
+                if hasattr(field, 'primary_key') and field.primary_key:
+                    field_info['is_primary_key'] = True
                 
                 # Check for foreign key or many-to-many relations
                 if isinstance(field, models.ForeignKey):
                     field_info['relation'] = f'FK → {field.related_model.__name__}'
+                    field_info['is_foreign_key'] = True
                 elif isinstance(field, models.ManyToManyField):
                     field_info['relation'] = f'M2M → {field.related_model.__name__}'
+                    field_info['is_foreign_key'] = True
                 elif isinstance(field, models.OneToOneField):
                     field_info['relation'] = f'1:1 → {field.related_model.__name__}'
+                    field_info['is_foreign_key'] = True
+                
+                # Check if field is required (not blank and not null)
+                if hasattr(field, 'blank') and hasattr(field, 'null'):
+                    if not field.blank and not field.null:
+                        field_info['is_required'] = True
                 
                 model_info['fields'].append(field_info)
             
