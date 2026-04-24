@@ -560,6 +560,7 @@
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             filterSidebar(searchTerm);
+            filterTableSchemas(searchTerm);
         });
 
         function filterSidebar(searchTerm) {
@@ -594,6 +595,48 @@
                     }
                 } else {
                     group.style.display = 'none';
+                }
+            });
+        }
+
+        function filterTableSchemas(searchTerm) {
+            const sections = document.querySelectorAll('.module-section');
+            
+            sections.forEach(section => {
+                const title = section.querySelector('.module-title');
+                const cards = section.querySelectorAll('.model-card');
+                const sectionName = title.textContent.toLowerCase();
+                
+                let hasVisibleCards = false;
+                
+                cards.forEach(card => {
+                    const modelName = card.querySelector('.model-name').textContent.toLowerCase();
+                    const fields = card.querySelectorAll('.field-item');
+                    let hasMatchingField = false;
+                    
+                    fields.forEach(field => {
+                        const fieldName = field.querySelector('.field-name').textContent.toLowerCase();
+                        const fieldType = field.querySelector('.field-type').textContent.toLowerCase();
+                        const fieldRelation = field.querySelector('.field-relation').textContent.toLowerCase();
+                        
+                        if (fieldName.includes(searchTerm) || fieldType.includes(searchTerm) || fieldRelation.includes(searchTerm)) {
+                            hasMatchingField = true;
+                        }
+                    });
+                    
+                    if (modelName.includes(searchTerm) || sectionName.includes(searchTerm) || hasMatchingField) {
+                        card.style.display = 'flex';
+                        hasVisibleCards = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide section based on whether it has visible cards
+                if (searchTerm === '' || hasVisibleCards) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
                 }
             });
         }
