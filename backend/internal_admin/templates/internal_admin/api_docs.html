@@ -50,6 +50,63 @@
             padding: 10px 0;
         }
         
+        .sidebar-group {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-group-title {
+            padding: 10px 15px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .sidebar-group-title:hover {
+            background: #1f4068;
+        }
+        
+        .sidebar-group-title .arrow {
+            transition: transform 0.2s;
+            font-size: 0.8em;
+        }
+        
+        .sidebar-group-title.collapsed .arrow {
+            transform: rotate(-90deg);
+        }
+        
+        .sidebar-items {
+            display: none;
+            padding-left: 15px;
+        }
+        
+        .sidebar-items.expanded {
+            display: block;
+        }
+        
+        .sidebar-item {
+            padding: 8px 15px 8px 25px;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-item:hover {
+            background: #1f4068;
+            color: #fff;
+        }
+        
+        .sidebar-item.active {
+            background: #667eea;
+            color: #fff;
+        }
+        
         .content-area {
             flex: 1;
             display: flex;
@@ -213,10 +270,145 @@
     </div>
 
     <script>
+        // API endpoints grouped by app/module
+        const apiEndpoints = {
+            'Authentication': {
+                icon: '🔐',
+                endpoints: [
+                    { name: 'Register', path: '/api/auth/register/', method: 'POST' },
+                    { name: 'Login', path: '/api/auth/login/', method: 'POST' },
+                    { name: 'Logout', path: '/api/auth/logout/', method: 'POST' },
+                    { name: 'Profile', path: '/api/auth/profile/', method: 'GET' },
+                    { name: 'Update Profile', path: '/api/auth/profile/', method: 'PUT' },
+                ]
+            },
+            'Weddings': {
+                icon: '💒',
+                endpoints: [
+                    { name: 'List Weddings', path: '/api/weddings/', method: 'GET' },
+                    { name: 'Create Wedding', path: '/api/weddings/', method: 'POST' },
+                    { name: 'Wedding Detail', path: '/api/weddings/{id}/', method: 'GET' },
+                    { name: 'Update Wedding', path: '/api/weddings/{id}/', method: 'PUT' },
+                    { name: 'Delete Wedding', path: '/api/weddings/{id}/', method: 'DELETE' },
+                ]
+            },
+            'Guests': {
+                icon: '👥',
+                endpoints: [
+                    { name: 'List Guests', path: '/api/guests/', method: 'GET' },
+                    { name: 'Create Guest', path: '/api/guests/', method: 'POST' },
+                    { name: 'Guest Detail', path: '/api/guests/{id}/', method: 'GET' },
+                    { name: 'Update Guest', path: '/api/guests/{id}/', method: 'PUT' },
+                    { name: 'Delete Guest', path: '/api/guests/{id}/', method: 'DELETE' },
+                    { name: 'Bulk RSVP Update', path: '/api/guests/bulk-rsvp/', method: 'POST' },
+                ]
+            },
+            'Expenses': {
+                icon: '💰',
+                endpoints: [
+                    { name: 'List Expenses', path: '/api/expenses/', method: 'GET' },
+                    { name: 'Create Expense', path: '/api/expenses/', method: 'POST' },
+                    { name: 'Expense Detail', path: '/api/expenses/{id}/', method: 'GET' },
+                    { name: 'Update Expense', path: '/api/expenses/{id}/', method: 'PUT' },
+                    { name: 'Delete Expense', path: '/api/expenses/{id}/', method: 'DELETE' },
+                    { name: 'Expense Statistics', path: '/api/expenses/statistics/', method: 'GET' },
+                ]
+            },
+            'Vendors': {
+                icon: '🏪',
+                endpoints: [
+                    { name: 'List Vendors', path: '/api/vendors/', method: 'GET' },
+                    { name: 'Create Vendor', path: '/api/vendors/', method: 'POST' },
+                    { name: 'Vendor Detail', path: '/api/vendors/{id}/', method: 'GET' },
+                    { name: 'Update Vendor', path: '/api/vendors/{id}/', method: 'PUT' },
+                    { name: 'Delete Vendor', path: '/api/vendors/{id}/', method: 'DELETE' },
+                ]
+            },
+            'Timeline': {
+                icon: '📅',
+                endpoints: [
+                    { name: 'List Timeline Events', path: '/api/timeline/', method: 'GET' },
+                    { name: 'Create Event', path: '/api/timeline/', method: 'POST' },
+                    { name: 'Event Detail', path: '/api/timeline/{id}/', method: 'GET' },
+                    { name: 'Update Event', path: '/api/timeline/{id}/', method: 'PUT' },
+                    { name: 'Delete Event', path: '/api/timeline/{id}/', method: 'DELETE' },
+                ]
+            },
+            'Media': {
+                icon: '📷',
+                endpoints: [
+                    { name: 'Upload Media', path: '/api/media/upload/', method: 'POST' },
+                    { name: 'List Media', path: '/api/media/', method: 'GET' },
+                    { name: 'Media Detail', path: '/api/media/{id}/', method: 'GET' },
+                    { name: 'Delete Media', path: '/api/media/{id}/', method: 'DELETE' },
+                ]
+            },
+        };
+
+        // Populate sidebar
+        function populateSidebar() {
+            const sidebarContent = document.getElementById('sidebarContent');
+            sidebarContent.innerHTML = '';
+
+            for (const [groupName, group] of Object.entries(apiEndpoints)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'sidebar-group';
+
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'sidebar-group-title';
+                groupTitle.innerHTML = `<span class="arrow">▼</span> ${group.icon} ${groupName}`;
+                groupTitle.onclick = () => toggleGroup(groupTitle);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'sidebar-items expanded';
+
+                group.endpoints.forEach(endpoint => {
+                    const item = document.createElement('a');
+                    item.className = 'sidebar-item';
+                    item.href = '#';
+                    item.innerHTML = `<span style="color: ${getMethodColor(endpoint.method)}">${endpoint.method}</span> ${endpoint.name}`;
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        navigateToEndpoint(endpoint);
+                    };
+                    itemsDiv.appendChild(item);
+                });
+
+                groupDiv.appendChild(groupTitle);
+                groupDiv.appendChild(itemsDiv);
+                sidebarContent.appendChild(groupDiv);
+            }
+        }
+
+        function getMethodColor(method) {
+            const colors = {
+                'GET': '#61affe',
+                'POST': '#49cc90',
+                'PUT': '#fca130',
+                'DELETE': '#f93e3e',
+                'PATCH': '#50e3c2'
+            };
+            return colors[method] || '#999';
+        }
+
+        function toggleGroup(groupTitle) {
+            groupTitle.classList.toggle('collapsed');
+            const items = groupTitle.nextElementSibling;
+            items.classList.toggle('expanded');
+        }
+
+        function navigateToEndpoint(endpoint) {
+            // For now, just alert - will implement actual navigation later
+            alert(`Navigate to: ${endpoint.method} ${endpoint.path}`);
+        }
+
+        // Initialize sidebar
+        populateSidebar();
+
         // Load Swagger UI dynamically
         const swaggerContainer = document.getElementById('swaggerContainer');
         swaggerContainer.innerHTML = `
-            <iframe src="/api/docs/" style="width: 100%; height: 100%; border: none;" id="swaggerFrame"></iframe>
+            <iframe src="/api/swagger/" style="width: 100%; height: 100%; border: none;" id="swaggerFrame"></iframe>
         `;
     </script>
 </body>
