@@ -3,6 +3,7 @@ from accounts.models import User, Role, Settings
 from weddings.models import Wedding, WeddingStatus, VenueCatalog, Venue
 from guests.models import Guest, RsvpStatus, Table, Meal
 from expenses.models import Expense, ExpenseStatus, BudgetCategory
+from vendors.models import Vendor, VendorStatus, VendorCategory, VendorCatalog
 
 
 @admin.register(User)
@@ -298,3 +299,77 @@ class BudgetCategoryAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_staff
+
+
+@admin.register(Vendor)
+class VendorAdmin(admin.ModelAdmin):
+    """Admin configuration for Vendor model"""
+    list_display = ['id', 'wedding', 'vendor_catalog', 'status', 'cost_estimate', 'actual_cost']
+    list_filter = ['status', 'vendor_catalog__category']
+    search_fields = ['vendor_catalog__name', 'wedding__bride_name', 'wedding__groom_name']
+    ordering = ['vendor_catalog__category', 'vendor_catalog__name']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(VendorStatus)
+class VendorStatusAdmin(admin.ModelAdmin):
+    """Admin configuration for VendorStatus model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(VendorCategory)
+class VendorCategoryAdmin(admin.ModelAdmin):
+    """Admin configuration for VendorCategory model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(VendorCatalog)
+class VendorCatalogAdmin(admin.ModelAdmin):
+    """Admin configuration for VendorCatalog model"""
+    list_display = ['id', 'name', 'category', 'contact', 'price_range', 'rating']
+    list_filter = ['category']
+    search_fields = ['name', 'contact']
+    ordering = ['category', 'name']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
