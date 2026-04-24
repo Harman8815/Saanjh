@@ -10,6 +10,7 @@ from .serializers import (
     UserLoginSerializer, UserUpdateSerializer,
     RoleSerializer, SettingsSerializer, SettingsUpdateSerializer
 )
+from utils.api_response import APIResponse
 
 class UserRegistrationView(generics.CreateAPIView):
     """User registration endpoint"""
@@ -22,10 +23,10 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token, created = Token.objects.get_or_create(user=user)
-        return Response({
+        return APIResponse.created({
             'user': UserSerializer(user).data,
             'token': token.key
-        }, status=status.HTTP_201_CREATED)
+        }, "User registered successfully")
 
 class UserLoginView(generics.GenericAPIView):
     """User login endpoint"""
@@ -41,10 +42,10 @@ class UserLoginView(generics.GenericAPIView):
         # login(request, user)  # This causes issues with API requests
         
         token, created = Token.objects.get_or_create(user=user)
-        return Response({
+        return APIResponse.success({
             'user': UserSerializer(user).data,
             'token': token.key
-        })
+        }, "Login successful")
 
 class UserLogoutView(generics.GenericAPIView):
     """User logout endpoint"""
@@ -56,13 +57,42 @@ class UserLogoutView(generics.GenericAPIView):
         except:
             pass
         logout(request)
-        return Response({'message': 'Successfully logged out'})
+        return APIResponse.success({}, "Successfully logged out")
 
 class RoleViewSet(viewsets.ModelViewSet):
     """ViewSet for Role model"""
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Roles retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Role created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Role retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Role updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Role deleted successfully")
 
 
 class SettingsViewSet(viewsets.ModelViewSet):
@@ -80,6 +110,35 @@ class SettingsViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Settings retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Settings created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Settings retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Settings updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Settings deleted successfully")
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -94,6 +153,19 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return UserUpdateSerializer
         return UserSerializer
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Profile retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return APIResponse.success(serializer.data, "Profile updated successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -107,21 +179,23 @@ def user_stats(request):
         expense_total = sum(expense.actual_cost or expense.estimated_cost 
                           for expense in wedding.expenses.all())
         
-        return Response({
+        stats = {
             'guest_count': guest_count,
             'vendor_count': vendor_count,
             'expense_total': expense_total,
             'days_until_wedding': wedding.days_until_wedding(),
             'has_wedding': True
-        })
+        }
+        return APIResponse.success(stats, "Statistics retrieved successfully")
     except:
-        return Response({
+        stats = {
             'guest_count': 0,
             'vendor_count': 0,
             'expense_total': 0,
             'days_until_wedding': 0,
             'has_wedding': False
-        })
+        }
+        return APIResponse.success(stats, "Statistics retrieved successfully")
 
 
 @api_view(['GET', 'POST'])
@@ -132,11 +206,14 @@ def user_settings_detail(request):
     
     if request.method == 'GET':
         serializer = SettingsSerializer(settings)
-        return Response(serializer.data)
+        return APIResponse.success(serializer.data, "Settings retrieved successfully")
     
     elif request.method == 'POST':
         serializer = SettingsUpdateSerializer(settings, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return APIResponse.success(serializer.data, "Settings updated successfully")
+        return APIResponse.validation_error(
+            [f"{field}: {', '.join(errors)}" for field, errors in serializer.errors.items()],
+            "Settings validation failed"
+        )

@@ -50,6 +50,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
     """ViewSet for Wedding model with standardized responses"""
     serializer_class = WeddingSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Wedding.objects.all()  # Required for DRF router basename
     
     def get_queryset(self):
         return Wedding.objects.filter(user=self.request.user)
