@@ -413,6 +413,49 @@
         // Initialize sidebar
         populateSidebar();
 
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filterSidebar(searchTerm);
+        });
+
+        function filterSidebar(searchTerm) {
+            const groups = document.querySelectorAll('.sidebar-group');
+            
+            groups.forEach(group => {
+                const groupTitle = group.querySelector('.sidebar-group-title');
+                const items = group.querySelectorAll('.sidebar-item');
+                const groupName = groupTitle.textContent.toLowerCase();
+                
+                let hasVisibleItems = false;
+                
+                items.forEach(item => {
+                    const itemName = item.textContent.toLowerCase();
+                    const matchesSearch = itemName.includes(searchTerm) || groupName.includes(searchTerm);
+                    
+                    if (matchesSearch) {
+                        item.style.display = 'block';
+                        hasVisibleItems = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide group based on whether it has visible items
+                if (searchTerm === '' || hasVisibleItems) {
+                    group.style.display = 'block';
+                    // Expand group if searching
+                    if (searchTerm !== '') {
+                        groupTitle.classList.remove('collapsed');
+                        group.querySelector('.sidebar-items').classList.add('expanded');
+                    }
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        }
+
         // Load Swagger UI dynamically
         const swaggerContainer = document.getElementById('swaggerContainer');
         swaggerContainer.innerHTML = `
