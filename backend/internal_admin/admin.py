@@ -2,6 +2,7 @@ from django.contrib import admin
 from accounts.models import User, Role, Settings
 from weddings.models import Wedding, WeddingStatus, VenueCatalog, Venue
 from guests.models import Guest, RsvpStatus, Table, Meal
+from expenses.models import Expense, ExpenseStatus, BudgetCategory
 
 
 @admin.register(User)
@@ -236,3 +237,64 @@ class MealAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    """Admin configuration for Expense model"""
+    list_display = ['id', 'title', 'amount', 'paid_amount', 'wedding', 'budget_category', 'vendor', 'status', 'expense_date', 'due_date']
+    list_filter = ['status', 'expense_date', 'due_date', 'budget_category', 'wedding']
+    search_fields = ['title', 'notes', 'wedding__bride_name', 'wedding__groom_name', 'vendor__name']
+    ordering = ['-expense_date', 'budget_category', 'title']
+    readonly_fields = ['created_at', 'updated_at', 'remaining_balance', 'is_overdue']
+    date_hierarchy = 'expense_date'
+    list_per_page = 50
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(ExpenseStatus)
+class ExpenseStatusAdmin(admin.ModelAdmin):
+    """Admin configuration for ExpenseStatus model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(BudgetCategory)
+class BudgetCategoryAdmin(admin.ModelAdmin):
+    """Admin configuration for BudgetCategory model"""
+    list_display = ['id', 'wedding', 'name', 'allocated_amount']
+    list_filter = ['wedding']
+    search_fields = ['name', 'wedding__bride_name', 'wedding__groom_name']
+    ordering = ['wedding', 'name']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
