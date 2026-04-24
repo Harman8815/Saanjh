@@ -1,6 +1,7 @@
 from django.contrib import admin
 from accounts.models import User, Role, Settings
 from weddings.models import Wedding, WeddingStatus, VenueCatalog, Venue
+from guests.models import Guest, RsvpStatus, Table, Meal
 
 
 @admin.register(User)
@@ -158,3 +159,80 @@ class VenueAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_staff
+
+
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+    """Admin configuration for Guest model"""
+    list_display = ['id', 'first_name', 'last_name', 'email', 'wedding', 'rsvp_status', 'relationship', 'table', 'invitation_sent']
+    list_filter = ['rsvp_status', 'relationship', 'invitation_sent', 'reminder_sent', 'added_date']
+    search_fields = ['first_name', 'last_name', 'email', 'phone', 'wedding__bride_name', 'wedding__groom_name']
+    ordering = ['last_name', 'first_name']
+    readonly_fields = ['added_date', 'updated_at']
+    date_hierarchy = 'added_date'
+    list_per_page = 50
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(RsvpStatus)
+class RsvpStatusAdmin(admin.ModelAdmin):
+    """Admin configuration for RsvpStatus model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(Table)
+class TableAdmin(admin.ModelAdmin):
+    """Admin configuration for Table model"""
+    list_display = ['id', 'wedding', 'table_number', 'capacity']
+    list_filter = ['wedding']
+    search_fields = ['wedding__bride_name', 'wedding__groom_name', 'table_number']
+    ordering = ['wedding', 'table_number']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(Meal)
+class MealAdmin(admin.ModelAdmin):
+    """Admin configuration for Meal model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
