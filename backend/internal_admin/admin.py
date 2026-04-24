@@ -95,6 +95,10 @@ class WeddingAdmin(admin.ModelAdmin):
     date_hierarchy = 'wedding_date'
     list_per_page = 25
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('user', 'status')
+
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
 
@@ -175,6 +179,10 @@ class GuestAdmin(admin.ModelAdmin):
     date_hierarchy = 'added_date'
     list_per_page = 50
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('wedding', 'rsvp_status', 'table')
+
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
 
@@ -252,6 +260,10 @@ class ExpenseAdmin(admin.ModelAdmin):
     date_hierarchy = 'expense_date'
     list_per_page = 50
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('wedding', 'budget_category', 'vendor', 'status')
+
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
 
@@ -309,6 +321,10 @@ class VendorAdmin(admin.ModelAdmin):
     list_filter = ['status', 'vendor_catalog__category']
     search_fields = ['vendor_catalog__name', 'wedding__bride_name', 'wedding__groom_name']
     ordering = ['vendor_catalog__category', 'vendor_catalog__name']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('wedding', 'vendor_catalog', 'status')
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
@@ -405,6 +421,10 @@ class TimelineEventAdmin(admin.ModelAdmin):
     ordering = ['event_date', 'start_time']
     date_hierarchy = 'event_date'
     list_per_page = 50
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('timeline', 'timeline__wedding', 'status')
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
