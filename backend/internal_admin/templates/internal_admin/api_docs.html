@@ -206,6 +206,9 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: box-shadow 0.2s;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
         }
         
         .model-card:hover {
@@ -223,6 +226,8 @@
         
         .field-list {
             margin-top: 10px;
+            flex: 1;
+            overflow-y: auto;
         }
         
         .field-item {
@@ -230,10 +235,17 @@
             padding: 8px 0;
             border-bottom: 1px solid #f1f1f1;
             align-items: center;
+            justify-content: space-between;
+        }
+        
+        .field-left {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 10px;
         }
         
         .field-name {
-            flex: 1;
             font-weight: 500;
             color: #333;
         }
@@ -254,16 +266,22 @@
         }
         
         .field-type {
-            flex: 1;
             color: #666;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
+            min-width: 120px;
         }
         
         .field-relation {
-            flex: 1;
             color: #999;
             font-size: 0.85em;
+            min-width: 100px;
+        }
+        
+        .field-badges {
+            display: flex;
+            gap: 5px;
+            align-items: center;
         }
         
         .field-badge {
@@ -272,7 +290,6 @@
             border-radius: 4px;
             font-size: 0.75em;
             font-weight: 600;
-            margin-left: 8px;
         }
         
         .badge-pk {
@@ -285,12 +302,6 @@
             background: #e3f2fd;
             color: #2196f3;
             border: 1px solid #2196f3;
-        }
-        
-        .badge-required {
-            background: #ffebee;
-            color: #e53935;
-            border: 1px solid #e53935;
         }
         
         @media (max-width: 768px) {
@@ -636,10 +647,8 @@
                         const fieldItem = document.createElement('div');
                         fieldItem.className = 'field-item';
 
-                        const fieldNameContainer = document.createElement('div');
-                        fieldNameContainer.style.flex = '1';
-                        fieldNameContainer.style.display = 'flex';
-                        fieldNameContainer.style.alignItems = 'center';
+                        const fieldLeft = document.createElement('div');
+                        fieldLeft.className = 'field-left';
 
                         const fieldName = document.createElement('div');
                         fieldName.className = 'field-name';
@@ -656,28 +665,6 @@
                             fieldName.classList.add('required');
                         }
 
-                        // Add badges
-                        if (field.is_primary_key) {
-                            const badge = document.createElement('span');
-                            badge.className = 'field-badge badge-pk';
-                            badge.textContent = 'PK';
-                            fieldNameContainer.appendChild(badge);
-                        }
-                        if (field.is_foreign_key) {
-                            const badge = document.createElement('span');
-                            badge.className = 'field-badge badge-fk';
-                            badge.textContent = 'FK';
-                            fieldNameContainer.appendChild(badge);
-                        }
-                        if (field.is_required && !field.is_primary_key) {
-                            const badge = document.createElement('span');
-                            badge.className = 'field-badge badge-required';
-                            badge.textContent = '!';
-                            fieldNameContainer.appendChild(badge);
-                        }
-
-                        fieldNameContainer.appendChild(fieldName);
-
                         const fieldType = document.createElement('div');
                         fieldType.className = 'field-type';
                         fieldType.textContent = field.type;
@@ -686,9 +673,29 @@
                         fieldRelation.className = 'field-relation';
                         fieldRelation.textContent = field.relation || '';
 
-                        fieldItem.appendChild(fieldNameContainer);
-                        fieldItem.appendChild(fieldType);
-                        fieldItem.appendChild(fieldRelation);
+                        fieldLeft.appendChild(fieldName);
+                        fieldLeft.appendChild(fieldType);
+                        fieldLeft.appendChild(fieldRelation);
+
+                        const fieldBadges = document.createElement('div');
+                        fieldBadges.className = 'field-badges';
+
+                        // Add PK and FK badges to right side
+                        if (field.is_primary_key) {
+                            const badge = document.createElement('span');
+                            badge.className = 'field-badge badge-pk';
+                            badge.textContent = 'PK';
+                            fieldBadges.appendChild(badge);
+                        }
+                        if (field.is_foreign_key) {
+                            const badge = document.createElement('span');
+                            badge.className = 'field-badge badge-fk';
+                            badge.textContent = 'FK';
+                            fieldBadges.appendChild(badge);
+                        }
+
+                        fieldItem.appendChild(fieldLeft);
+                        fieldItem.appendChild(fieldBadges);
                         fieldList.appendChild(fieldItem);
                     });
 
