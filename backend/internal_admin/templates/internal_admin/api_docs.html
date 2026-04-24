@@ -26,6 +26,7 @@
             flex-direction: column;
             border-right: 1px solid #333;
             flex-shrink: 0;
+            z-index: 10;
         }
         
         .sidebar-header {
@@ -526,7 +527,9 @@
         }
 
         // Initialize sidebar
-        populateSidebar();
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSidebar();
+        });
 
         // Tab switching functionality
         const tabs = document.querySelectorAll('.tab');
