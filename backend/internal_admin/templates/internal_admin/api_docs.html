@@ -398,8 +398,16 @@
         }
 
         function navigateToEndpoint(endpoint) {
-            // For now, just alert - will implement actual navigation later
-            alert(`Navigate to: ${endpoint.method} ${endpoint.path}`);
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            event.target.classList.add('active');
+            
+            // For now, just log - actual Swagger navigation will be implemented later
+            console.log(`Navigate to: ${endpoint.method} ${endpoint.path}`);
         }
 
         // Initialize sidebar
