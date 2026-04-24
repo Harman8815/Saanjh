@@ -303,6 +303,60 @@
             border: 1px solid #2196f3;
         }
         
+        .legend-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .legend-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .legend-sample {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        
+        .legend-sample.pk {
+            background: #fff9c4;
+            color: #d4a017;
+            border: 1px solid #d4a017;
+        }
+        
+        .legend-sample.fk {
+            background: #e3f2fd;
+            color: #2196f3;
+            border: 1px solid #2196f3;
+        }
+        
+        .legend-sample.required {
+            color: #e53935;
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 width: 220px;
@@ -672,6 +726,28 @@
         function displayTableSchemas(schemaData) {
             const container = document.getElementById('tableSchemasContainer');
             container.innerHTML = '';
+
+            // Add legend section
+            const legendSection = document.createElement('div');
+            legendSection.className = 'legend-section';
+            legendSection.innerHTML = `
+                <div class="legend-title">📋 Legend</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-sample pk">PK</span>
+                        <span>Primary Key (Gold)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-sample fk">FK</span>
+                        <span>Foreign Key (Blue)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-sample required">Field Name</span>
+                        <span>Required Field (Red)</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(legendSection);
 
             for (const [appName, models] of Object.entries(schemaData)) {
                 const section = document.createElement('div');
