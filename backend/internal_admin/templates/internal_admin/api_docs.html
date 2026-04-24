@@ -413,6 +413,30 @@
         // Initialize sidebar
         populateSidebar();
 
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Hide all containers
+                document.getElementById('swaggerContainer').style.display = 'none';
+                document.getElementById('tableSchemasContainer').style.display = 'none';
+                
+                // Show selected container
+                const tabName = tab.getAttribute('data-tab');
+                if (tabName === 'api-docs') {
+                    document.getElementById('swaggerContainer').style.display = 'block';
+                } else if (tabName === 'table-schemas') {
+                    document.getElementById('tableSchemasContainer').style.display = 'block';
+                    document.getElementById('tableSchemasContainer').classList.add('active');
+                }
+            });
+        });
+
         // Search functionality
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', (e) => {
