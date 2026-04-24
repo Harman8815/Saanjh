@@ -4,6 +4,7 @@ from weddings.models import Wedding, WeddingStatus, VenueCatalog, Venue
 from guests.models import Guest, RsvpStatus, Table, Meal
 from expenses.models import Expense, ExpenseStatus, BudgetCategory
 from vendors.models import Vendor, VendorStatus, VendorCategory, VendorCatalog
+from timeline.models import Timeline, TimelineEvent, TimelineStatus
 
 
 @admin.register(User)
@@ -364,6 +365,65 @@ class VendorCatalogAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(Timeline)
+class TimelineAdmin(admin.ModelAdmin):
+    """Admin configuration for Timeline model"""
+    list_display = ['id', 'wedding', 'name']
+    list_filter = ['wedding']
+    search_fields = ['name', 'wedding__bride_name', 'wedding__groom_name']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(TimelineEvent)
+class TimelineEventAdmin(admin.ModelAdmin):
+    """Admin configuration for TimelineEvent model"""
+    list_display = ['id', 'title', 'timeline', 'event_date', 'start_time', 'end_time', 'status']
+    list_filter = ['status', 'event_date']
+    search_fields = ['title', 'timeline__name', 'timeline__wedding__bride_name', 'timeline__wedding__groom_name']
+    ordering = ['event_date', 'start_time']
+    date_hierarchy = 'event_date'
+    list_per_page = 50
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(TimelineStatus)
+class TimelineStatusAdmin(admin.ModelAdmin):
+    """Admin configuration for TimelineStatus model"""
+    list_display = ['id', 'name']
+    search_fields = ['name']
 
     def has_add_permission(self, request):
         return request.user.is_superuser
