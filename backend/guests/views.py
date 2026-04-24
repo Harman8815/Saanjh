@@ -11,12 +11,42 @@ from .serializers import (
     RsvpStatusSerializer, TableSerializer, TableCreateSerializer,
     MealSerializer
 )
+from utils.api_response import APIResponse
 
 class RsvpStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for RsvpStatus model"""
     queryset = RsvpStatus.objects.all()
     serializer_class = RsvpStatusSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "RSVP statuses retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "RSVP status created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "RSVP status retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "RSVP status updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "RSVP status deleted successfully")
 
 
 class MealViewSet(viewsets.ModelViewSet):
@@ -24,6 +54,35 @@ class MealViewSet(viewsets.ModelViewSet):
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Meals retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Meal created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Meal retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Meal updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Meal deleted successfully")
 
 
 class TableViewSet(viewsets.ModelViewSet):
@@ -40,6 +99,35 @@ class TableViewSet(viewsets.ModelViewSet):
             return TableCreateSerializer
         return TableSerializer
     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Tables retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Table created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Table retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Table updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Table deleted successfully")
+    
     @action(detail=True, methods=['post'])
     def assign_guest(self, request, pk=None):
         """Assign a guest to this table"""
@@ -47,9 +135,10 @@ class TableViewSet(viewsets.ModelViewSet):
         guest_id = request.data.get('guest_id')
         
         if not guest_id:
-            return Response(
-                {'error': 'guest_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
+            return APIResponse.error(
+                "guest_id is required",
+                ["Missing required field: guest_id"],
+                status.HTTP_400_BAD_REQUEST
             )
         
         try:
@@ -60,19 +149,21 @@ class TableViewSet(viewsets.ModelViewSet):
             
             # Check if table has capacity
             if table.assigned_guests.count() >= table.capacity:
-                return Response(
-                    {'error': 'Table is at full capacity'},
-                    status=status.HTTP_400_BAD_REQUEST
+                return APIResponse.error(
+                    "Table is at full capacity",
+                    ["Cannot assign more guests to this table"],
+                    status.HTTP_400_BAD_REQUEST
                 )
             
             guest.table = table
             guest.save()
             
-            return Response({'message': 'Guest assigned to table successfully'})
+            return APIResponse.success({}, "Guest assigned to table successfully")
         except Guest.DoesNotExist:
-            return Response(
-                {'error': 'Guest not found'},
-                status=status.HTTP_404_NOT_FOUND
+            return APIResponse.error(
+                "Guest not found",
+                ["The specified guest does not exist or is not accessible"],
+                status.HTTP_404_NOT_FOUND
             )
 
 
@@ -100,14 +191,49 @@ class GuestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(wedding=self.request.user.wedding)
     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Guests retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Guest created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Guest retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Guest updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Guest deleted successfully")
+    
     @action(detail=False, methods=['post'])
     def bulk_create(self, request):
         """Bulk create guests"""
         serializer = GuestBulkCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             guests = serializer.save()
-            return Response(GuestSerializer(guests, many=True).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return APIResponse.created(
+                GuestSerializer(guests, many=True).data,
+                "Guests created successfully"
+            )
+        return APIResponse.validation_error(
+            [f"{field}: {', '.join(errors)}" for field, errors in serializer.errors.items()],
+            "Guest bulk creation failed"
+        )
     
     @action(detail=False, methods=['post'])
     def bulk_rsvp_update(self, request):
@@ -117,9 +243,10 @@ class GuestViewSet(viewsets.ModelViewSet):
         rsvp_date = request.data.get('rsvp_date')
         
         if not guest_ids or not rsvp_status_id:
-            return Response(
-                {'error': 'guest_ids and rsvp_status_id are required'},
-                status=status.HTTP_400_BAD_REQUEST
+            return APIResponse.error(
+                "guest_ids and rsvp_status_id are required",
+                ["Missing required fields: guest_ids and rsvp_status_id"],
+                status.HTTP_400_BAD_REQUEST
             )
         
         updated_count = Guest.objects.filter(
@@ -127,10 +254,9 @@ class GuestViewSet(viewsets.ModelViewSet):
             wedding=request.user.wedding
         ).update(rsvp_status_id=rsvp_status_id, rsvp_date=rsvp_date)
         
-        return Response({
-            'message': f'Updated {updated_count} guests',
+        return APIResponse.success({
             'updated_count': updated_count
-        })
+        }, f"Updated {updated_count} guests successfully")
 
 
 class GuestListCreateView(generics.ListCreateAPIView):
@@ -149,6 +275,17 @@ class GuestListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return GuestCreateSerializer
         return GuestSerializer
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Guests retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Guest created successfully")
 
 class GuestDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Guest detail, update, and delete endpoint"""
@@ -161,6 +298,24 @@ class GuestDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return GuestUpdateSerializer
         return GuestSerializer
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Guest retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Guest updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Guest deleted successfully")
 
 class GuestBulkCreateView(generics.CreateAPIView):
     """Bulk create guests endpoint"""
@@ -176,9 +331,10 @@ def guest_bulk_rsvp_update(request):
     rsvp_date = request.data.get('rsvp_date')
     
     if not guest_ids or not rsvp_status:
-        return Response(
-            {'error': 'guest_ids and rsvp_status are required'},
-            status=status.HTTP_400_BAD_REQUEST
+        return APIResponse.error(
+            "guest_ids and rsvp_status are required",
+            ["Missing required fields: guest_ids and rsvp_status"],
+            status.HTTP_400_BAD_REQUEST
         )
     
     updated_count = Guest.objects.filter(
@@ -186,10 +342,9 @@ def guest_bulk_rsvp_update(request):
         wedding=request.user.wedding
     ).update(rsvp_status=rsvp_status, rsvp_date=rsvp_date)
     
-    return Response({
-        'message': f'Updated {updated_count} guests',
+    return APIResponse.success({
         'updated_count': updated_count
-    })
+    }, f"Updated {updated_count} guests successfully")
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -198,9 +353,10 @@ def guest_send_invitations(request):
     guest_ids = request.data.get('guest_ids', [])
     
     if not guest_ids:
-        return Response(
-            {'error': 'guest_ids are required'},
-            status=status.HTTP_400_BAD_REQUEST
+        return APIResponse.error(
+            "guest_ids are required",
+            ["Missing required field: guest_ids"],
+            status.HTTP_400_BAD_REQUEST
         )
     
     from django.utils import timezone
@@ -212,10 +368,9 @@ def guest_send_invitations(request):
         invitation_sent_date=timezone.now()
     )
     
-    return Response({
-        'message': f'Marked {updated_count} invitations as sent',
+    return APIResponse.success({
         'updated_count': updated_count
-    })
+    }, f"Marked {updated_count} invitations as sent successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -246,9 +401,9 @@ def guest_statistics(request):
             rsvp_status='confirmed', plus_one=True
         ).count()
         
-        return Response(stats)
+        return APIResponse.success(stats, "Statistics retrieved successfully")
     except:
-        return Response({
+        stats = {
             'total': 0,
             'confirmed': 0,
             'pending': 0,
@@ -258,7 +413,8 @@ def guest_statistics(request):
             'reminders_sent': 0,
             'rsvp_rate': 0,
             'expected_attendees': 0
-        })
+        }
+        return APIResponse.success(stats, "Statistics retrieved successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -281,7 +437,7 @@ def guest_export(request):
             'added_date': guest.added_date,
         })
     
-    return Response(export_data)
+    return APIResponse.success(export_data, "Guest data exported successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -305,12 +461,12 @@ def seating_chart(request):
             table__isnull=True
         )
         
-        return Response({
+        return APIResponse.success({
             'tables': seating_data,
             'unassigned_guests': GuestSerializer(unassigned_guests, many=True).data
-        })
+        }, "Seating chart retrieved successfully")
     except:
-        return Response({
+        return APIResponse.success({
             'tables': [],
             'unassigned_guests': []
-        })
+        }, "Seating chart retrieved successfully")
