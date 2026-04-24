@@ -88,9 +88,9 @@ class SettingsAdmin(admin.ModelAdmin):
 @admin.register(Wedding)
 class WeddingAdmin(admin.ModelAdmin):
     """Admin configuration for Wedding model"""
-    list_display = ['id', 'user', 'bride_name', 'groom_name', 'wedding_date', 'status']
+    list_display = ['id', 'user', 'get_couple_name', 'wedding_date', 'status', 'venue', 'theme']
     list_filter = ['status', 'wedding_date']
-    search_fields = ['bride_name', 'groom_name', 'user__username', 'user__email']
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'theme']
     ordering = ['-wedding_date']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'wedding_date'
@@ -98,7 +98,7 @@ class WeddingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related('user', 'status')
+        return qs.select_related('user', 'status', 'venue')
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_staff
