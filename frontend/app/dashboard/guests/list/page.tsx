@@ -6,64 +6,34 @@ import { X, Download, Upload, Info, Filter, ChevronRight, Edit2, Trash2, UserPlu
 // import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
-import { Guest } from '../../../../types/guest';
+import { Guest } from '../../../../types/api';
+import { GuestService } from '../../../../services/guests';
 
 export default function GuestListPage() {
-  const [guests, setGuests] = useState<Guest[]>([
-    {
-      id: 1,
-      name: 'Emily Johnson',
-      email: 'emily@email.com',
-      phone: '+1-555-0123',
-      whatsapp: '+1-555-0123',
-      table: 'A1',
-      side: 'Bride',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'vegetarian',
-      address: '123 Main St, City, State 12345',
-      notes: 'Bridesmaid - needs special dietary accommodations'
-    },
-    {
-      id: 2,
-      name: 'Michael Smith',
-      email: 'michael@email.com',
-      phone: '+1-555-0456',
-      whatsapp: '',
-      table: 'A2',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'pending',
-      mealPreference: 'none',
-      address: '456 Oak Ave, City, State 67890'
-    },
-    {
-      id: 3,
-      name: 'Jessica Davis',
-      email: 'jessica@email.com',
-      phone: '+1-555-0789',
-      whatsapp: '',
-      table: 'A3',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'declined',
-      mealPreference: 'gluten-free',
-      address: '789 Pine St, City, State 54321'
-    },
-    {
-      id: 4,
-      name: 'Robert Wilson',
-      email: 'robert@email.com',
-      phone: '+1-555-0321',
-      whatsapp: '',
-      table: 'B1',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'pending',
-      mealPreference: 'vegan',
-      address: '321 Elm St, City, State 98765'
-    }
-  ]);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalGuests, setTotalGuests] = useState(0);
+
+  // Fetch guests from API
+  useEffect(() => {
+    const fetchGuests = async () => {
+      try {
+        setIsLoading(true);
+        const response = await GuestService.getGuests(currentPage, 50);
+        setGuests(response.results);
+        setTotalGuests(response.count);
+      } catch (err: any) {
+        console.error('Error fetching guests:', err);
+        setError(err.message || 'Failed to load guests');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGuests();
+  }, [currentPage]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTable, setSelectedTable] = useState('all');
@@ -195,21 +165,36 @@ export default function GuestListPage() {
     setShowAddGuestModal(true);
   };
 
-  const handleSaveGuest = (guest: Omit<Guest, 'id'>) => {
-    if (editingGuest) {
-      setGuests(guests.map(g => g.id === editingGuest.id ? { ...guest, id: editingGuest.id } : g));
-    } else {
-      setGuests([...guests, { ...guest, id: guests.length + 1 }]);
+  const handleSaveGuest = async (guest: Omit<Guest, 'id'>) => {
+    try {
+      if (editingGuest) {
+        const updated = await GuestService.updateGuest(editingGuest.id, guest);
+        setGuests(guests.map(g => g.id === editingGuest.id ? updated : g));
+      } else {
+        const created = await GuestService.createGuest(guest);
+        setGuests([...guests, created]);
+      }
+      setShowAddGuestModal(false);
+      setEditingGuest(null);
+    } catch (err: any) {
+      console.error('Error saving guest:', err);
+      alert(err.message || 'Failed to save guest');
     }
-    setShowAddGuestModal(false);
-    setEditingGuest(null);
   };
 
-  const handleDeleteGuest = (guestId: number) => {
-    setGuests(guests.filter(g => g.id !== guestId));
-    if (editingGuest?.id === guestId) {
-      setEditingGuest(null);
-      setShowAddGuestModal(false);
+  const handleDeleteGuest = async (guestId: number) => {
+    if (confirm('Are you sure you want to delete this guest?')) {
+      try {
+        await GuestService.deleteGuest(guestId);
+        setGuests(guests.filter(g => g.id !== guestId));
+        if (editingGuest?.id === guestId) {
+          setEditingGuest(null);
+          setShowAddGuestModal(false);
+        }
+      } catch (err: any) {
+        console.error('Error deleting guest:', err);
+        alert(err.message || 'Failed to delete guest');
+      }
     }
   };
 
@@ -286,6 +271,23 @@ export default function GuestListPage() {
     });
     setCurrentPage(1);
   };
+
+  if (isLoading) {
+    return <GuestLayoutSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -761,7 +763,7 @@ export default function GuestListPage() {
           setShowAddGuestModal(false);
           setEditingGuest(null);
         }}
-        onAddGuest={handleSaveGuest}
+        onGuestAdded={handleSaveGuest}
         existingGuests={guests}
         editingGuest={editingGuest}
       />
