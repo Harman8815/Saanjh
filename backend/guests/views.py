@@ -264,9 +264,9 @@ class GuestListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['rsvp_status', 'relationship', 'invitation_sent']
-    search_fields = ['name', 'email', 'phone']
-    ordering_fields = ['name', 'added_date', 'rsvp_status']
-    ordering = ['name']
+    search_fields = ['first_name', 'last_name', 'email', 'phone']
+    ordering_fields = ['last_name', 'first_name', 'added_date', 'rsvp_status']
+    ordering = ['last_name', 'first_name']
     
     def get_queryset(self):
         return Guest.objects.filter(wedding=self.request.user.wedding)
@@ -425,13 +425,11 @@ def guest_export(request):
     export_data = []
     for guest in guests:
         export_data.append({
-            'name': guest.name,
+            'name': guest.full_name,
             'email': guest.email,
             'phone': guest.phone,
-            'rsvp_status': guest.get_rsvp_status_display(),
+            'rsvp_status': guest.rsvp_status.name if guest.rsvp_status else '',
             'relationship': guest.get_relationship_display(),
-            'plus_one': guest.plus_one,
-            'plus_one_name': guest.plus_one_name,
             'dietary_restrictions': guest.dietary_restrictions,
             'notes': guest.notes,
             'added_date': guest.added_date,

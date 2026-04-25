@@ -180,9 +180,9 @@ class ExpenseListCreateView(generics.ListCreateAPIView):
     """Expense list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['category', 'payment_status', 'vendor']
-    search_fields = ['description', 'notes']
-    ordering_fields = ['expense_date', 'due_date', 'created_at', 'description']
+    filterset_fields = ['budget_category', 'status', 'vendor']
+    search_fields = ['title', 'notes']
+    ordering_fields = ['expense_date', 'due_date', 'created_at', 'title']
     ordering = ['-expense_date']
     
     def get_queryset(self):
