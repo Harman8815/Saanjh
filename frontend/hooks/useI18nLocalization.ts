@@ -41,12 +41,8 @@ export function useI18nLocalization() {
       await i18n.changeLanguage(languageCode);
       // Update document attributes
       document.documentElement.lang = languageCode;
-      const language = getLanguageByCode(languageCode);
-      if (language?.rtl) {
-        document.documentElement.dir = 'rtl';
-      } else {
-        document.documentElement.dir = 'ltr';
-      }
+      // Force LTR direction
+      document.documentElement.dir = 'ltr';
     } catch (error) {
       console.error('Failed to change language:', error);
     }

@@ -86,12 +86,8 @@ export const useLocalizationStore = create<LocalizationState>()(
             // Use requestAnimationFrame to ensure DOM is ready
             requestAnimationFrame(() => {
               document.documentElement.lang = languageCode;
-              // Update text direction if needed
-              if (language.rtl) {
-                document.documentElement.dir = 'rtl';
-              } else {
-                document.documentElement.dir = 'ltr';
-              }
+              // Force LTR direction
+              document.documentElement.dir = 'ltr';
             });
           }
         }
@@ -173,10 +169,7 @@ export const initializeLocalization = () => {
   const language = languages.find(lang => lang.code === state.currentLanguage);
   if (language) {
     document.documentElement.lang = state.currentLanguage;
-    if (language.rtl) {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
+    // Force LTR direction
+    document.documentElement.dir = 'ltr';
   }
 };

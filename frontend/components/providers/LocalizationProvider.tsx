@@ -25,10 +25,9 @@ export function LocalizationProvider({ children }: LocalizationProviderProps) {
           htmlElement.lang = language;
         }
         
-        // Update text direction if needed
-        const isRTL = language === 'hi'; // Hindi is not RTL, but example for future languages
-        if (htmlElement.dir !== (isRTL ? 'rtl' : 'ltr')) {
-          htmlElement.dir = isRTL ? 'rtl' : 'ltr';
+        // Force LTR direction
+        if (htmlElement.dir !== 'ltr') {
+          htmlElement.dir = 'ltr';
         }
       }
     };

@@ -69,12 +69,8 @@ export function useLanguageConverter() {
       
       // Update document attributes
       document.documentElement.lang = languageCode;
-      const language = languages.find(lang => lang.code === languageCode);
-      if (language?.rtl) {
-        document.documentElement.dir = 'rtl';
-      } else {
-        document.documentElement.dir = 'ltr';
-      }
+      // Force LTR direction
+      document.documentElement.dir = 'ltr';
     } catch (error) {
       console.error('Failed to change language:', error);
     } finally {
