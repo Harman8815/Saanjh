@@ -264,9 +264,9 @@ class GuestListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['rsvp_status', 'relationship', 'invitation_sent']
-    search_fields = ['name', 'email', 'phone']
-    ordering_fields = ['name', 'added_date', 'rsvp_status']
-    ordering = ['name']
+    search_fields = ['first_name', 'last_name', 'email', 'phone']
+    ordering_fields = ['last_name', 'first_name', 'added_date', 'rsvp_status']
+    ordering = ['last_name', 'first_name']
     
     def get_queryset(self):
         return Guest.objects.filter(wedding=self.request.user.wedding)
@@ -382,10 +382,9 @@ def guest_statistics(request):
         
         stats = {
             'total': guests.count(),
-            'confirmed': guests.filter(rsvp_status='confirmed').count(),
-            'pending': guests.filter(rsvp_status='pending').count(),
-            'declined': guests.filter(rsvp_status='declined').count(),
-            'with_plus_one': guests.filter(plus_one=True).count(),
+            'confirmed': guests.filter(rsvp_status__name='confirmed').count(),
+            'pending': guests.filter(rsvp_status__name='pending').count(),
+            'declined': guests.filter(rsvp_status__name='declined').count(),
             'invitations_sent': guests.filter(invitation_sent=True).count(),
             'reminders_sent': guests.filter(reminder_sent=True).count(),
         }
@@ -396,10 +395,8 @@ def guest_statistics(request):
         else:
             stats['rsvp_rate'] = 0
         
-        # Guest count with plus ones
-        stats['expected_attendees'] = stats['confirmed'] + guests.filter(
-            rsvp_status='confirmed', plus_one=True
-        ).count()
+        # Expected attendees (confirmed guests)
+        stats['expected_attendees'] = stats['confirmed']
         
         return APIResponse.success(stats, "Statistics retrieved successfully")
     except:
@@ -408,7 +405,6 @@ def guest_statistics(request):
             'confirmed': 0,
             'pending': 0,
             'declined': 0,
-            'with_plus_one': 0,
             'invitations_sent': 0,
             'reminders_sent': 0,
             'rsvp_rate': 0,
@@ -425,13 +421,11 @@ def guest_export(request):
     export_data = []
     for guest in guests:
         export_data.append({
-            'name': guest.name,
+            'name': guest.full_name,
             'email': guest.email,
             'phone': guest.phone,
-            'rsvp_status': guest.get_rsvp_status_display(),
+            'rsvp_status': guest.rsvp_status.name if guest.rsvp_status else '',
             'relationship': guest.get_relationship_display(),
-            'plus_one': guest.plus_one,
-            'plus_one_name': guest.plus_one_name,
             'dietary_restrictions': guest.dietary_restrictions,
             'notes': guest.notes,
             'added_date': guest.added_date,
