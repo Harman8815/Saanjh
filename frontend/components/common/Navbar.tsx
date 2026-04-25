@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import { useAuthStore } from '../../store/authStore';
+import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
   className?: string;
@@ -12,6 +14,21 @@ interface NavbarProps {
 export default function Navbar({ className = '' }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, setCurrentPage } = useAppStore();
+  const { user: authUser, isAuthenticated, logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Use auth user if available, fallback to app store user
+  const currentUser = authUser || user;
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -54,22 +71,39 @@ export default function Navbar({ className = '' }: NavbarProps) {
                   {item.name}
                 </Link>
               ))}
-              {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => handleNavClick('dashboard')}
-                  className="btn-primary text-sm"
-                >
-                  Dashboard
-                </Link>
+              {currentUser ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => handleNavClick('dashboard')}
+                    className="btn-primary text-sm"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="ml-2 text-sm text-text-secondary hover:text-text-primary px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-white/10"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
-                <Link
-                  href="/contact"
-                  onClick={() => handleNavClick('contact')}
-                  className="btn-primary text-sm"
-                >
-                  Get Started
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => handleNavClick('login')}
+                    className="text-sm text-text-secondary hover:text-text-primary px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-white/10"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => handleNavClick('signup')}
+                    className="btn-primary text-sm"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -121,22 +155,39 @@ export default function Navbar({ className = '' }: NavbarProps) {
                   {item.name}
                 </Link>
               ))}
-              {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => handleNavClick('dashboard')}
-                  className="btn-primary text-base mt-2 block text-center"
-                >
-                  Dashboard
-                </Link>
+              {currentUser ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => handleNavClick('dashboard')}
+                    className="btn-primary text-base mt-2 block text-center"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-base text-text-secondary hover:text-text-primary block px-3 py-2 rounded-lg font-medium transition-colors hover:bg-white/10 mt-2"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
-                <Link
-                  href="/contact"
-                  onClick={() => handleNavClick('contact')}
-                  className="btn-primary text-base mt-2 block text-center"
-                >
-                  Get Started
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => handleNavClick('login')}
+                    className="text-text-secondary hover:text-text-primary block px-3 py-2 rounded-lg text-base font-medium transition-colors hover:bg-white/10"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => handleNavClick('signup')}
+                    className="btn-primary text-base mt-2 block text-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
           </motion.div>

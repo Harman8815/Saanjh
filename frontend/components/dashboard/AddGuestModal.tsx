@@ -3,73 +3,129 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, UserPlus } from 'lucide-react';
-import { Guest, NewGuest } from '../../types/guest';
+import { Guest, GuestCreateRequest } from '../../types/api';
+import { GuestService } from '../../services/guests';
 
 interface AddGuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddGuest: (guest: NewGuest) => void;
+  onGuestAdded?: (guest: Guest) => void;
   existingGuests?: Guest[];
   editingGuest?: Guest | null;
 }
 
-export default function AddGuestModal({ isOpen, onClose, onAddGuest, existingGuests = [], editingGuest }: AddGuestModalProps) {
-  const [formData, setFormData] = useState<NewGuest>({
-    name: '',
+export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingGuests = [], editingGuest }: AddGuestModalProps) {
+  const [formData, setFormData] = useState<GuestCreateRequest>({
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
-    rsvpStatus: 'pending',
-    mealPreference: '',
-    plusOne: false,
-    gender: 'male'
+    relationship: 'family',
+    address: '',
+    dietary_restrictions: '',
+    notes: '',
+    wedding: 1, // This should be dynamically set based on current wedding
+    rsvp_status: 'pending',
+    invitation_sent: false,
+    reminder_sent: false,
+    table: null,
+    side: 'bride'
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   // Update form data when editing guest changes
   useEffect(() => {
     if (editingGuest) {
       setFormData({
-        name: editingGuest.name,
-        email: editingGuest.email,
-        phone: editingGuest.phone,
-        rsvpStatus: editingGuest.rsvpStatus,
-        mealPreference: editingGuest.mealPreference || '',
-        plusOne: editingGuest.plusOne,
-        gender: editingGuest.gender || 'male'
+        first_name: editingGuest.first_name,
+        last_name: editingGuest.last_name,
+        email: editingGuest.email || '',
+        phone: editingGuest.phone || '',
+        relationship: editingGuest.relationship || 'family',
+        address: editingGuest.address || '',
+        dietary_restrictions: editingGuest.dietary_restrictions || '',
+        notes: editingGuest.notes || '',
+        wedding: editingGuest.wedding,
+        rsvp_status: editingGuest.rsvp_status,
+        invitation_sent: editingGuest.invitation_sent,
+        reminder_sent: editingGuest.reminder_sent,
+        table: editingGuest.table,
+        side: editingGuest.side || 'bride'
       });
     } else {
       setFormData({
-        name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
-        rsvpStatus: 'pending',
-        mealPreference: '',
-        plusOne: false,
-        gender: 'male'
+        relationship: 'family',
+        address: '',
+        dietary_restrictions: '',
+        notes: '',
+        wedding: 1,
+        rsvp_status: 'pending',
+        invitation_sent: false,
+        reminder_sent: false,
+        table: null,
+        side: 'bride'
       });
     }
-  }, [editingGuest]);
+    setErrors({});
+  }, [editingGuest, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'First name is required';
+    }
+
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Last name is required';
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check for duplicate guest (only for new guests, not when editing)
-    if (!editingGuest) {
-      const isDuplicate = existingGuests.some(guest => 
-        guest.name.toLowerCase().trim() === formData.name.toLowerCase().trim() ||
-        guest.email.toLowerCase().trim() === formData.email.toLowerCase().trim() ||
-        guest.phone.replace(/\D/g, '') === formData.phone.replace(/\D/g, '')
-      );
-      
-      if (isDuplicate) {
-        alert('A guest with this name, email, or phone number already exists. Please check the existing guest list.');
-        return;
-      }
+    if (!validateForm()) {
+      return;
     }
+
+    setIsSaving(true);
     
-    const newGuest: Omit<Guest, 'id'> = {
-      ...formData
-    };
-    
+    try {
+      let savedGuest: Guest;
+      
+      if (editingGuest) {
+        // Update existing guest
+        savedGuest = await GuestService.updateGuest(editingGuest.id, formData);
+      } else {
+        // Create new guest
+        savedGuest = await GuestService.createGuest(formData);
+      }
+      
+      // Callback to parent component
+      if (onGuestAdded) {
+        onGuestAdded(savedGuest);
+      }
+      
+      onClose();
+    } catch (error: any) {
+      console.error('Error saving guest:', error);
+      setErrors({ submit: error.message || 'Failed to save guest. Please try again.' });
+    } finally {
+      setIsSaving(false);
+    }
     onAddGuest(newGuest);
     setFormData({
       name: '',

@@ -11,12 +11,42 @@ from .serializers import (
     BudgetCategoryCreateSerializer, BudgetCategoryUpdateSerializer,
     ExpenseStatusSerializer
 )
+from utils.api_response import APIResponse
 
 class ExpenseStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for ExpenseStatus model"""
     queryset = ExpenseStatus.objects.all()
     serializer_class = ExpenseStatusSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Expense statuses retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Expense status created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Expense status retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Expense status updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Expense status deleted successfully")
 
 
 class BudgetCategoryViewSet(viewsets.ModelViewSet):
@@ -37,6 +67,35 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(wedding=self.request.user.wedding)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Budget categories retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Budget category created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Budget category retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Budget category updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Budget category deleted successfully")
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
@@ -63,6 +122,35 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(wedding=self.request.user.wedding)
     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Expenses retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Expense created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Expense retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Expense updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Expense deleted successfully")
+    
     @action(detail=False, methods=['post'])
     def bulk_payment_update(self, request):
         """Bulk update payment status for multiple expenses"""
@@ -72,9 +160,10 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         paid_date = request.data.get('paid_date')
         
         if not expense_ids or not status_id:
-            return Response(
-                {'error': 'expense_ids and status_id are required'},
-                status=status.HTTP_400_BAD_REQUEST
+            return APIResponse.error(
+                "expense_ids and status_id are required",
+                ["Missing required fields: expense_ids and status_id"],
+                status.HTTP_400_BAD_REQUEST
             )
         
         updated_count = Expense.objects.filter(
@@ -82,10 +171,9 @@ class ExpenseViewSet(viewsets.ModelViewSet):
             wedding=request.user.wedding
         ).update(paid_amount=paid_amount, status_id=status_id, paid_date=paid_date)
         
-        return Response({
-            'message': f'Updated {updated_count} expenses',
+        return APIResponse.success({
             'updated_count': updated_count
-        })
+        }, f"Updated {updated_count} expenses successfully")
 
 
 class ExpenseListCreateView(generics.ListCreateAPIView):
@@ -104,6 +192,17 @@ class ExpenseListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return ExpenseCreateSerializer
         return ExpenseSerializer
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Expenses retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Expense created successfully")
 
 class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Expense detail, update, and delete endpoint"""
@@ -116,6 +215,24 @@ class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return ExpenseUpdateSerializer
         return ExpenseSerializer
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Expense retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Expense updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Expense deleted successfully")
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -126,9 +243,10 @@ def expense_bulk_payment_update(request):
     paid_date = request.data.get('paid_date')
     
     if not expense_ids or not payment_status:
-        return Response(
-            {'error': 'expense_ids and payment_status are required'},
-            status=status.HTTP_400_BAD_REQUEST
+        return APIResponse.error(
+            "expense_ids and payment_status are required",
+            ["Missing required fields: expense_ids and payment_status"],
+            status.HTTP_400_BAD_REQUEST
         )
     
     update_data = {'payment_status': payment_status}
@@ -140,10 +258,9 @@ def expense_bulk_payment_update(request):
         wedding=request.user.wedding
     ).update(**update_data)
     
-    return Response({
-        'message': f'Updated {updated_count} expenses',
+    return APIResponse.success({
         'updated_count': updated_count
-    })
+    }, f"Updated {updated_count} expenses successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -207,9 +324,9 @@ def expense_statistics(request):
         ).count()
         stats['overdue_count'] = overdue_expenses
         
-        return Response(stats)
+        return APIResponse.success(stats, "Statistics retrieved successfully")
     except:
-        return Response({
+        stats = {
             'total_expenses': 0,
             'total_estimated': 0,
             'total_actual': 0,
@@ -221,7 +338,8 @@ def expense_statistics(request):
             'by_payment_status': {},
             'by_category': {},
             'overdue_count': 0
-        })
+        }
+        return APIResponse.success(stats, "Statistics retrieved successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -237,7 +355,7 @@ def expense_overdue(request):
     ).order_by('due_date')
     
     serializer = ExpenseSerializer(expenses, many=True)
-    return Response(serializer.data)
+    return APIResponse.success(serializer.data, "Overdue expenses retrieved successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -255,7 +373,7 @@ def expense_upcoming(request):
     ).order_by('due_date')
     
     serializer = ExpenseSerializer(expenses, many=True)
-    return Response(serializer.data)
+    return APIResponse.success(serializer.data, "Upcoming expenses retrieved successfully")
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -296,12 +414,12 @@ def expense_summary(request):
                 'remaining_balance': expense.remaining_balance()
             })
         
-        return Response({
+        return APIResponse.success({
             'recent_expenses': recent_data,
             'upcoming_payments': upcoming_data
-        })
+        }, "Expense summary retrieved successfully")
     except:
-        return Response({
+        return APIResponse.success({
             'recent_expenses': [],
             'upcoming_payments': []
-        })
+        }, "Expense summary retrieved successfully")

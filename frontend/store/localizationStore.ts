@@ -81,15 +81,18 @@ export const useLocalizationStore = create<LocalizationState>()(
         const language = languages.find(lang => lang.code === languageCode);
         if (language) {
           set({ currentLanguage: languageCode });
-          // Update document lang attribute only on client side
+          // Update document lang attribute only on client side after hydration
           if (typeof window !== 'undefined') {
-            document.documentElement.lang = languageCode;
-            // Update text direction if needed
-            if (language.rtl) {
-              document.documentElement.dir = 'rtl';
-            } else {
-              document.documentElement.dir = 'ltr';
-            }
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+              document.documentElement.lang = languageCode;
+              // Update text direction if needed
+              if (language.rtl) {
+                document.documentElement.dir = 'rtl';
+              } else {
+                document.documentElement.dir = 'ltr';
+              }
+            });
           }
         }
       },
@@ -157,19 +160,7 @@ export const useLocalizationStore = create<LocalizationState>()(
     {
       name: 'localization-settings',
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        if (state && typeof window !== 'undefined') {
-          const language = languages.find(lang => lang.code === state.currentLanguage);
-          if (language) {
-            document.documentElement.lang = state.currentLanguage;
-            if (language.rtl) {
-              document.documentElement.dir = 'rtl';
-            } else {
-              document.documentElement.dir = 'ltr';
-            }
-          }
-        }
-      },
+      // Remove onRehydrateStorage to prevent hydration mismatch
     }
   )
 );

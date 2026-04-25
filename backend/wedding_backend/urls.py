@@ -16,10 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from django.http import JsonResponse
 from . import views
+from internal_admin.views import home, api_docs, table_schemas_data
 
 urlpatterns = [
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
+    # API documentation
+    path('api/docs/', api_docs, name='api-docs'),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/table-schemas/', lambda request: JsonResponse(table_schemas_data(request)), name='table-schemas'),
+    # API endpoints
     path('api/auth/', include('accounts.urls')),
     path('api/weddings/', include('weddings.urls')),
     path('api/guests/', include('guests.urls')),

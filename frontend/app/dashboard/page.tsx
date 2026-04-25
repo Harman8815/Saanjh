@@ -2,47 +2,84 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAppStore } from '../../store/useAppStore';
+import { useAuthStore } from '../../store/authStore';
+import { WeddingService } from '../../services/weddings';
+import { GuestService } from '../../services/guests';
+import { ExpenseService } from '../../services/expenses';
+import { VendorService } from '../../services/vendors';
+import { TimelineService } from '../../services/timeline';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 import FirstTimeModal from '../../components/common/FirstTimeModal';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { useDateFormat } from '../../hooks/useDateFormat';
+import { Wedding, WeddingDashboard, Guest, Expense, Vendor, TimelineEvent } from '../../types/api';
 
 
 export default function DashboardPage() {
-  const { 
-    user, 
-    wedding, 
-    setCurrentPage, 
-    isFirstTimeUser, 
-    showFirstTimeModal, 
-    setShowFirstTimeModal 
-  } = useAppStore();
+  const { user } = useAuthStore();
   const { formatCurrency } = useFormatCurrency();
   const { formatDateForDisplay } = useDateFormat();
+  
+  // State management
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState<'table' | 'card' | 'graph'>('table');
   const [activeAction, setActiveAction] = useState<'guest' | 'expense' | 'vendor'>('guest');
   const [showModal, setShowModal] = useState(false);
+  const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
+  
+  // Data state
+  const [wedding, setWedding] = useState<Wedding | null>(null);
+  const [dashboardData, setDashboardData] = useState<WeddingDashboard | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate loading data
+  // Fetch dashboard data on component mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000); // 2 second loading time
-
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, []);
 
-  // First visit detection - show modal if first time user and no wedding data
-  useEffect(() => {
-    if (!isLoading) {
-      if (isFirstTimeUser && (!wedding || !wedding.brideName || !wedding.groomName)) {
-        setShowModal(true);
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Fetch wedding data
+      const weddingData = await WeddingService.getWedding();
+      setWedding(weddingData);
+      
+      // Check if user needs to fill wedding details
+      if (!weddingData.wedding_date || !weddingData.theme) {
         setShowFirstTimeModal(true);
+        setShowModal(true);
       }
+      
+      // Fetch dashboard statistics
+      const dashboardStats = await WeddingService.getDashboard();
+      setDashboardData(dashboardStats);
+      
+      // Fetch other data in parallel
+      const [guestsData, expensesData, vendorsData, timelineData] = await Promise.all([
+        GuestService.getGuests(1, 20),
+        ExpenseService.getExpenses(1, 20),
+        VendorService.getVendors(1, 20),
+        TimelineService.getTimelineEvents(1, 20)
+      ]);
+      
+      setGuests(guestsData.results);
+      setExpenses(expensesData.results);
+      setVendors(vendorsData.results);
+      setTimeline(timelineData.results);
+      
+    } catch (err: any) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message || 'Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
     }
-  }, [isLoading, isFirstTimeUser, wedding, setShowFirstTimeModal]);
+  };
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -54,46 +91,35 @@ export default function DashboardPage() {
     setShowFirstTimeModal(true);
   };
 
+  const handleWeddingUpdate = async (weddingData: Partial<Wedding>) => {
+    try {
+      const updatedWedding = await WeddingService.updateWedding(weddingData);
+      setWedding(updatedWedding);
+      handleModalClose();
+      // Refresh dashboard data
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error('Error updating wedding:', err);
+      setError(err.message || 'Failed to update wedding details');
+    }
+  };
+
   // Calculate days until wedding
   const calculateDaysUntilWedding = () => {
-    if (!wedding?.weddingDate) return 0;
-    const weddingDate = new Date(wedding.weddingDate);
+    if (!wedding?.wedding_date) return 0;
+    const weddingDate = new Date(wedding.wedding_date);
     const today = new Date();
     const diffTime = weddingDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Mock data for demonstration (replace with actual data fetching when backend is ready)
-  const mockData = {
-    budgetUsed: 65,
-    guestRSVPs: { confirmed: 45, pending: 30, declined: 5 },
-    tasks: { completed: 24, inProgress: 8, pending: 12 },
-    expenses: 6500,
-    vendors: [
-      { name: 'Venue', status: 'Confirmed' },
-      { name: 'Photographer', status: 'In Progress' },
-      { name: 'Caterer', status: 'Pending' },
-      { name: 'Florist', status: 'Confirmed' }
-    ],
-    timeline: [
-      { event: 'Venue Booking', description: 'Final venue contract signed and deposit paid', date: '2024-01-15' },
-      { event: 'Photography Session', description: 'Engagement photoshoot scheduled', date: '2024-02-20' },
-      { event: 'Catering Tasting', description: 'Menu tasting with selected caterer', date: '2024-03-10' },
-      { event: 'Dress Fitting', description: 'Final dress fitting and alterations', date: '2024-04-05' },
-      { event: 'Final Guest Count', description: 'Confirm final guest count with venue', date: '2024-05-01' }
-    ],
-    activities: [
-      { activity: 'Venue deposit paid', description: 'Initial deposit for wedding venue transferred', time: '2 hours ago' },
-      { activity: 'Guest list updated', description: 'Added 10 new guests to the invitation list', time: '1 day ago' },
-      { activity: 'Vendor meeting scheduled', description: 'Meeting with photographer next week', time: '2 days ago' },
-      { activity: 'Budget review completed', description: 'Monthly budget tracking and expense review', time: '3 days ago' }
-    ],
-    upcomingTasks: [
-      { task: 'Send save-the-dates', description: 'Mail save-the-date cards to all guests', due: '2024-06-01' },
-      { task: 'Final dress fitting', description: 'Final wedding dress fitting appointment', due: '2024-06-15' },
-      { task: 'Cake tasting', description: 'Schedule and attend cake tasting session', due: '2024-07-01' }
-    ]
+  // Calculate budget percentage
+  const calculateBudgetPercentage = () => {
+    if (!dashboardData) return 0;
+    const totalBudget = dashboardData.total_expenses || 0;
+    const paidExpenses = dashboardData.paid_expenses || 0;
+    return totalBudget > 0 ? Math.round((paidExpenses / totalBudget) * 100) : 0;
   };
 
   return (
@@ -105,16 +131,16 @@ export default function DashboardPage() {
           {/* Header with Edit Details Button */}
           <div className="flex justify-between items-center mb-8 px-4">
             <div className="text-center flex-1">
-              {wedding?.brideName && wedding?.groomName ? (
+              {user?.first_name && user?.last_name ? (
                 <h1 className="text-3xl font-bold text-text-primary mb-2">
-                  {wedding.brideName} & {wedding.groomName}
+                  {user.first_name} & {user.last_name}
                 </h1>
               ) : (
                 <h1 className="text-3xl font-bold text-text-primary mb-2">Welcome to Your Wedding Dashboard</h1>
               )}
-              {wedding?.weddingDate && (
+              {wedding?.wedding_date && (
                 <p className="text-text-secondary">
-                  {formatDateForDisplay(new Date(wedding.weddingDate))}
+                  {formatDateForDisplay(new Date(wedding.wedding_date))}
                 </p>
               )}
             </div>
@@ -237,7 +263,7 @@ export default function DashboardPage() {
                     {calculateDaysUntilWedding()}
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    {wedding?.weddingDate ? formatDateForDisplay(new Date(wedding.weddingDate)) : 'No date set'}
+                    {wedding?.wedding_date ? formatDateForDisplay(new Date(wedding.wedding_date)) : 'No date set'}
                   </p>
                 </motion.div>
 
@@ -252,10 +278,10 @@ export default function DashboardPage() {
                     <span className="text-emotional-2xl text-primary">Budget</span>
                   </div>
                   <div className="text-data-3xl font-bold text-primary mb-2">
-                    {mockData.budgetUsed}%
+                    {calculateBudgetPercentage()}%
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    {formatCurrency(wedding?.budget || 0)} total budget
+                    {formatCurrency(dashboardData?.total_expenses || 0)} total expenses
                   </p>
                 </motion.div>
 
@@ -270,10 +296,10 @@ export default function DashboardPage() {
                     <span className="text-emotional-2xl text-primary">Guests</span>
                   </div>
                   <div className="text-data-3xl font-bold text-primary mb-2">
-                    {mockData.guestRSVPs.confirmed}
+                    {dashboardData?.confirmed_guests || 0}
                   </div>
                   <p className="body-data text-data-sm text-text-secondary">
-                    {wedding?.guestCount || 0} invited
+                    {dashboardData?.total_guests || 0} invited
                   </p>
                 </motion.div>
 
@@ -288,10 +314,10 @@ export default function DashboardPage() {
                     <span className="text-2xl">Tasks</span>
                   </div>
                   <div className="text-3xl font-bold text-primary mb-2">
-                    {Math.round((mockData.tasks.completed / (mockData.tasks.completed + mockData.tasks.inProgress + mockData.tasks.pending)) * 100)}%
+                    {timeline.length > 0 ? Math.round((timeline.filter(t => t.status === 'completed').length / timeline.length) * 100) : 0}%
                   </div>
                   <p className="text-text-secondary text-sm">
-                    {mockData.tasks.completed + mockData.tasks.inProgress + mockData.tasks.pending} total tasks
+                    {timeline.length} total tasks
                   </p>
                 </motion.div>
               </div>
@@ -309,16 +335,21 @@ export default function DashboardPage() {
                       Wedding Timeline
                     </h2>
                     <div className="space-y-4">
-                      {mockData.timeline.map((item, i) => (
+                      {timeline.slice(0, 5).map((item, i) => (
                         <div key={i} className="flex items-center gap-4">
                           <div className="w-4 h-4 bg-primary rounded-full"></div>
                           <div className="flex-1">
-                            <h4 className="text-text-primary">{item.event}</h4>
-                            <p className="text-text-secondary text-sm">{item.description}</p>
+                            <h4 className="text-text-primary">{item.title}</h4>
+                            <p className="text-text-secondary text-sm">{item.description || 'No description'}</p>
                           </div>
-                          <span className="text-text-secondary text-sm">{formatDateForDisplay(new Date(item.date))}</span>
+                          <span className="text-text-secondary text-sm">
+                            {item.date ? formatDateForDisplay(new Date(item.date)) : 'No date'}
+                          </span>
                         </div>
                       ))}
+                      {timeline.length === 0 && (
+                        <p className="text-text-secondary text-sm">No timeline events yet</p>
+                      )}
                     </div>
                   </motion.div>
 
@@ -390,18 +421,18 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Total Budget</span>
-                        <span className="text-primary font-semibold">${wedding?.budget || 0}</span>
+                        <span className="text-primary font-semibold">{formatCurrency(dashboardData?.total_expenses || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Spent</span>
-                        <span className="text-primary font-semibold">{formatCurrency(mockData.expenses)}</span>
+                        <span className="text-primary font-semibold">{formatCurrency(dashboardData?.paid_expenses || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Remaining</span>
-                        <span className="text-primary font-semibold">{formatCurrency((wedding?.budget || 0) - mockData.expenses)}</span>
+                        <span className="text-primary font-semibold">{formatCurrency((dashboardData?.total_expenses || 0) - (dashboardData?.paid_expenses || 0))}</span>
                       </div>
                       <div className="w-full bg-surface rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full" style={{ width: `${mockData.budgetUsed}%` }}></div>
+                        <div className="bg-primary h-2 rounded-full" style={{ width: `${calculateBudgetPercentage()}%` }}></div>
                       </div>
                     </div>
                   </motion.div>
@@ -416,12 +447,15 @@ export default function DashboardPage() {
                       Vendor Status
                     </h3>
                     <div className="space-y-3">
-                      {mockData.vendors.map((vendor, i) => (
+                      {vendors.slice(0, 4).map((vendor, i) => (
                         <div key={i} className="flex justify-between items-center">
-                          <span className="text-text-secondary">{vendor.name}</span>
-                          <span className="text-primary text-sm">{vendor.status}</span>
+                          <span className="text-text-secondary">{vendor.vendor_catalog?.name || `Vendor ${i + 1}`}</span>
+                          <span className="text-primary text-sm">{vendor.status.name}</span>
                         </div>
                       ))}
+                      {vendors.length === 0 && (
+                        <p className="text-text-secondary text-sm">No vendors added yet</p>
+                      )}
                     </div>
                   </motion.div>
 
@@ -636,7 +670,9 @@ export default function DashboardPage() {
       <FirstTimeModal 
         isOpen={showModal} 
         onClose={handleModalClose}
-        isEditMode={!isFirstTimeUser}
+        isEditMode={!showFirstTimeModal}
+        wedding={wedding}
+        onSave={handleWeddingUpdate}
       />
     </>
   );
