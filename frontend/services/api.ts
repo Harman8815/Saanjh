@@ -73,23 +73,58 @@ class ApiClient {
 
   // HTTP methods
   public get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.get(url, config).then(response => response.data);
+    return this.client.get(url, config).then(response => {
+      // Unwrap APIResponse format if present
+      const data = response.data;
+      if (data && typeof data === 'object' && 'data' in data && 'success' in data) {
+        return data.data as T;
+      }
+      return data as T;
+    });
   }
 
   public post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.post(url, data, config).then(response => response.data);
+    return this.client.post(url, data, config).then(response => {
+      // Unwrap APIResponse format if present
+      const responseData = response.data;
+      if (responseData && typeof responseData === 'object' && 'data' in responseData && 'success' in responseData) {
+        return responseData.data as T;
+      }
+      return responseData as T;
+    });
   }
 
   public put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.put(url, data, config).then(response => response.data);
+    return this.client.put(url, data, config).then(response => {
+      // Unwrap APIResponse format if present
+      const data = response.data;
+      if (data && typeof data === 'object' && 'data' in data && 'success' in data) {
+        return data.data as T;
+      }
+      return data as T;
+    });
   }
 
   public patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.patch(url, data, config).then(response => response.data);
+    return this.client.patch(url, data, config).then(response => {
+      // Unwrap APIResponse format if present
+      const data = response.data;
+      if (data && typeof data === 'object' && 'data' in data && 'success' in data) {
+        return data.data as T;
+      }
+      return data as T;
+    });
   }
 
   public delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.client.delete(url, config).then(response => response.data);
+    return this.client.delete(url, config).then(response => {
+      // Unwrap APIResponse format if present
+      const data = response.data;
+      if (data && typeof data === 'object' && 'data' in data && 'success' in data) {
+        return data.data as T;
+      }
+      return data as T;
+    });
   }
 }
 
