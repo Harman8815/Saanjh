@@ -3,13 +3,20 @@
 import { motion } from 'framer-motion';
 import { Star, MapPin, Phone, Mail, ExternalLink, CheckCircle, XCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { Vendor, VendorCategory, VENDOR_CATEGORY_CONFIG } from '../../../types/vendor';
+import { VendorCatalog } from '../../../types/api';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 interface VendorCardProps {
-  vendor: Vendor;
+  vendor: VendorCatalog;
   index: number;
 }
+
+const categoryConfig: Record<string, { label: string; color: string }> = {
+  photographer: { label: 'Photographer', color: 'rose' },
+  catering: { label: 'Catering', color: 'amber' },
+  decoration: { label: 'Decoration', color: 'violet' },
+  others: { label: 'Others', color: 'blue' },
+};
 
 const statusConfig = {
   available: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Available' },
@@ -18,8 +25,12 @@ const statusConfig = {
 };
 
 export default function VendorCard({ vendor, index }: VendorCardProps) {
-  const config = VENDOR_CATEGORY_CONFIG[vendor.category];
-  const status = statusConfig[vendor.status];
+  const categoryName = vendor.category?.name?.toLowerCase() || 'others';
+  const category = categoryName.includes('photo') ? 'photographer' :
+                   categoryName.includes('cater') ? 'catering' :
+                   categoryName.includes('decor') ? 'decoration' : 'others';
+  const config = categoryConfig[category] || categoryConfig.others;
+  const status = statusConfig.available; // API doesn't provide status, default to available
   const StatusIcon = status.icon;
   const { formatCurrency } = useFormatCurrency();
 
@@ -33,20 +44,12 @@ export default function VendorCard({ vendor, index }: VendorCardProps) {
       {/* Image Header */}
       <div className="relative h-48 bg-surface overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
-        {vendor.image ? (
-          <img 
-            src={vendor.image} 
-            alt={vendor.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-4xl">{vendor.name.charAt(0)}</span>
-            </div>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-4xl">{vendor.name.charAt(0)}</span>
           </div>
-        )}
-        
+        </div>
+
         {/* Category Badge */}
         <div className="absolute top-4 left-4">
           <span className={`px-3 py-1 rounded-full text-xs font-medium bg-${config.color}-500/20 text-${config.color}-400 border border-${config.color}-500/30`}>
@@ -65,7 +68,7 @@ export default function VendorCard({ vendor, index }: VendorCardProps) {
         {/* Price Badge */}
         <div className="absolute bottom-4 right-4">
           <span className="px-3 py-1 rounded-full text-sm font-semibold bg-surface/90 backdrop-blur-sm border border-white/20">
-            {vendor.pricing.priceRange}
+            {vendor.price_range ? `$${vendor.price_range}` : 'Price on request'}
           </span>
         </div>
       </div>
@@ -80,64 +83,31 @@ export default function VendorCard({ vendor, index }: VendorCardProps) {
             </h3>
             <p className="text-sm text-text-muted flex items-center gap-1 mt-1">
               <MapPin size={12} />
-              {vendor.location}
+              Contact: {vendor.contact}
             </p>
           </div>
           <div className="flex items-center gap-1 bg-gold/10 px-2 py-1 rounded-lg">
             <Star size={14} className="text-gold fill-current" />
             <span className="text-sm font-medium text-gold">{vendor.rating}</span>
-            <span className="text-xs text-text-muted">({vendor.reviewCount})</span>
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-text-secondary line-clamp-2">
-          {vendor.description}
-        </p>
-
         {/* Starting Price */}
         <div className="flex items-center justify-between py-2 border-t border-b border-white/5">
-          <span className="text-sm text-text-muted">Starting from</span>
+          <span className="text-sm text-text-muted">Price Range</span>
           <span className="text-lg font-semibold text-primary">
-            {formatCurrency(vendor.pricing.startingPrice)}
+            {vendor.price_range ? formatCurrency(vendor.price_range) : 'Contact for pricing'}
           </span>
         </div>
 
-        {/* Contact Icons */}
-        <div className="flex items-center gap-3">
-          <a 
-            href={`tel:${vendor.phone}`}
-            className="p-2 rounded-lg bg-white/5 hover:bg-primary/20 text-text-secondary hover:text-primary transition-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Phone size={16} />
-          </a>
-          <a 
-            href={`mailto:${vendor.email}`}
-            className="p-2 rounded-lg bg-white/5 hover:bg-primary/20 text-text-secondary hover:text-primary transition-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Mail size={16} />
-          </a>
-          {vendor.website && (
-            <a 
-              href={vendor.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 hover:bg-primary/20 text-text-secondary hover:text-primary transition-all"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink size={16} />
-            </a>
-          )}
-        </div>
-
-        {/* View Details Button */}
-        <Link href={`/dashboard/vendors/${vendor.id}`}>
-          <button className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95">
-            View Details
-          </button>
-        </Link>
+        {/* Contact Button */}
+        <a
+          href={`tel:${vendor.contact}`}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Phone size={16} />
+          Contact Vendor
+        </a>
       </div>
     </motion.div>
   );
