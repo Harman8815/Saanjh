@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { formatCurrency } = useFormatCurrency();
   const { formatDateForDisplay } = useDateFormat();
+  const { toasts, addToast, removeToast } = useToast();
 
   // State management
   const [isLoading, setIsLoading] = useState(true);
@@ -98,11 +99,13 @@ export default function DashboardPage() {
       const updatedWedding = await WeddingService.updateWedding(weddingData);
       setWedding(updatedWedding);
       handleModalClose();
+      addToast({ type: 'success', title: 'Wedding updated', message: 'Your wedding details have been updated successfully' });
       // Refresh dashboard data
       await fetchDashboardData();
     } catch (err: any) {
       console.error('Error updating wedding:', err);
       setError(err.message || 'Failed to update wedding details');
+      addToast({ type: 'error', title: 'Update failed', message: err.message || 'Failed to update wedding details' });
     }
   };
 
@@ -150,6 +153,7 @@ export default function DashboardPage() {
 
   return (
     <>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       {isLoading ? (
         <DashboardSkeleton />
       ) : (
