@@ -51,7 +51,7 @@ export default function Navbar({ className = '' }: NavbarProps) {
           <div className="flex-shrink-0">
             <Link 
               href="/" 
-              className="text-2xl font-bold text-gradient animate-glow"
+              className="text-2xl font-bold text-text-primary drop-shadow-lg"
               onClick={() => handleNavClick('home')}
             >
               💍 Perfect Wedding

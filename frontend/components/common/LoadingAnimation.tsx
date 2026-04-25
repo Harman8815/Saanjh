@@ -97,7 +97,7 @@ export default function LoadingAnimation({
                 animate="animate"
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <div className="text-6xl animate-glow">💕</div>
+                <div className="text-6xl drop-shadow-lg">💕</div>
               </motion.div>
               <motion.div
                 animate={{ 
@@ -138,7 +138,7 @@ export default function LoadingAnimation({
               transition={{ duration: 0.8, delay: 0.3 }}
               className="mb-8"
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-gradient mb-3 animate-glow">
+              <h1 className="text-4xl md:text-5xl font-bold text-text-primary mb-3 drop-shadow-lg">
                 Perfect Wedding
               </h1>
               <p className="text-text-secondary text-lg animate-pulse">

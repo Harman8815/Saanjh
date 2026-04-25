@@ -65,7 +65,7 @@ export default function Footer({ className = '' }: FooterProps) {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h3 className="text-2xl font-bold text-gradient mb-4 animate-glow">
+            <h3 className="text-2xl font-bold text-text-primary mb-4 drop-shadow-lg">
               💍 Perfect Wedding
             </h3>
             <p className="text-text-secondary mb-6 max-w-md leading-relaxed">

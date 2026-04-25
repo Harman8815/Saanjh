@@ -6,12 +6,14 @@ import { X, Menu } from 'lucide-react';
 import DashboardSidebar from '../../components/dashboard/DashboardSidebar';
 import DashboardSearch from '../../components/dashboard/DashboardSearch';
 import Breadcrumbs from '../../components/dashboard/Breadcrumbs';
+import { useRequireAuth } from '../../hooks/useAuth';
 
 export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  useRequireAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeItem, setActiveItem] = useState('/dashboard');

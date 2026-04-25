@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '../services';
 import { LoginRequest, RegisterRequest, User, AuthResponse } from '../types/api';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../store/authStore';
 
 // Login mutation
 export function useLogin() {
@@ -97,4 +99,36 @@ export function useUserStats() {
     enabled: AuthService.isAuthenticated(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+}
+
+// Hook to protect routes - redirects to login if not authenticated
+export function useRequireAuth() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Check authentication status from localStorage
+    const checkAuth = () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const user = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+      const authStatus = !!(token && user);
+
+      setIsAuthenticated(authStatus);
+      setIsChecking(false);
+
+      if (!authStatus) {
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  // Don't render anything while checking auth
+  if (isChecking) {
+    return null;
+  }
+
+  return isAuthenticated;
 }

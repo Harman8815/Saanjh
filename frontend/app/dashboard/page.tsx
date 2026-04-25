@@ -8,6 +8,7 @@ import { GuestService } from '../../services/guests';
 import { ExpenseService } from '../../services/expenses';
 import { VendorService } from '../../services/vendors';
 import { TimelineService } from '../../services/timeline';
+import { AdminService } from '../../services/admin';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 import FirstTimeModal from '../../components/common/FirstTimeModal';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [activeAction, setActiveAction] = useState<'guest' | 'expense' | 'vendor'>('guest');
   const [showModal, setShowModal] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
+  const [isGeneratingData, setIsGeneratingData] = useState(false);
 
   // Data state
   const [wedding, setWedding] = useState<Wedding | null>(null);
@@ -101,6 +103,30 @@ export default function DashboardPage() {
     } catch (err: any) {
       console.error('Error updating wedding:', err);
       setError(err.message || 'Failed to update wedding details');
+    }
+  };
+
+  const handleGenerateFakeData = async () => {
+    if (!confirm('This will generate fake data for testing. Continue?')) {
+      return;
+    }
+
+    setIsGeneratingData(true);
+    try {
+      const response = await AdminService.generateFakeData({
+        user_count: 1,
+        guests_per_wedding: 30,
+        vendors_per_wedding: 8,
+        expenses_per_wedding: 15
+      });
+      alert(`Generated ${response.summary.guests_created} guests, ${response.summary.vendors_created} vendors, ${response.summary.expenses_created} expenses`);
+      // Refresh dashboard data
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error('Error generating fake data:', err);
+      alert(err.message || 'Failed to generate fake data');
+    } finally {
+      setIsGeneratingData(false);
     }
   };
 
@@ -369,6 +395,13 @@ export default function DashboardPage() {
                     </button>
                     <button className="w-full btn-secondary">
                       Update Timeline
+                    </button>
+                    <button
+                      onClick={handleGenerateFakeData}
+                      disabled={isGeneratingData}
+                      className="w-full btn-secondary text-yellow-400 hover:text-yellow-300"
+                    >
+                      {isGeneratingData ? 'Generating...' : 'Generate Fake Data'}
                     </button>
                   </div>
                 </motion.div>

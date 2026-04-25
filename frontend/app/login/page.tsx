@@ -91,10 +91,10 @@ export default function LoginPage() {
         
         <div className="relative z-10 flex flex-col justify-center items-center p-12 text-center">
           <div className="mb-8">
-            <h1 className="text-6xl font-bold text-gradient animate-glow mb-4 heading-emotional">
+            <h1 className="text-6xl font-bold text-white drop-shadow-lg mb-4 heading-emotional">
               💍 Perfect Wedding
             </h1>
-            <p className="text-xl text-text-primary/90 body-emotional max-w-md">
+            <p className="text-xl text-white/90 body-emotional max-w-md">
               Where dreams begin and love stories unfold
             </p>
           </div>
