@@ -102,13 +102,69 @@ export interface VenueAmenity {
 }
 
 export interface WeddingDashboard {
-  total_guests: number;
-  confirmed_guests: number;
-  pending_rsvp: number;
-  total_expenses: number;
-  paid_expenses: number;
-  pending_vendors: number;
-  upcoming_payments: number;
+  wedding: {
+    id: number;
+    user: number;
+    couple_names: string;
+    wedding_date: string;
+    theme: string;
+    status: {
+      id: number;
+      name: string;
+    };
+    venue?: {
+      id: number;
+      venue_catalog: {
+        id: number;
+        name: string;
+        type: string;
+        address: string;
+        capacity_min: number;
+        capacity_max: number;
+        price: string;
+        rating: number;
+      };
+    };
+    days_until_wedding: number;
+    created_at: string;
+    updated_at: string;
+  };
+  guest_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    declined: number;
+  };
+  vendor_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    contacted: number;
+  };
+  expense_stats: {
+    total_estimated: number;
+    total_actual: number;
+    total_paid: number;
+    remaining: number;
+    budget_used: number;
+  };
+  recent_activities: {
+    guests: Array<{
+      name: string;
+      date: string;
+      type: string;
+    }>;
+    expenses: Array<{
+      description: string;
+      date: string;
+      type: string;
+    }>;
+    vendors: Array<{
+      name: string;
+      date: string | null;
+      type: string;
+    }>;
+  };
 }
 
 export interface WeddingTimeline {

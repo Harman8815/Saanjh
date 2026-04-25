@@ -147,8 +147,8 @@ export default function DashboardPage() {
   // Calculate budget percentage
   const calculateBudgetPercentage = () => {
     if (!dashboardData) return 0;
-    const totalBudget = dashboardData.total_expenses || 0;
-    const paidExpenses = dashboardData.paid_expenses || 0;
+    const totalBudget = dashboardData.expense_stats.total_actual || 0;
+    const paidExpenses = dashboardData.expense_stats.total_paid || 0;
     return totalBudget > 0 ? Math.round((paidExpenses / totalBudget) * 100) : 0;
   };
 
@@ -236,10 +236,10 @@ export default function DashboardPage() {
                   <span className="text-emotional-2xl text-primary">Guests</span>
                 </div>
                 <div className="text-data-3xl font-bold text-primary mb-2">
-                  {dashboardData?.confirmed_guests || 0}
+                  {dashboardData?.guest_stats.confirmed || 0}
                 </div>
                 <p className="body-data text-data-sm text-text-secondary">
-                  {dashboardData?.total_guests || 0} invited
+                  {dashboardData?.guest_stats.total || 0} invited
                 </p>
               </motion.div>
 
@@ -341,15 +341,15 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-text-secondary">Total Budget</span>
-                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.total_expenses || 0)}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.expense_stats.total_actual || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-secondary">Spent</span>
-                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.paid_expenses || 0)}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.expense_stats.total_paid || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-text-secondary">Remaining</span>
-                      <span className="text-primary font-semibold">{formatCurrency((dashboardData?.total_expenses || 0) - (dashboardData?.paid_expenses || 0))}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.expense_stats.remaining || 0)}</span>
                     </div>
                     <div className="w-full bg-surface rounded-full h-2">
                       <div className="bg-primary h-2 rounded-full" style={{ width: `${calculateBudgetPercentage()}%` }}></div>
