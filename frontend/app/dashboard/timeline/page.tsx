@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Calendar as CalendarIcon, ListTodo, Plus } from 'lucide-react';
 import TimelineView from '../../../components/dashboard/timeline/TimelineView';
@@ -9,7 +9,8 @@ import ChecklistView from '../../../components/dashboard/timeline/ChecklistView'
 import EventFormModal from '../../../components/dashboard/timeline/EventFormModal';
 import ViewEventModal from '../../../components/dashboard/timeline/ViewEventModal';
 import DeleteConfirmModal from '../../../components/dashboard/timeline/DeleteConfirmModal';
-import { Event } from '../../../types/event';
+import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
+import { TimelineService } from '../../../services/timeline';
 
 export default function TimelinePage() {
   const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('calendar');
@@ -23,124 +24,81 @@ export default function TimelinePage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedEventData, setSelectedEventData] = useState<Event | null>(null);
+  const [selectedEventData, setSelectedEventData] = useState<TimelineEvent | null>(null);
 
-  // Get today's date string for demo
-  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: 1,
-      title: 'Morning Yoga & Meditation',
-      date: today,
-      time: '7:00 AM',
-      duration: 60,
-      location: 'Garden Terrace',
-      description: 'Start the day with peaceful yoga session',
-      status: 'completed',
-      category: 'planning'
-    },
-    {
-      id: 2,
-      title: 'Breakfast with Family',
-      date: today,
-      time: '8:30 AM',
-      duration: 90,
-      location: 'Main Dining Hall',
-      description: 'Intimate breakfast with close family members',
-      status: 'completed',
-      category: 'milestone'
-    },
-    {
-      id: 3,
-      title: 'Hair & Makeup Session',
-      date: today,
-      time: '10:00 AM',
-      duration: 180,
-      location: 'Bridal Suite',
-      description: 'Professional styling for the bride and bridesmaids',
-      status: 'in-progress',
-      category: 'planning'
-    },
-    {
-      id: 4,
-      title: 'Photography Session',
-      date: today,
-      time: '1:00 PM',
-      duration: 120,
-      location: 'Rose Garden',
-      description: 'Pre-ceremony photos with wedding party',
-      status: 'upcoming',
-      category: 'planning'
-    },
-    {
-      id: 5,
-      title: 'Wedding Ceremony',
-      date: today,
-      time: '4:00 PM',
-      duration: 60,
-      location: 'Grand Ballroom',
-      description: 'The main ceremony - exchanging vows',
-      status: 'upcoming',
-      category: 'ceremony'
-    },
-    {
-      id: 6,
-      title: 'Cocktail Hour',
-      date: today,
-      time: '5:30 PM',
-      duration: 90,
-      location: 'Sunset Terrace',
-      description: 'Drinks and appetizers while couple takes photos',
-      status: 'upcoming',
-      category: 'reception'
-    },
-    {
-      id: 7,
-      title: 'Reception & Dinner',
-      date: today,
-      time: '7:00 PM',
-      duration: 240,
-      location: 'Grand Ballroom',
-      description: 'Dinner, speeches, dancing, and celebration',
-      status: 'upcoming',
-      category: 'reception'
-    }
-  ]);
+  // Fetch timeline events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await TimelineService.getTimelineEvents(1, 100);
+        setEvents(response.results);
+      } catch (err: any) {
+        console.error('Error fetching timeline events:', err);
+        setError(err.message || 'Failed to load timeline events');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // CRUD Functions
-  const handleCreateEvent = (newEvent: Omit<Event, 'id'>) => {
-    const eventWithId = { ...newEvent, id: Date.now() };
-    setEvents(prev => [...prev, eventWithId as Event]);
-    setIsCreateModalOpen(false);
-  };
-
-  const handleEditEvent = (updatedEvent: Omit<Event, 'id'> & { id?: number }) => {
-    if (!updatedEvent.id) return;
-    setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent as Event : e));
-    setIsEditModalOpen(false);
-    setSelectedEventData(null);
-  };
-
-  const handleDeleteEvent = () => {
-    if (selectedEventData) {
-      setEvents(prev => prev.filter(e => e.id !== selectedEventData.id));
-      setIsDeleteModalOpen(false);
-      setSelectedEventData(null);
+  const handleCreateEvent = async (newEvent: TimelineEventCreateRequest) => {
+    try {
+      const created = await TimelineService.createTimelineEvent(newEvent);
+      setEvents(prev => [...prev, created]);
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      console.error('Error creating event:', err);
+      alert(err.message || 'Failed to create event');
     }
   };
 
-  const openViewModal = (event: Event) => {
+  const handleEditEvent = async (updatedEvent: TimelineEvent) => {
+    try {
+      const updated = await TimelineService.updateTimelineEvent(updatedEvent.id, updatedEvent);
+      setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updated : e));
+      setIsEditModalOpen(false);
+      setSelectedEventData(null);
+    } catch (err: any) {
+      console.error('Error updating event:', err);
+      alert(err.message || 'Failed to update event');
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (selectedEventData) {
+      try {
+        await TimelineService.deleteTimelineEvent(selectedEventData.id);
+        setEvents(prev => prev.filter(e => e.id !== selectedEventData.id));
+        setIsDeleteModalOpen(false);
+        setSelectedEventData(null);
+      } catch (err: any) {
+        console.error('Error deleting event:', err);
+        alert(err.message || 'Failed to delete event');
+      }
+    }
+  };
+
+  const openViewModal = (event: TimelineEvent) => {
     setSelectedEventData(event);
     setIsViewModalOpen(true);
   };
 
-  const openEditModal = () => {
+  const openEditModal = (event: TimelineEvent) => {
+    setSelectedEventData(event);
     setIsViewModalOpen(false);
     setIsEditModalOpen(true);
   };
 
-  const openDeleteModal = () => {
+  const openDeleteModal = (event: TimelineEvent) => {
+    setSelectedEventData(event);
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(true);
   };
@@ -160,6 +118,27 @@ export default function TimelinePage() {
       return eventDate.toDateString() === date.toDateString();
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Loading timeline events...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
