@@ -27,19 +27,19 @@ export default function TimelinePage() {
   const [selectedEventData, setSelectedEventData] = useState<TimelineEvent | null>(null);
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch timeline events from API
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        setIsLoading(true);
-        
+        setIsCalendarLoading(true);
+
         // Calculate date range based on current view and date
         let startDate: string;
         let endDate: string;
-        
+
         if (calendarView === 'month') {
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth();
@@ -48,7 +48,9 @@ export default function TimelinePage() {
         } else if (calendarView === 'week') {
           const startOfWeek = new Date(currentDate);
           const dayOfWeek = startOfWeek.getDay();
-          startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+          // Adjust so Monday is day 0 (getDay returns 0 for Sunday)
+          const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          startOfWeek.setDate(startOfWeek.getDate() - adjustedDay);
           startDate = startOfWeek.toISOString().split('T')[0];
           const endOfWeek = new Date(startOfWeek);
           endOfWeek.setDate(endOfWeek.getDate() + 6);
@@ -58,14 +60,14 @@ export default function TimelinePage() {
           startDate = currentDate.toISOString().split('T')[0];
           endDate = startDate;
         }
-        
+
         const response = await TimelineService.filterTimelineEventsByDateRange(startDate, endDate);
         setEvents(response.results);
       } catch (err: any) {
         console.error('Error fetching timeline events:', err);
         setError(err.message || 'Failed to load timeline events');
       } finally {
-        setIsLoading(false);
+        setIsCalendarLoading(false);
       }
     };
 
@@ -145,14 +147,6 @@ export default function TimelinePage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-text-muted">Loading timeline events...</div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -221,6 +215,7 @@ export default function TimelinePage() {
               setSelectedDate={setSelectedDate}
               getStatusColor={getStatusColor}
               getEventsForDate={getEventsForDate}
+              isLoading={isCalendarLoading}
             />
           )}
 

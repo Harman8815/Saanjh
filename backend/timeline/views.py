@@ -36,10 +36,12 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
             timeline = wedding.timeline
             queryset = TimelineEvent.objects.filter(timeline=timeline)
 
-            # Optional filtering by month, day, or week
+            # Optional filtering by month, day, week, or date range
             month = self.request.query_params.get('month')
             day = self.request.query_params.get('day')
             week = self.request.query_params.get('week')
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
 
             if month:
                 from django.utils import timezone
@@ -69,6 +71,15 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
                     start_of_week = week_date - timedelta(days=week_date.weekday())
                     end_of_week = start_of_week + timedelta(days=6)
                     queryset = queryset.filter(date__range=[start_of_week, end_of_week])
+                except ValueError:
+                    pass
+
+            if start_date and end_date:
+                from django.utils import timezone
+                try:
+                    start = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
+                    end = timezone.datetime.strptime(end_date, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date__range=[start, end])
                 except ValueError:
                     pass
 
