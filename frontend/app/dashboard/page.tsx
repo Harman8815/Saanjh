@@ -363,18 +363,7 @@ export default function DashboardPage() {
                       Recent Activity
                     </h2>
                     <div className="space-y-4">
-                      {mockData.activities.map((item, i) => (
-                        <div key={i} className="flex items-center gap-4 pb-4 border-b border-white/10">
-                          <div className="w-10 h-10 bg-surface rounded-full flex items-center justify-center">
-                            <span className="text-text-secondary text-xs">✓</span>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-text-primary">{item.activity}</p>
-                            <p className="text-text-secondary text-sm">{item.description}</p>
-                          </div>
-                          <span className="text-text-secondary text-xs">{item.time}</span>
-                        </div>
-                      ))}
+                      <p className="text-text-secondary text-sm">No recent activity to display</p>
                     </div>
                   </motion.div>
 
@@ -393,16 +382,7 @@ export default function DashboardPage() {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      {mockData.upcomingTasks.map((item, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                          <input type="checkbox" className="toggle" />
-                          <div className="flex-1">
-                            <h4 className="text-text-primary">{item.task}</h4>
-                            <p className="text-text-secondary text-sm">{item.description}</p>
-                          </div>
-                          <span className="text-primary text-sm">{formatDateForDisplay(new Date(item.due))}</span>
-                        </div>
-                      ))}
+                      <p className="text-text-secondary text-sm">No upcoming tasks to display</p>
                     </div>
                   </motion.div>
                 </div>
@@ -557,7 +537,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Total Budget</span>
-                      <span className="text-primary font-semibold">${wedding?.budget || 0}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.total_expenses || 0)}</span>
                     </div>
                     <div className="w-full bg-surface rounded-full h-4">
                       <div 
@@ -567,7 +547,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Spent</span>
-                      <span className="text-primary font-semibold">${Math.round((wedding?.budget || 0) * 0.65)}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.paid_expenses || 0)}</span>
                     </div>
                   </div>
                 </motion.div>
