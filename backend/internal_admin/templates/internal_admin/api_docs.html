@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saanjh API Documentation</title>
+    <title>Saanjh Table Schemas</title>
     <style>
         * {
             margin: 0;
@@ -13,171 +13,62 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        .sidebar {
-            width: 280px;
-            background: #1a1a2e;
-            color: #eee;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #333;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            background: #16213e;
-        }
-        
-        .sidebar-header h2 {
-            font-size: 1.2em;
-            margin-bottom: 5px;
-        }
-        
-        .sidebar-header p {
-            font-size: 0.85em;
-            color: #888;
-        }
-        
-        .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
-        
-        .sidebar-group {
-            margin-bottom: 5px;
-        }
-        
-        .sidebar-group-title {
-            padding: 10px 15px;
-            font-weight: 600;
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-        
-        .sidebar-group-title:hover {
-            background: #1f4068;
-        }
-        
-        .sidebar-group-title .arrow {
-            transition: transform 0.2s;
-            font-size: 0.8em;
-        }
-        
-        .sidebar-group-title.collapsed .arrow {
-            transform: rotate(-90deg);
-        }
-        
-        .sidebar-items {
-            display: none;
-            padding-left: 15px;
-        }
-        
-        .sidebar-items.expanded {
-            display: block;
-        }
-        
-        .sidebar-item {
-            padding: 8px 15px 8px 25px;
-            color: #ccc;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9em;
-            text-decoration: none;
-            display: block;
-        }
-        
-        .sidebar-item:hover {
-            background: #1f4068;
-            color: #fff;
-        }
-        
-        .sidebar-item.active {
-            background: #667eea;
-            color: #fff;
-        }
-        
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        .content-header {
-            padding: 15px 20px;
             background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
         }
         
         .search-container {
-            flex: 1;
-            max-width: 400px;
+            margin-bottom: 20px;
         }
         
         .search-input {
             width: 100%;
-            padding: 8px 12px;
+            padding: 12px 16px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.9em;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
         }
         
-        .tabs {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .tab {
-            padding: 8px 16px;
-            background: #e9ecef;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .tab.active {
-            background: #667eea;
-            color: white;
-        }
-        
-        .tab:hover:not(.active) {
-            background: #dee2e6;
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .content-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        
-        .swagger-container {
-            height: 100%;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .table-schemas-container {
-            display: none;
-            height: 100%;
-        }
-        
-        .table-schemas-container.active {
             display: block;
         }
         
@@ -358,42 +249,6 @@
         }
         
         @media (max-width: 768px) {
-            .sidebar {
-                width: 220px;
-            }
-            
-            .sidebar-header h2 {
-                font-size: 1em;
-            }
-            
-            .sidebar-header p {
-                font-size: 0.75em;
-            }
-            
-            .sidebar-item {
-                font-size: 0.85em;
-                padding: 6px 12px 6px 20px;
-            }
-            
-            .content-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            
-            .search-container {
-                max-width: 100%;
-            }
-            
-            .tabs {
-                justify-content: center;
-            }
-            
-            .tab {
-                padding: 6px 12px;
-                font-size: 0.85em;
-            }
-            
             .content-body {
                 padding: 15px;
             }
@@ -416,31 +271,17 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2>🎊 Saanjh API</h2>
-            <p>Interactive Documentation</p>
+    <div class="container">
+        <div class="header">
+            <h1>🎊 Saanjh Table Schemas</h1>
+            <p>Database schema documentation for the wedding planning platform</p>
         </div>
-        <div class="sidebar-content" id="sidebarContent">
-            <!-- Sidebar content will be populated by JavaScript -->
-        </div>
-    </div>
-    
-    <div class="content-area">
-        <div class="content-header">
-            <div class="search-container">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search endpoints...">
-            </div>
-            <div class="tabs">
-                <button class="tab active" data-tab="api-docs">API Docs</button>
-                <button class="tab" data-tab="table-schemas">Table Schemas</button>
-            </div>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search tables and fields...">
         </div>
         
         <div class="content-body">
-            <div class="swagger-container" id="swaggerContainer">
-                <!-- Swagger UI will be loaded here -->
-            </div>
             <div class="table-schemas-container" id="tableSchemasContainer">
                 <!-- Table schemas will be loaded here -->
             </div>
@@ -448,275 +289,11 @@
     </div>
 
     <script>
-        // API endpoints grouped by app/module
-        const apiEndpoints = {
-            'Authentication': {
-                icon: '🔐',
-                endpoints: [
-                    { name: 'Register', path: '/api/auth/register/', method: 'POST' },
-                    { name: 'Login', path: '/api/auth/login/', method: 'POST' },
-                    { name: 'Logout', path: '/api/auth/logout/', method: 'POST' },
-                    { name: 'Profile', path: '/api/auth/profile/', method: 'GET' },
-                    { name: 'Update Profile', path: '/api/auth/profile/', method: 'PUT' },
-                ]
-            },
-            'Weddings': {
-                icon: '💒',
-                endpoints: [
-                    { name: 'List Weddings', path: '/api/weddings/', method: 'GET' },
-                    { name: 'Create Wedding', path: '/api/weddings/', method: 'POST' },
-                    { name: 'Wedding Detail', path: '/api/weddings/{id}/', method: 'GET' },
-                    { name: 'Update Wedding', path: '/api/weddings/{id}/', method: 'PUT' },
-                    { name: 'Delete Wedding', path: '/api/weddings/{id}/', method: 'DELETE' },
-                ]
-            },
-            'Guests': {
-                icon: '👥',
-                endpoints: [
-                    { name: 'List Guests', path: '/api/guests/', method: 'GET' },
-                    { name: 'Create Guest', path: '/api/guests/', method: 'POST' },
-                    { name: 'Guest Detail', path: '/api/guests/{id}/', method: 'GET' },
-                    { name: 'Update Guest', path: '/api/guests/{id}/', method: 'PUT' },
-                    { name: 'Delete Guest', path: '/api/guests/{id}/', method: 'DELETE' },
-                    { name: 'Bulk RSVP Update', path: '/api/guests/bulk-rsvp/', method: 'POST' },
-                ]
-            },
-            'Expenses': {
-                icon: '💰',
-                endpoints: [
-                    { name: 'List Expenses', path: '/api/expenses/', method: 'GET' },
-                    { name: 'Create Expense', path: '/api/expenses/', method: 'POST' },
-                    { name: 'Expense Detail', path: '/api/expenses/{id}/', method: 'GET' },
-                    { name: 'Update Expense', path: '/api/expenses/{id}/', method: 'PUT' },
-                    { name: 'Delete Expense', path: '/api/expenses/{id}/', method: 'DELETE' },
-                    { name: 'Expense Statistics', path: '/api/expenses/statistics/', method: 'GET' },
-                ]
-            },
-            'Vendors': {
-                icon: '🏪',
-                endpoints: [
-                    { name: 'List Vendors', path: '/api/vendors/', method: 'GET' },
-                    { name: 'Create Vendor', path: '/api/vendors/', method: 'POST' },
-                    { name: 'Vendor Detail', path: '/api/vendors/{id}/', method: 'GET' },
-                    { name: 'Update Vendor', path: '/api/vendors/{id}/', method: 'PUT' },
-                    { name: 'Delete Vendor', path: '/api/vendors/{id}/', method: 'DELETE' },
-                ]
-            },
-            'Timeline': {
-                icon: '📅',
-                endpoints: [
-                    { name: 'List Timeline Events', path: '/api/timeline/', method: 'GET' },
-                    { name: 'Create Event', path: '/api/timeline/', method: 'POST' },
-                    { name: 'Event Detail', path: '/api/timeline/{id}/', method: 'GET' },
-                    { name: 'Update Event', path: '/api/timeline/{id}/', method: 'PUT' },
-                    { name: 'Delete Event', path: '/api/timeline/{id}/', method: 'DELETE' },
-                ]
-            },
-            'Media': {
-                icon: '📷',
-                endpoints: [
-                    { name: 'Upload Media', path: '/api/media/upload/', method: 'POST' },
-                    { name: 'List Media', path: '/api/media/', method: 'GET' },
-                    { name: 'Media Detail', path: '/api/media/{id}/', method: 'GET' },
-                    { name: 'Delete Media', path: '/api/media/{id}/', method: 'DELETE' },
-                ]
-            },
-        };
-
-        // Populate sidebar
-        function populateSidebar() {
-            const sidebarContent = document.getElementById('sidebarContent');
-            sidebarContent.innerHTML = '';
-
-            for (const [groupName, group] of Object.entries(apiEndpoints)) {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'sidebar-group';
-
-                const groupTitle = document.createElement('div');
-                groupTitle.className = 'sidebar-group-title';
-                groupTitle.innerHTML = `<span class="arrow">▼</span> ${group.icon} ${groupName}`;
-                groupTitle.onclick = () => toggleGroup(groupTitle);
-
-                const itemsDiv = document.createElement('div');
-                itemsDiv.className = 'sidebar-items expanded';
-
-                group.endpoints.forEach(endpoint => {
-                    const item = document.createElement('a');
-                    item.className = 'sidebar-item';
-                    item.href = '#';
-                    item.innerHTML = `<span style="color: ${getMethodColor(endpoint.method)}">${endpoint.method}</span> ${endpoint.name}`;
-                    item.onclick = (e) => {
-                        e.preventDefault();
-                        navigateToEndpoint(endpoint);
-                    };
-                    itemsDiv.appendChild(item);
-                });
-
-                groupDiv.appendChild(groupTitle);
-                groupDiv.appendChild(itemsDiv);
-                sidebarContent.appendChild(groupDiv);
-            }
-        }
-
-        function getMethodColor(method) {
-            const colors = {
-                'GET': '#61affe',
-                'POST': '#49cc90',
-                'PUT': '#fca130',
-                'DELETE': '#f93e3e',
-                'PATCH': '#50e3c2'
-            };
-            return colors[method] || '#999';
-        }
-
-        function toggleGroup(groupTitle) {
-            groupTitle.classList.toggle('collapsed');
-            const items = groupTitle.nextElementSibling;
-            items.classList.toggle('expanded');
-        }
-
-        function navigateToEndpoint(endpoint) {
-            // Remove active class from all items
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Add active class to clicked item
-            event.target.classList.add('active');
-            
-            // Switch to API Docs tab if not already active
-            const apiDocsTab = document.querySelector('.tab[data-tab="api-docs"]');
-            if (apiDocsTab && !apiDocsTab.classList.contains('active')) {
-                apiDocsTab.click();
-            }
-            
-            // Navigate to the endpoint in Swagger UI
-            const swaggerFrame = document.getElementById('swaggerFrame');
-            if (swaggerFrame && openAPISchema) {
-                // Find the operationId from the OpenAPI schema
-                let operationId = null;
-                let tag = null;
-                
-                // Search through paths in the schema
-                for (const [path, methods] of Object.entries(openAPISchema.paths || {})) {
-                    if (path === endpoint.path) {
-                        // Get the method (GET, POST, etc.)
-                        const method = endpoint.method.toLowerCase();
-                        if (methods[method]) {
-                            operationId = methods[method].operationId;
-                            tag = methods[method].tags && methods[method].tags[0];
-                            break;
-                        }
-                    }
-                }
-                
-                if (operationId) {
-                    // Use Swagger UI's hash-based navigation
-                    // Format: #/{tag}/{operationId}
-                    const baseUrl = '/api/swagger/';
-                    const hash = `#/${tag || 'default'}/${operationId}`;
-                    swaggerFrame.src = baseUrl + hash;
-                } else {
-                    // Fallback: try to construct hash from path
-                    const tag = endpoint.path.split('/')[2] || 'default';
-                    const fallbackId = endpoint.name.toLowerCase().replace(/\s+/g, '_');
-                    const baseUrl = '/api/swagger/';
-                    const hash = `#/${tag}/${fallbackId}`;
-                    swaggerFrame.src = baseUrl + hash;
-                }
-            }
-        }
-
-        // Initialize sidebar and other functionality
+        // Initialize table schemas
         document.addEventListener('DOMContentLoaded', () => {
-            populateSidebar();
-            loadOpenAPISchema();
+            loadTableSchemas();
             initializeSearch();
-            initializeTabs();
         });
-
-        let openAPISchema = null;
-
-        async function loadOpenAPISchema() {
-            try {
-                const response = await fetch('/api/schema/');
-                openAPISchema = await response.json();
-            } catch (error) {
-                console.error('Error loading OpenAPI schema:', error);
-            }
-        }
-
-        function initializeTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active class from all tabs
-                    tabs.forEach(t => t.classList.remove('active'));
-                    // Add active class to clicked tab
-                    tab.classList.add('active');
-                    
-                    // Hide all containers
-                    document.getElementById('swaggerContainer').style.display = 'none';
-                    document.getElementById('tableSchemasContainer').style.display = 'none';
-                    
-                    // Show selected container
-                    const tabName = tab.getAttribute('data-tab');
-                    if (tabName === 'api-docs') {
-                        document.getElementById('swaggerContainer').style.display = 'block';
-                    } else if (tabName === 'table-schemas') {
-                        document.getElementById('tableSchemasContainer').style.display = 'block';
-                        document.getElementById('tableSchemasContainer').classList.add('active');
-                    }
-                });
-            });
-        }
-
-        function initializeSearch() {
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    filterSidebar(searchTerm);
-                    filterTableSchemas(searchTerm);
-                });
-            }
-        }
-
-        function filterSidebar(searchTerm) {
-            const groups = document.querySelectorAll('.sidebar-group');
-            
-            groups.forEach(group => {
-                const groupTitle = group.querySelector('.sidebar-group-title');
-                const items = group.querySelectorAll('.sidebar-item');
-                const groupName = groupTitle.textContent.toLowerCase();
-                
-                let hasVisibleItems = false;
-                
-                items.forEach(item => {
-                    const itemName = item.textContent.toLowerCase();
-                    const matchesSearch = itemName.includes(searchTerm) || groupName.includes(searchTerm);
-                    
-                    if (matchesSearch) {
-                        item.style.display = 'block';
-                        hasVisibleItems = true;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-                
-                // Show/hide group based on whether it has visible items
-                if (searchTerm === '' || hasVisibleItems) {
-                    group.style.display = 'block';
-                    // Expand group if searching
-                    if (searchTerm !== '') {
-                        groupTitle.classList.remove('collapsed');
-                        group.querySelector('.sidebar-items').classList.add('expanded');
-                    }
-                } else {
-                    group.style.display = 'none';
-                }
-            });
-        }
 
         function filterTableSchemas(searchTerm) {
             const sections = document.querySelectorAll('.module-section');
@@ -760,15 +337,17 @@
             });
         }
 
-        // Load Swagger UI dynamically
-        const swaggerContainer = document.getElementById('swaggerContainer');
-        swaggerContainer.innerHTML = `
-            <iframe src="/api/swagger/" style="width: 100%; height: 100%; border: none;" id="swaggerFrame"></iframe>
-        `;
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    filterTableSchemas(searchTerm);
+                });
+            }
+        }
 
         // Load table schemas data
-        loadTableSchemas();
-
         async function loadTableSchemas() {
             try {
                 const response = await fetch('/api/table-schemas/');

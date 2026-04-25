@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -151,6 +152,95 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Jazzmin Configuration
+JAZZMIN_SETTINGS = {
+    'site_title': 'Saanjh Admin',
+    'site_header': 'Saanjh Wedding Planning',
+    'site_brand': 'Saanjh',
+    'welcome_sign': 'Welcome to Saanjh Wedding Planning Admin',
+    'copyright': 'Saanjh Wedding Planning Platform',
+    'navigation': [
+        {'app': 'accounts', 'label': '👤 Accounts', 'models': [
+            {'model': 'accounts.user', 'label': 'Users'},
+            {'model': 'accounts.role', 'label': 'Roles'},
+            {'model': 'accounts.settings', 'label': 'User Settings'},
+        ]},
+        {'app': 'weddings', 'label': '💒 Weddings', 'models': [
+            {'model': 'weddings.wedding', 'label': 'Weddings'},
+            {'model': 'weddings.weddingstatus', 'label': 'Wedding Status'},
+            {'model': 'weddings.venuecatalog', 'label': 'Venue Catalog'},
+            {'model': 'weddings.venue', 'label': 'Venues'},
+        ]},
+        {'app': 'guests', 'label': '👥 Guests', 'models': [
+            {'model': 'guests.guest', 'label': 'Guests'},
+            {'model': 'guests.rsvpstatus', 'label': 'RSVP Status'},
+            {'model': 'guests.table', 'label': 'Tables'},
+            {'model': 'guests.meal', 'label': 'Meal Options'},
+        ]},
+        {'app': 'expenses', 'label': '💰 Expenses', 'models': [
+            {'model': 'expenses.expense', 'label': 'Expenses'},
+            {'model': 'expenses.expensestatus', 'label': 'Expense Status'},
+            {'model': 'expenses.budgetcategory', 'label': 'Budget Categories'},
+        ]},
+        {'app': 'vendors', 'label': '🏪 Vendors', 'models': [
+            {'model': 'vendors.vendor', 'label': 'Vendors'},
+            {'model': 'vendors.vendorstatus', 'label': 'Vendor Status'},
+            {'model': 'vendors.vendorcategory', 'label': 'Vendor Categories'},
+            {'model': 'vendors.vendorcatalog', 'label': 'Vendor Catalog'},
+        ]},
+        {'app': 'timeline', 'label': '📅 Timeline', 'models': [
+            {'model': 'timeline.timeline', 'label': 'Timelines'},
+            {'model': 'timeline.timelineevent', 'label': 'Timeline Events'},
+            {'model': 'timeline.timestatus', 'label': 'Timeline Status'},
+        ]},
+    ],
+    'icons': {
+        'accounts': 'fas fa-user-circle',
+        'weddings': 'fas fa-heart',
+        'guests': 'fas fa-users',
+        'expenses': 'fas fa-dollar-sign',
+        'vendors': 'fas fa-store',
+        'timeline': 'fas fa-calendar-alt',
+    },
+    'default_model_icons': {
+        'User': 'fas fa-user',
+        'Role': 'fas fa-user-tag',
+        'Settings': 'fas fa-cog',
+        'Wedding': 'fas fa-heart',
+        'WeddingStatus': 'fas fa-flag',
+        'VenueCatalog': 'fas fa-building',
+        'Venue': 'fas fa-map-marker-alt',
+        'Guest': 'fas fa-user',
+        'RsvpStatus': 'fas fa-envelope',
+        'Table': 'fas fa-chair',
+        'Meal': 'fas fa-utensils',
+        'Expense': 'fas fa-receipt',
+        'ExpenseStatus': 'fas fa-check-circle',
+        'BudgetCategory': 'fas fa-tags',
+        'Vendor': 'fas fa-store',
+        'VendorStatus': 'fas fa-clipboard-check',
+        'VendorCategory': 'fas fa-th-large',
+        'VendorCatalog': 'fas fa-book',
+        'Timeline': 'fas fa-calendar',
+        'TimelineEvent': 'fas fa-clock',
+        'TimelineStatus': 'fas fa-tasks',
+    },
+    'hide_models': ['auth.Group', 'auth.Permission'],
+    'search_url': '/admin/',
+    'user_avatar': 'img/jazzmin_avatar.png',
+    'topmenu_links': [
+        {'name': 'Home', 'url': '/', 'icon': 'fas fa-home'},
+        {'name': 'Table Schemas', 'url': '/api/docs/', 'icon': 'fas fa-database'},
+        {'name': 'Swagger UI', 'url': '/api/swagger/', 'icon': 'fas fa-code'},
+    ],
+    'related_modal_active': True,
+    'actions': {
+        'accounts.user': ['mark_active', 'mark_inactive'],
+        'guests.guest': ['mark_rsvp_confirmed', 'send_invitation_reminder'],
+        'expenses.expense': ['mark_as_paid'],
+    },
 }
 
 # drf-spectacular configuration
