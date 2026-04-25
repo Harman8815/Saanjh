@@ -84,12 +84,15 @@ export default function TimelinePage() {
     }
   };
 
-  const handleEditEvent = async (updatedEvent: TimelineEvent) => {
+  const handleEditEvent = async (updatedEvent: TimelineEventCreateRequest | TimelineEvent) => {
     try {
-      const updated = await TimelineService.updateTimelineEvent(updatedEvent.id, updatedEvent);
-      setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updated : e));
-      setIsEditModalOpen(false);
-      setSelectedEventData(null);
+      // Type guard to ensure we have a TimelineEvent with an id
+      if ('id' in updatedEvent) {
+        const updated = await TimelineService.updateTimelineEvent(updatedEvent.id, updatedEvent);
+        setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updated : e));
+        setIsEditModalOpen(false);
+        setSelectedEventData(null);
+      }
     } catch (err: any) {
       console.error('Error updating event:', err);
       alert(err.message || 'Failed to update event');
