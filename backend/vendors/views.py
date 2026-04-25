@@ -131,19 +131,18 @@ class VendorDetailView(generics.RetrieveUpdateDestroyAPIView):
 def vendor_bulk_status_update(request):
     """Bulk update vendor status"""
     vendor_ids = request.data.get('vendor_ids', [])
-    status = request.data.get('status')
+    status_id = request.data.get('status_id')
     
-    if not vendor_ids or not status:
+    if not vendor_ids or not status_id:
         return Response(
-            {'error': 'vendor_ids and status are required'},
+            {'error': 'vendor_ids and status_id are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    from django.utils import timezone
     updated_count = Vendor.objects.filter(
         id__in=vendor_ids,
         wedding=request.user.wedding
-    ).update(status=status, last_contact_date=timezone.now())
+    ).update(status_id=status_id)
     
     return Response({
         'message': f'Updated {updated_count} vendors',
@@ -160,28 +159,29 @@ def vendor_statistics(request):
         
         stats = {
             'total': vendors.count(),
-            'pending': vendors.filter(status='pending').count(),
-            'contacted': vendors.filter(status='contacted').count(),
-            'confirmed': vendors.filter(status='confirmed').count(),
-            'completed': vendors.filter(status='completed').count(),
-            'cancelled': vendors.filter(status='cancelled').count(),
+            'pending': vendors.filter(status__name='pending').count(),
+            'contacted': vendors.filter(status__name='contacted').count(),
+            'confirmed': vendors.filter(status__name='confirmed').count(),
+            'completed': vendors.filter(status__name='completed').count(),
+            'cancelled': vendors.filter(status__name='cancelled').count(),
         }
         
-        # Vendor type breakdown
-        vendor_types = {}
+        # Vendor category breakdown
+        vendor_categories = {}
         for vendor in vendors:
-            vendor_type = vendor.get_vendor_type_display()
-            vendor_types[vendor_type] = vendor_types.get(vendor_type, 0) + 1
+            if vendor.vendor_catalog and vendor.vendor_catalog.category:
+                category = vendor.vendor_catalog.category.name
+                vendor_categories[category] = vendor_categories.get(category, 0) + 1
         
-        stats['by_type'] = vendor_types
+        stats['by_category'] = vendor_categories
         
         # Total cost
-        total_cost = sum(vendor.cost or 0 for vendor in vendors)
-        total_deposits = sum(vendor.deposit_paid or 0 for vendor in vendors)
+        total_cost = sum(vendor.cost_estimate or 0 for vendor in vendors)
+        total_paid = sum(vendor.actual_cost or 0 for vendor in vendors)
         
         stats['total_cost'] = total_cost
-        stats['total_deposits'] = total_deposits
-        stats['remaining_balance'] = total_cost - total_deposits
+        stats['total_paid'] = total_paid
+        stats['remaining_balance'] = total_cost - total_paid
         
         return Response(stats)
     except:
@@ -192,9 +192,9 @@ def vendor_statistics(request):
             'confirmed': 0,
             'completed': 0,
             'cancelled': 0,
-            'by_type': {},
+            'by_category': {},
             'total_cost': 0,
-            'total_deposits': 0,
+            'total_paid': 0,
             'remaining_balance': 0
         })
 
@@ -202,14 +202,10 @@ def vendor_statistics(request):
 @permission_classes([permissions.IsAuthenticated])
 def vendor_follow_ups(request):
     """Get vendors that need follow-up"""
-    from django.utils import timezone
-    today = timezone.now().date()
-    
     vendors = Vendor.objects.filter(
         wedding=request.user.wedding,
-        next_follow_up__lte=today,
-        status__in=['pending', 'contacted']
-    ).order_by('next_follow_up')
+        status__name__in=['pending', 'contacted']
+    ).order_by('vendor_catalog__category', 'vendor_catalog__name')
     
     serializer = VendorSerializer(vendors, many=True)
     return Response(serializer.data)
@@ -217,30 +213,29 @@ def vendor_follow_ups(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def vendor_mark_contacted(request, pk):
-    """Mark vendor as contacted and set next follow-up"""
+    """Mark vendor as contacted"""
     try:
         vendor = Vendor.objects.get(
             pk=pk, 
             wedding=request.user.wedding
         )
         
-        from django.utils import timezone
-        vendor.last_contact_date = timezone.now()
-        
-        # Set next follow-up based on status
-        if vendor.status == 'pending':
-            vendor.next_follow_up = timezone.now().date() + timezone.timedelta(days=7)
-        elif vendor.status == 'contacted':
-            vendor.next_follow_up = timezone.now().date() + timezone.timedelta(days=14)
-        
+        # Update status to contacted
+        from .models import VendorStatus
+        contacted_status = VendorStatus.objects.get(name='contacted')
+        vendor.status = contacted_status
         vendor.save()
         
         return Response({
-            'message': 'Vendor marked as contacted',
-            'next_follow_up': vendor.next_follow_up
+            'message': 'Vendor marked as contacted'
         })
     except Vendor.DoesNotExist:
         return Response(
             {'error': 'Vendor not found'},
             status=status.HTTP_404_NOT_FOUND
+        )
+    except VendorStatus.DoesNotExist:
+        return Response(
+            {'error': 'Contacted status not found'},
+            status=status.HTTP_400_BAD_REQUEST
         )
