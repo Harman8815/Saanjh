@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet } from 'lucide-react';
 
@@ -13,21 +13,102 @@ import {
   TabType,
   PaymentStatus,
   Expense,
-  BudgetCategory,
-  initialCategories,
-  totalBudget,
+  BudgetCategory as LocalBudgetCategory,
   formatCurrency,
   formatShortCurrency
 } from '../../../components/dashboard/budget';
+import { ExpenseService } from '../../../services/expenses';
+import { BudgetCategory as ApiBudgetCategory } from '../../../types/api';
 
 export default function BudgetTrackerPage() {
   // State
-  const [categories, setCategories] = useState<BudgetCategory[]>(initialCategories);
+  const [categories, setCategories] = useState<LocalBudgetCategory[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [currentTotalBudget, setCurrentTotalBudget] = useState(totalBudget);
+  const [currentTotalBudget, setCurrentTotalBudget] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Transform API BudgetCategory to local BudgetCategory format
+  const transformApiToLocal = (apiCategory: ApiBudgetCategory, categoryExpenses: any[]): LocalBudgetCategory => {
+    return {
+      id: apiCategory.id.toString(),
+      name: apiCategory.name,
+      icon: Wallet, // Default icon, could be customized based on category
+      allocated: apiCategory.allocated_amount || 0,
+      expenses: categoryExpenses.map(exp => ({
+        id: exp.id.toString(),
+        vendorName: exp.description || 'Unknown',
+        amount: exp.amount,
+        paidAmount: exp.paid_amount || 0,
+        status: exp.status === 'paid' ? 'paid' : exp.status === 'partial' ? 'partial' : 'pending',
+        date: exp.date,
+        notes: exp.notes
+      })),
+      color: '#8B5CF6' // Default color
+    };
+  };
+
+  // Fetch budget categories and expenses from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [budgetCategories, expensesData] = await Promise.all([
+          ExpenseService.getBudgetCategories(),
+          ExpenseService.getExpenses(1, 100)
+        ]);
+
+        // Group expenses by category
+        const expensesByCategory: Record<number, any[]> = {};
+        expensesData.results.forEach(exp => {
+          if (exp.budget_category) {
+            const categoryId = exp.budget_category.id;
+            if (!expensesByCategory[categoryId]) {
+              expensesByCategory[categoryId] = [];
+            }
+            expensesByCategory[categoryId].push(exp);
+          }
+        });
+
+        // Transform categories with their expenses
+        const localCategories = budgetCategories.map(cat =>
+          transformApiToLocal(cat, expensesByCategory[cat.id] || [])
+        );
+        setCategories(localCategories);
+      } catch (err: any) {
+        console.error('Error fetching budget data:', err);
+        setError(err.message || 'Failed to load budget data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Loading budget data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>('budget');
