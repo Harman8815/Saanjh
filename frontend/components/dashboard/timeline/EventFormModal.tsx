@@ -8,7 +8,7 @@ import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: TimelineEventCreateRequest | TimelineEvent) => void;
+  onSubmit: (event: TimelineEventCreateRequest | TimelineEvent) => void | Promise<void>;
   event?: TimelineEvent | null;
   mode: 'create' | 'edit';
 }
@@ -62,10 +62,23 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      if (mode === 'edit' && event) {
+        // Merge form data with existing event to create a complete TimelineEvent
+        const updatedEvent: TimelineEvent = {
+          ...event,
+          ...formData,
+          id: event.id,
+          status: event.status,
+          created_at: event.created_at,
+          updated_at: event.updated_at
+        };
+        await onSubmit(updatedEvent);
+      } else {
+        await onSubmit(formData);
+      }
       onClose();
     }
   };

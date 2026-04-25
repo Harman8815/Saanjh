@@ -35,7 +35,31 @@ export default function TimelinePage() {
     const fetchEvents = async () => {
       try {
         setIsLoading(true);
-        const response = await TimelineService.getTimelineEvents(1, 100);
+        
+        // Calculate date range based on current view and date
+        let startDate: string;
+        let endDate: string;
+        
+        if (calendarView === 'month') {
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth();
+          startDate = new Date(year, month, 1).toISOString().split('T')[0];
+          endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        } else if (calendarView === 'week') {
+          const startOfWeek = new Date(currentDate);
+          const dayOfWeek = startOfWeek.getDay();
+          startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+          startDate = startOfWeek.toISOString().split('T')[0];
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(endOfWeek.getDate() + 6);
+          endDate = endOfWeek.toISOString().split('T')[0];
+        } else {
+          // Day view
+          startDate = currentDate.toISOString().split('T')[0];
+          endDate = startDate;
+        }
+        
+        const response = await TimelineService.filterTimelineEventsByDateRange(startDate, endDate);
         setEvents(response.results);
       } catch (err: any) {
         console.error('Error fetching timeline events:', err);
@@ -46,7 +70,7 @@ export default function TimelinePage() {
     };
 
     fetchEvents();
-  }, []);
+  }, [currentDate, calendarView]);
 
   // CRUD Functions
   const handleCreateEvent = async (newEvent: TimelineEventCreateRequest) => {
@@ -97,8 +121,7 @@ export default function TimelinePage() {
     setIsEditModalOpen(true);
   };
 
-  const openDeleteModal = (event: TimelineEvent) => {
-    setSelectedEventData(event);
+  const openDeleteModal = () => {
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(true);
   };
