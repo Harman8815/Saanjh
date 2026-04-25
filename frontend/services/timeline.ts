@@ -35,8 +35,16 @@ export class TimelineService {
   }
 
   // Timeline Event CRUD operations
-  static async getTimelineEvents(page = 1, pageSize = 20): Promise<PaginatedResponse<TimelineEvent>> {
-    return apiClient.get<PaginatedResponse<TimelineEvent>>(`/timeline/timeline-events/?page=${page}&page_size=${pageSize}`);
+  static async getTimelineEvents(page = 1, pageSize = 20, filters?: {
+    month?: string;
+    day?: string;
+    week?: string;
+  }): Promise<PaginatedResponse<TimelineEvent>> {
+    let url = `/timeline/timeline-events/?page=${page}&page_size=${pageSize}`;
+    if (filters?.month) url += `&month=${filters.month}`;
+    if (filters?.day) url += `&day=${filters.day}`;
+    if (filters?.week) url += `&week=${filters.week}`;
+    return apiClient.get<PaginatedResponse<TimelineEvent>>(url);
   }
 
   static async createTimelineEvent(eventData: TimelineEventCreateRequest): Promise<TimelineEvent> {

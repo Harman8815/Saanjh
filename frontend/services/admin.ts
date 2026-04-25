@@ -5,6 +5,7 @@ export interface FakeDataRequest {
   guests_per_wedding?: number;
   vendors_per_wedding?: number;
   expenses_per_wedding?: number;
+  timeline_events_per_wedding?: number;
 }
 
 export interface FakeDataResponse {
@@ -15,6 +16,7 @@ export interface FakeDataResponse {
     guests_created: number;
     vendors_created: number;
     expenses_created: number;
+    timeline_events_created: number;
     wedding_cards_created: number;
   };
   details: {

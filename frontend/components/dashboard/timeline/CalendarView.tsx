@@ -29,6 +29,7 @@ interface CalendarViewProps {
   setSelectedDate: (date: Date) => void;
   getStatusColor: (status: string) => string;
   getEventsForDate: (date: Date) => TimelineEvent[];
+  isLoading?: boolean;
 }
 
 // Transform TimelineEvent to local Event format for child components
@@ -74,7 +75,8 @@ export default function CalendarView({
   selectedDate,
   setSelectedDate,
   getStatusColor,
-  getEventsForDate
+  getEventsForDate,
+  isLoading = false
 }: CalendarViewProps) {
   // Transform events to local format
   const transformedEvents = events.map(transformEvent);
@@ -233,36 +235,54 @@ export default function CalendarView({
         </button>
       </div>
 
-      {/* View Content */}
-      {calendarView === 'month' && (
-        <MonthView
-          days={calendarDays.map(day => ({
-            ...day,
-            events: day.events.map(transformEvent)
-          }))}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
-      )}
+      {/* Skeleton Loading */}
+      {isLoading ? (
+        <div className="glass-card p-6">
+          <div className="grid grid-cols-7 gap-2 mb-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="h-8 bg-surface/50 rounded animate-pulse" />
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="h-24 bg-surface/30 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* View Content */
+        <>
+          {calendarView === 'month' && (
+            <MonthView
+              days={calendarDays.map(day => ({
+                ...day,
+                events: day.events.map(transformEvent)
+              }))}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+          )}
 
-      {calendarView === 'week' && (
-        <WeekView
-          weekDays={weekDays.map(day => ({
-            ...day,
-            events: day.events.map(transformEvent)
-          }))}
-          timeSlots={timeSlots}
-        />
-      )}
+          {calendarView === 'week' && (
+            <WeekView
+              weekDays={weekDays.map(day => ({
+                ...day,
+                events: day.events.map(transformEvent)
+              }))}
+              timeSlots={timeSlots}
+            />
+          )}
 
-      {calendarView === 'day' && (
-        <DayView
-          currentDate={currentDate}
-          timeSlots={timeSlots}
-          events={transformedEvents}
-          getEventsForDate={getTransformedEventsForDate}
-          getStatusColor={getStatusColor}
-        />
+          {calendarView === 'day' && (
+            <DayView
+              currentDate={currentDate}
+              timeSlots={timeSlots}
+              events={transformedEvents}
+              getEventsForDate={getTransformedEventsForDate}
+              getStatusColor={getStatusColor}
+            />
+          )}
+        </>
       )}
     </motion.div>
   );
