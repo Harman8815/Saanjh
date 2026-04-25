@@ -36,6 +36,20 @@ export default function DashboardPage() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Mock data for placeholder sections
+  const mockData = {
+    activities: [
+      { activity: 'Guest RSVP received', description: 'John Smith confirmed attendance', time: '2 hours ago' },
+      { activity: 'Vendor payment made', description: 'Catering deposit paid', time: '1 day ago' },
+      { activity: 'Timeline updated', description: 'Added rehearsal dinner details', time: '2 days ago' },
+    ],
+    upcomingTasks: [
+      { task: 'Send final invitations', description: 'To all pending guests', due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
+      { task: 'Confirm catering menu', description: 'Finalize dietary restrictions', due: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() },
+      { task: 'Book florist', description: 'Select floral arrangements', due: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString() },
+    ]
+  };
+
   // Fetch dashboard data on component mount
   useEffect(() => {
     fetchDashboardData();
@@ -557,7 +571,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Total Budget</span>
-                      <span className="text-primary font-semibold">${wedding?.budget || 0}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.total_expenses || 0)}</span>
                     </div>
                     <div className="w-full bg-surface rounded-full h-4">
                       <div 
@@ -567,7 +581,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Spent</span>
-                      <span className="text-primary font-semibold">${Math.round((wedding?.budget || 0) * 0.65)}</span>
+                      <span className="text-primary font-semibold">{formatCurrency(dashboardData?.paid_expenses || 0)}</span>
                     </div>
                   </div>
                 </motion.div>
