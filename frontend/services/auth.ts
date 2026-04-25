@@ -13,12 +13,16 @@ export class AuthService {
     try {
       console.log('Attempting login with:', credentials.username);
       const response = await apiClient.post<AuthResponse>('auth/login/', credentials);
-      console.log('Login response:', response);
+      console.log('Login response after unwrapping:', response);
+      console.log('Has token?', !!response.token);
+      console.log('Has user?', !!response.user);
       
       // Store token and user data
       if (response.token) {
         apiClient.setAuthToken(response.token);
         this.storeUser(response.user);
+      } else {
+        console.error('No token in response!', response);
       }
       
       return response;
@@ -135,6 +139,7 @@ export class AuthService {
   static storeUser(userData: User): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user_data', JSON.stringify(userData));
+      console.log('User data stored:', userData);
     }
   }
 
