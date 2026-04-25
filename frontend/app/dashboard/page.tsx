@@ -221,7 +221,7 @@ export default function DashboardPage() {
                   {calculateBudgetPercentage()}%
                 </div>
                 <p className="body-data text-data-sm text-text-secondary">
-                  {formatCurrency(dashboardData?.total_expenses || 0)} total expenses
+                  {formatCurrency(dashboardData?.expense_stats.total_actual || 0)} total expenses
                 </p>
               </motion.div>
 
@@ -303,7 +303,47 @@ export default function DashboardPage() {
                     Recent Activity
                   </h2>
                   <div className="space-y-4">
-                    <p className="text-text-secondary text-sm">No recent activity to display</p>
+                    {dashboardData?.recent_activities.guests.slice(0, 3).map((activity, i) => (
+                      <div key={`guest-${i}`} className="flex items-center gap-4">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <h4 className="text-text-primary">{activity.name}</h4>
+                          <p className="text-text-secondary text-sm">{activity.type}</p>
+                        </div>
+                        <span className="text-text-secondary text-sm">
+                          {formatDateForDisplay(new Date(activity.date))}
+                        </span>
+                      </div>
+                    ))}
+                    {dashboardData?.recent_activities.expenses.slice(0, 3).map((activity, i) => (
+                      <div key={`expense-${i}`} className="flex items-center gap-4">
+                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <h4 className="text-text-primary">{activity.description}</h4>
+                          <p className="text-text-secondary text-sm">{activity.type}</p>
+                        </div>
+                        <span className="text-text-secondary text-sm">
+                          {formatDateForDisplay(new Date(activity.date))}
+                        </span>
+                      </div>
+                    ))}
+                    {dashboardData?.recent_activities.vendors.slice(0, 3).map((activity, i) => (
+                      <div key={`vendor-${i}`} className="flex items-center gap-4">
+                        <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <h4 className="text-text-primary">{activity.name}</h4>
+                          <p className="text-text-secondary text-sm">{activity.type}</p>
+                        </div>
+                        <span className="text-text-secondary text-sm">
+                          {activity.date ? formatDateForDisplay(new Date(activity.date)) : 'No date'}
+                        </span>
+                      </div>
+                    ))}
+                    {!dashboardData?.recent_activities.guests.length &&
+                     !dashboardData?.recent_activities.expenses.length &&
+                     !dashboardData?.recent_activities.vendors.length && (
+                      <p className="text-text-secondary text-sm">No recent activity to display</p>
+                    )}
                   </div>
                 </motion.div>
 
@@ -322,7 +362,24 @@ export default function DashboardPage() {
                     </button>
                   </div>
                   <div className="space-y-4">
-                    <p className="text-text-secondary text-sm">No upcoming tasks to display</p>
+                    {timeline.filter(t => t.status === 'pending').slice(0, 5).map((task, i) => (
+                      <div key={i} className="flex items-center gap-4">
+                        <div className={`w-4 h-4 rounded-full ${
+                          task.priority === 'high' ? 'bg-red-500' :
+                          task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}></div>
+                        <div className="flex-1">
+                          <h4 className="text-text-primary">{task.title}</h4>
+                          <p className="text-text-secondary text-sm">{task.description || 'No description'}</p>
+                        </div>
+                        <span className="text-text-secondary text-sm">
+                          {task.date ? formatDateForDisplay(new Date(task.date)) : 'No date'}
+                        </span>
+                      </div>
+                    ))}
+                    {timeline.filter(t => t.status === 'pending').length === 0 && (
+                      <p className="text-text-secondary text-sm">No upcoming tasks to display</p>
+                    )}
                   </div>
                 </motion.div>
               </div>
@@ -367,15 +424,22 @@ export default function DashboardPage() {
                     Vendor Status
                   </h3>
                   <div className="space-y-3">
-                    {vendors.slice(0, 4).map((vendor, i) => (
-                      <div key={i} className="flex justify-between items-center">
-                        <span className="text-text-secondary">{vendor.vendor_catalog?.name || `Vendor ${i + 1}`}</span>
-                        <span className="text-primary text-sm">{vendor.status.name}</span>
-                      </div>
-                    ))}
-                    {vendors.length === 0 && (
-                      <p className="text-text-secondary text-sm">No vendors added yet</p>
-                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Total Vendors</span>
+                      <span className="text-primary font-semibold">{dashboardData?.vendor_stats.total || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Confirmed</span>
+                      <span className="text-green-500 font-semibold">{dashboardData?.vendor_stats.confirmed || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Pending</span>
+                      <span className="text-yellow-500 font-semibold">{dashboardData?.vendor_stats.pending || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-secondary">Contacted</span>
+                      <span className="text-blue-500 font-semibold">{dashboardData?.vendor_stats.contacted || 0}</span>
+                    </div>
                   </div>
                 </motion.div>
 
