@@ -17,6 +17,7 @@ def generate_fake_data(request):
         guests_per_wedding = int(request.data.get('guests_per_wedding', 30))
         vendors_per_wedding = int(request.data.get('vendors_per_wedding', 8))
         expenses_per_wedding = int(request.data.get('expenses_per_wedding', 15))
+        timeline_events_per_wedding = int(request.data.get('timeline_events_per_wedding', 25))
         
         # Validate parameters
         if user_count < 1 or user_count > 10:
@@ -36,9 +37,10 @@ def generate_fake_data(request):
             user_count=user_count,
             guests_per_wedding=guests_per_wedding,
             vendors_per_wedding=vendors_per_wedding,
-            expenses_per_wedding=expenses_per_wedding
+            expenses_per_wedding=expenses_per_wedding,
+            timeline_events_per_wedding=timeline_events_per_wedding
         )
-        
+
         return Response({
             'message': 'Fake data generated successfully',
             'summary': {
@@ -47,6 +49,7 @@ def generate_fake_data(request):
                 'guests_created': len(results['guests']),
                 'vendors_created': len(results['vendors']),
                 'expenses_created': len(results['expenses']),
+                'timeline_events_created': len(results['timeline_events']),
                 'wedding_cards_created': len(results['wedding_cards'])
             },
             'details': {
@@ -267,7 +270,7 @@ def create_default_accounts(request):
         
         bride_wedding = Wedding.objects.create(
             user=bride_user,
-            wedding_date=date(2024, 6, 15),
+            wedding_date=date.today() + timedelta(days=30),
             theme='Garden Romance',
             status=wedding_status
         )
@@ -377,13 +380,14 @@ def create_default_accounts(request):
         )
         
         # Create timeline events
+        wedding_date = bride_wedding.wedding_date
         events = [
-            ('Venue Booking', date(2024, 1, 15), '09:00', '10:00'),
-            ('Dress Fitting', date(2024, 2, 20), '14:00', '15:00'),
-            ('Cake Tasting', date(2024, 3, 10), '11:00', '13:00'),
-            ('Final Guest Count', date(2024, 5, 1), '16:00', '17:00'),
-            ('Rehearsal Dinner', date(2024, 6, 14), '18:00', '21:00'),
-            ('Wedding Day!', date(2024, 6, 15), '16:00', '23:59')
+            ('Venue Booking', wedding_date - timedelta(days=45), '09:00', '10:00'),
+            ('Dress Fitting', wedding_date - timedelta(days=30), '14:00', '15:00'),
+            ('Cake Tasting', wedding_date - timedelta(days=20), '11:00', '13:00'),
+            ('Final Guest Count', wedding_date - timedelta(days=7), '16:00', '17:00'),
+            ('Rehearsal Dinner', wedding_date - timedelta(days=1), '18:00', '21:00'),
+            ('Wedding Day!', wedding_date, '16:00', '23:59')
         ]
         
         for title, event_date, start_time, end_time in events:
@@ -419,10 +423,10 @@ def create_default_accounts(request):
         # Create expenses
         expenses = []
         expense_data = [
-            ('Venue Deposit', 1, 2500.00, 2500.00, date(2024, 1, 15)),
-            ('Photography Package', 1, 3000.00, 2800.00, date(2024, 2, 1)),
-            ('Floral Arrangements', 4, 2000.00, 1600.00, date(2024, 3, 15)),
-            ('Catering Final Payment', 2, 5000.00, 5200.00, date(2024, 5, 15))
+            ('Venue Deposit', 1, 2500.00, 2500.00, wedding_date - timedelta(days=45)),
+            ('Photography Package', 1, 3000.00, 2800.00, wedding_date - timedelta(days=30)),
+            ('Floral Arrangements', 4, 2000.00, 1600.00, wedding_date - timedelta(days=20)),
+            ('Catering Final Payment', 2, 5000.00, 5200.00, wedding_date - timedelta(days=7))
         ]
         
         for title, cat_idx, amount, paid, expense_date in expense_data:

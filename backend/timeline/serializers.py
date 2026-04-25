@@ -13,17 +13,18 @@ class TimelineStatusSerializer(serializers.ModelSerializer):
 
 class TimelineEventSerializer(serializers.ModelSerializer):
     """Serializer for TimelineEvent model"""
-    
+
     status = TimelineStatusSerializer(read_only=True)
     status_id = serializers.IntegerField(write_only=True, required=False)
-    
+
     class Meta:
         model = TimelineEvent
         fields = [
-            'id', 'title', 'event_date', 'start_time', 'end_time',
-            'status', 'status_id'
+            'id', 'title', 'description', 'date', 'time', 'type',
+            'status', 'status_id', 'priority', 'location', 'notes',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class TimelineSerializer(serializers.ModelSerializer):
@@ -52,11 +53,14 @@ class TimelineCreateSerializer(serializers.ModelSerializer):
 
 class TimelineEventCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating timeline events"""
-    
+
     class Meta:
         model = TimelineEvent
-        fields = ['title', 'event_date', 'start_time', 'end_time', 'status_id']
-    
+        fields = [
+            'title', 'description', 'date', 'time', 'type',
+            'status_id', 'priority', 'location', 'notes'
+        ]
+
     def create(self, validated_data):
         # Get the timeline for the current user's wedding
         wedding = self.context['request'].user.wedding
@@ -65,12 +69,16 @@ class TimelineEventCreateSerializer(serializers.ModelSerializer):
             defaults={'name': f"{wedding.get_couple_name() or 'Wedding'} Timeline"}
         )
         validated_data['timeline'] = timeline
+        validated_data['wedding'] = wedding
         return TimelineEvent.objects.create(**validated_data)
 
 
 class TimelineEventUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating timeline events"""
-    
+
     class Meta:
         model = TimelineEvent
-        fields = ['title', 'event_date', 'start_time', 'end_time', 'status_id']
+        fields = [
+            'title', 'description', 'date', 'time', 'type',
+            'status_id', 'priority', 'location', 'notes'
+        ]

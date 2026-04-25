@@ -24,42 +24,80 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
     serializer_class = TimelineEventSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'event_date']
-    search_fields = ['title']
-    ordering_fields = ['event_date', 'start_time', 'title']
-    ordering = ['event_date', 'start_time']
-    
+    filterset_fields = ['status', 'date', 'type', 'priority']
+    search_fields = ['title', 'description', 'location']
+    ordering_fields = ['date', 'time', 'title', 'priority']
+    ordering = ['date', 'time']
+
     def get_queryset(self):
         # Get events for the current user's wedding timeline
         try:
             wedding = self.request.user.wedding
             timeline = wedding.timeline
-            return TimelineEvent.objects.filter(timeline=timeline)
+            queryset = TimelineEvent.objects.filter(timeline=timeline)
+
+            # Optional filtering by month, day, or week
+            month = self.request.query_params.get('month')
+            day = self.request.query_params.get('day')
+            week = self.request.query_params.get('week')
+
+            if month:
+                from django.utils import timezone
+                try:
+                    month_date = timezone.datetime.strptime(month, '%Y-%m').date()
+                    queryset = queryset.filter(
+                        date__year=month_date.year,
+                        date__month=month_date.month
+                    )
+                except ValueError:
+                    pass
+
+            if day:
+                from django.utils import timezone
+                try:
+                    day_date = timezone.datetime.strptime(day, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date=day_date)
+                except ValueError:
+                    pass
+
+            if week:
+                from django.utils import timezone
+                from datetime import timedelta
+                try:
+                    week_date = timezone.datetime.strptime(week, '%Y-%W').date()
+                    # Get the start of the week (Monday)
+                    start_of_week = week_date - timedelta(days=week_date.weekday())
+                    end_of_week = start_of_week + timedelta(days=6)
+                    queryset = queryset.filter(date__range=[start_of_week, end_of_week])
+                except ValueError:
+                    pass
+
+            return queryset
         except:
             return TimelineEvent.objects.none()
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return TimelineEventCreateSerializer
         elif self.action in ['update', 'partial_update']:
             return TimelineEventUpdateSerializer
         return TimelineEventSerializer
-    
+
     @action(detail=False, methods=['get'])
     def upcoming(self, request):
         """Get upcoming events"""
         from django.utils import timezone
         today = timezone.now().date()
-        upcoming_events = self.get_queryset().filter(event_date__gte=today)
+        upcoming_events = self.get_queryset().filter(date__gte=today)
         serializer = self.get_serializer(upcoming_events, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['get'])
     def past(self, request):
         """Get past events"""
         from django.utils import timezone
         today = timezone.now().date()
-        past_events = self.get_queryset().filter(event_date__lt=today)
+        past_events = self.get_queryset().filter(date__lt=today)
         serializer = self.get_serializer(past_events, many=True)
         return Response(serializer.data)
 
