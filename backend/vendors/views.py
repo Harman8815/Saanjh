@@ -101,10 +101,10 @@ class VendorListCreateView(generics.ListCreateAPIView):
     """Vendor list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['vendor_type', 'status', 'contract_signed']
-    search_fields = ['name', 'contact_person', 'email', 'phone']
-    ordering_fields = ['name', 'vendor_type', 'status', 'created_at']
-    ordering = ['vendor_type', 'name']
+    filterset_fields = ['status', 'vendor_catalog__category']
+    search_fields = ['vendor_catalog__name', 'vendor_catalog__contact']
+    ordering_fields = ['vendor_catalog__name', 'cost_estimate', 'actual_cost']
+    ordering = ['vendor_catalog__category', 'vendor_catalog__name']
     
     def get_queryset(self):
         return Vendor.objects.filter(wedding=self.request.user.wedding)
