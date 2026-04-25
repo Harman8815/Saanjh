@@ -1,250 +1,90 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Grid3X3, List } from 'lucide-react';
 import CategoryTabs from '../../../components/dashboard/vendors/CategoryTabs';
 import VendorCard from '../../../components/dashboard/vendors/VendorCard';
-import { Vendor, VendorCategory } from '../../../types/vendor';
+import { VendorCatalog } from '../../../types/api';
+import { VendorService } from '../../../services/vendors';
 
-// Sample vendors data - in production, this would come from an API
-const sampleVendors: Vendor[] = [
-  // Photographers
-  {
-    id: 'photo-1',
-    name: 'Moments Forever Photography',
-    category: 'photographer',
-    rating: 4.9,
-    reviewCount: 128,
-    location: 'Los Angeles, CA',
-    description: 'Capturing timeless moments with a blend of candid and artistic photography. Specializing in luxury weddings and engagement shoots.',
-    phone: '+1 (310) 555-0123',
-    email: 'hello@momentsforever.com',
-    website: 'https://momentsforever.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 3500, priceRange: '$$$' },
-    specialty: ['Wedding', 'Engagement', 'Editorial'],
-    equipment: ['Sony A7R IV', 'Canon EOS R5', 'Drone Photography'],
-    portfolio: [],
-    packages: [],
-    style: ['Documentary', 'Fine Art', 'Editorial'],
-    experienceYears: 8,
-    secondShooterAvailable: true,
-    engagementSessionIncluded: true,
-  },
-  {
-    id: 'photo-2',
-    name: 'Lens & Light Studios',
-    category: 'photographer',
-    rating: 4.7,
-    reviewCount: 89,
-    location: 'New York, NY',
-    description: 'Documentary-style wedding photography that tells your unique love story through authentic moments.',
-    phone: '+1 (212) 555-0456',
-    email: 'bookings@lensandlight.com',
-    website: 'https://lensandlight.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 2800, priceRange: '$$' },
-    specialty: ['Documentary', 'Destination Weddings'],
-    equipment: ['Nikon Z9', 'Fujifilm GFX'],
-    portfolio: [],
-    packages: [],
-    style: ['Documentary', 'Natural'],
-    experienceYears: 5,
-    secondShooterAvailable: true,
-    engagementSessionIncluded: false,
-  },
-  
-  // Catering
-  {
-    id: 'cater-1',
-    name: 'Royal Feast Catering',
-    category: 'catering',
-    rating: 4.8,
-    reviewCount: 215,
-    location: 'Chicago, IL',
-    description: 'Award-winning catering service offering exquisite cuisine from around the world. From intimate gatherings to grand celebrations.',
-    phone: '+1 (312) 555-0789',
-    email: 'events@royalfeast.com',
-    website: 'https://royalfeastcatering.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 85, priceRange: '$$$' },
-    cuisine: ['Italian', 'French', 'Mediterranean', 'Indian'],
-    menu: [],
-    packages: [],
-    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Kosher', 'Halal'],
-    serviceStyle: 'plated',
-    tastingsAvailable: true,
-  },
-  {
-    id: 'cater-2',
-    name: 'Garden Fresh Catering',
-    category: 'catering',
-    rating: 4.6,
-    reviewCount: 156,
-    location: 'San Francisco, CA',
-    description: 'Farm-to-table catering focusing on organic, locally-sourced ingredients. Sustainable and delicious.',
-    phone: '+1 (415) 555-0321',
-    email: 'hello@gardenfreshsf.com',
-    website: 'https://gardenfreshsf.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 65, priceRange: '$$' },
-    cuisine: ['Californian', 'Farm-to-Table', 'Organic'],
-    menu: [],
-    packages: [],
-    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free'],
-    serviceStyle: 'buffet',
-    tastingsAvailable: true,
-  },
-  {
-    id: 'cater-3',
-    name: 'Spice Route Catering',
-    category: 'catering',
-    rating: 4.9,
-    reviewCount: 98,
-    location: 'Austin, TX',
-    description: 'Authentic flavors from India, Thailand, and Mexico. Bold, vibrant cuisine that will wow your guests.',
-    phone: '+1 (512) 555-0654',
-    email: 'spice@spiceroutecatering.com',
-    website: 'https://spiceroutecatering.com',
-    status: 'booked',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 55, priceRange: '$$' },
-    cuisine: ['Indian', 'Thai', 'Mexican', 'Fusion'],
-    menu: [],
-    packages: [],
-    dietaryOptions: ['Vegetarian', 'Vegan', 'Gluten-Free', 'Spice Levels Customizable'],
-    serviceStyle: 'family-style',
-    tastingsAvailable: true,
-  },
-  
-  // Decoration
-  {
-    id: 'deco-1',
-    name: 'Blooming Dreams Decor',
-    category: 'decoration',
-    rating: 5.0,
-    reviewCount: 172,
-    location: 'Miami, FL',
-    description: 'Luxury floral arrangements and event design that transforms venues into magical spaces.',
-    phone: '+1 (305) 555-0987',
-    email: 'design@bloomingdreams.com',
-    website: 'https://bloomingdreamsdecor.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 2500, priceRange: '$$$' },
-    styles: ['Romantic', 'Luxury', 'Garden', 'Modern'],
-    themes: ['Classic Romance', 'Boho Chic', 'Glamorous Gold', 'Tropical Paradise'],
-    items: [],
-    packages: [],
-    setupIncluded: true,
-    consultationAvailable: true,
-    customDesignAvailable: true,
-  },
-  {
-    id: 'deco-2',
-    name: 'Elegant Events Design',
-    category: 'decoration',
-    rating: 4.5,
-    reviewCount: 87,
-    location: 'Seattle, WA',
-    description: 'Minimalist and elegant event design with a focus on sustainability and eco-friendly materials.',
-    phone: '+1 (206) 555-0143',
-    email: 'hello@elegante.design',
-    website: 'https://elegante.design',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 1800, priceRange: '$$' },
-    styles: ['Minimalist', 'Scandinavian', 'Eco-Friendly'],
-    themes: ['Nordic Elegance', 'Green Wedding', 'Modern Simplicity'],
-    items: [],
-    packages: [],
-    setupIncluded: true,
-    consultationAvailable: true,
-    customDesignAvailable: true,
-  },
-  
-  // Others
-  {
-    id: 'other-1',
-    name: 'VIP Transportation Services',
-    category: 'others',
-    rating: 4.8,
-    reviewCount: 203,
-    location: 'Las Vegas, NV',
-    description: 'Luxury wedding transportation with a fleet of limousines, vintage cars, and party buses.',
-    phone: '+1 (702) 555-0276',
-    email: 'bookings@viptranspo.com',
-    website: 'https://viptranspo.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 450, priceRange: '$$' },
-    subcategory: 'Transportation',
-    services: ['Limousine Service', 'Vintage Car Rental', 'Party Bus', 'Guest Shuttle'],
-    packages: [],
-    certifications: ['Licensed & Insured', 'Professional Chauffeurs'],
-    insuranceAvailable: true,
-  },
-  {
-    id: 'other-2',
-    name: 'Harmony Wedding DJ',
-    category: 'others',
-    rating: 4.7,
-    reviewCount: 134,
-    location: 'Nashville, TN',
-    description: 'Professional DJ services with state-of-the-art sound equipment and lighting. Keeping the dance floor packed!',
-    phone: '+1 (615) 555-0509',
-    email: 'beats@harmonyweddingdj.com',
-    website: 'https://harmonyweddingdj.com',
-    status: 'available',
-    image: '',
-    gallery: [],
-    pricing: { currency: '$', startingPrice: 800, priceRange: '$$' },
-    subcategory: 'Music & Entertainment',
-    services: ['DJ & MC Services', 'Lighting Design', 'Photo Booth', 'Live Musicians'],
-    packages: [],
-    certifications: ['Licensed & Insured'],
-    insuranceAvailable: true,
-  },
-];
+type CategoryType = 'photographer' | 'catering' | 'decoration' | 'others' | 'all';
 
 export default function VendorsPage() {
-  const [activeCategory, setActiveCategory] = useState<VendorCategory | 'all'>('all');
+  const [vendors, setVendors] = useState<VendorCatalog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Fetch vendor catalog from API
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        setIsLoading(true);
+        const catalog = await VendorService.getVendorCatalog();
+        setVendors(catalog);
+      } catch (err: any) {
+        console.error('Error fetching vendor catalog:', err);
+        setError(err.message || 'Failed to load vendors');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVendors();
+  }, []);
+
   // Calculate category counts
   const categoryCounts = useMemo(() => {
-    const counts: Record<VendorCategory | 'all', number> = { all: sampleVendors.length, photographer: 0, catering: 0, decoration: 0, others: 0 };
-    sampleVendors.forEach(vendor => {
-      counts[vendor.category]++;
+    const counts: Record<CategoryType, number> = { all: vendors.length, photographer: 0, catering: 0, decoration: 0, others: 0 };
+    vendors.forEach(vendor => {
+      const catName = vendor.category?.name?.toLowerCase() || 'others';
+      if (catName.includes('photo')) counts.photographer++;
+      else if (catName.includes('cater')) counts.catering++;
+      else if (catName.includes('decor')) counts.decoration++;
+      else counts.others++;
     });
     return counts;
-  }, []);
+  }, [vendors]);
 
   // Filter vendors based on category and search
   const filteredVendors = useMemo(() => {
-    return sampleVendors.filter(vendor => {
-      const matchesCategory = activeCategory === 'all' || vendor.category === activeCategory;
-      const matchesSearch = 
+    return vendors.filter(vendor => {
+      const catName = vendor.category?.name?.toLowerCase() || 'others';
+      const category: CategoryType = catName.includes('photo') ? 'photographer' :
+                      catName.includes('cater') ? 'catering' :
+                      catName.includes('decor') ? 'decoration' : 'others';
+
+      const matchesCategory = activeCategory === 'all' || category === activeCategory;
+      const matchesSearch =
         vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vendor.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vendor.location.toLowerCase().includes(searchQuery.toLowerCase());
+        (vendor.contact && vendor.contact.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, vendors]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Loading vendors...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
