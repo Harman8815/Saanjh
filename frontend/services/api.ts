@@ -15,13 +15,24 @@ class ApiClient {
       },
     });
 
-    // Request interceptor for adding auth token
+    console.log('API Client initialized with baseURL:', API_BASE_URL);
+
+    // Request interceptor for adding auth token and cache busting
     this.client.interceptors.request.use(
       (config) => {
         const token = this.getAuthToken();
         if (token) {
           config.headers.Authorization = `Token ${token}`;
         }
+
+        // Add cache-busting parameter to GET requests
+        if (config.method === 'get') {
+          config.params = {
+            ...config.params,
+            _t: Date.now()
+          };
+        }
+
         return config;
       },
       (error) => Promise.reject(error)

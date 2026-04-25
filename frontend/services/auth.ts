@@ -11,7 +11,9 @@ export class AuthService {
   // Login user
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
+      console.log('Attempting login with:', credentials.username);
       const response = await apiClient.post<AuthResponse>('auth/login/', credentials);
+      console.log('Login response:', response);
       
       // Store token and user data
       if (response.token) {
