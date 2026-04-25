@@ -180,9 +180,9 @@ class ExpenseListCreateView(generics.ListCreateAPIView):
     """Expense list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['category', 'payment_status', 'vendor']
-    search_fields = ['description', 'notes']
-    ordering_fields = ['expense_date', 'due_date', 'created_at', 'description']
+    filterset_fields = ['budget_category', 'status', 'vendor']
+    search_fields = ['title', 'notes']
+    ordering_fields = ['expense_date', 'due_date', 'created_at', 'title']
     ordering = ['-expense_date']
     
     def get_queryset(self):
@@ -239,17 +239,20 @@ class ExpenseDetailView(generics.RetrieveUpdateDestroyAPIView):
 def expense_bulk_payment_update(request):
     """Bulk update payment status for multiple expenses"""
     expense_ids = request.data.get('expense_ids', [])
-    payment_status = request.data.get('payment_status')
+    status_id = request.data.get('status_id')
+    paid_amount = request.data.get('paid_amount')
     paid_date = request.data.get('paid_date')
     
-    if not expense_ids or not payment_status:
+    if not expense_ids or not status_id:
         return APIResponse.error(
-            "expense_ids and payment_status are required",
-            ["Missing required fields: expense_ids and payment_status"],
+            "expense_ids and status_id are required",
+            ["Missing required fields: expense_ids and status_id"],
             status.HTTP_400_BAD_REQUEST
         )
     
-    update_data = {'payment_status': payment_status}
+    update_data = {'status_id': status_id}
+    if paid_amount is not None:
+        update_data['paid_amount'] = paid_amount
     if paid_date:
         update_data['paid_date'] = paid_date
     
@@ -273,45 +276,44 @@ def expense_statistics(request):
         # Basic statistics
         stats = {
             'total_expenses': expenses.count(),
-            'total_estimated': expenses.aggregate(total=Sum('estimated_cost'))['total'] or 0,
-            'total_actual': expenses.aggregate(total=Sum('actual_cost'))['total'] or 0,
-            'total_paid': expenses.aggregate(total=Sum('amount_paid'))['total'] or 0,
+            'total_amount': expenses.aggregate(total=Sum('amount'))['total'] or 0,
+            'total_paid': expenses.aggregate(total=Sum('paid_amount'))['total'] or 0,
         }
         
-        stats['remaining_balance'] = stats['total_actual'] - stats['total_paid']
+        stats['remaining_balance'] = stats['total_amount'] - stats['total_paid']
         
         # Budget comparison
-        if wedding.budget:
-            stats['budget'] = wedding.budget
-            stats['budget_used'] = (stats['total_actual'] / wedding.budget * 100)
-            stats['budget_remaining'] = wedding.budget - stats['total_actual']
+        total_budget = wedding.budget_categories.aggregate(total=Sum('allocated_amount'))['total'] or 0
+        stats['total_budget'] = total_budget
+        if total_budget > 0:
+            stats['budget_used'] = (stats['total_paid'] / total_budget * 100)
+            stats['budget_remaining'] = total_budget - stats['total_paid']
         else:
-            stats['budget'] = 0
             stats['budget_used'] = 0
             stats['budget_remaining'] = 0
         
-        # Payment status breakdown
-        payment_stats = {}
+        # Status breakdown
+        status_stats = {}
         for expense in expenses:
-            status = expense.get_payment_status_display()
-            payment_stats[status] = payment_stats.get(status, 0) + 1
-        stats['by_payment_status'] = payment_stats
+            if expense.status:
+                status_name = expense.status.name
+                status_stats[status_name] = status_stats.get(status_name, 0) + 1
+        stats['by_status'] = status_stats
         
         # Category breakdown
         category_stats = {}
         for expense in expenses:
-            category = expense.get_category_display()
-            if category not in category_stats:
-                category_stats[category] = {
-                    'count': 0,
-                    'estimated': 0,
-                    'actual': 0,
-                    'paid': 0
-                }
-            category_stats[category]['count'] += 1
-            category_stats[category]['estimated'] += expense.estimated_cost
-            category_stats[category]['actual'] += expense.actual_cost or 0
-            category_stats[category]['paid'] += expense.amount_paid
+            if expense.budget_category:
+                category = expense.budget_category.name
+                if category not in category_stats:
+                    category_stats[category] = {
+                        'count': 0,
+                        'amount': 0,
+                        'paid': 0
+                    }
+                category_stats[category]['count'] += 1
+                category_stats[category]['amount'] += expense.amount
+                category_stats[category]['paid'] += expense.paid_amount
         
         stats['by_category'] = category_stats
         
@@ -320,7 +322,7 @@ def expense_statistics(request):
         today = timezone.now().date()
         overdue_expenses = expenses.filter(
             due_date__lt=today,
-            payment_status__in=['pending', 'partial']
+            status__name__in=['pending', 'partial']
         ).count()
         stats['overdue_count'] = overdue_expenses
         
@@ -328,14 +330,13 @@ def expense_statistics(request):
     except:
         stats = {
             'total_expenses': 0,
-            'total_estimated': 0,
-            'total_actual': 0,
+            'total_amount': 0,
             'total_paid': 0,
             'remaining_balance': 0,
-            'budget': 0,
+            'total_budget': 0,
             'budget_used': 0,
             'budget_remaining': 0,
-            'by_payment_status': {},
+            'by_status': {},
             'by_category': {},
             'overdue_count': 0
         }
@@ -351,7 +352,7 @@ def expense_overdue(request):
     expenses = Expense.objects.filter(
         wedding=request.user.wedding,
         due_date__lt=today,
-        payment_status__in=['pending', 'partial']
+        status__name__in=['pending', 'partial']
     ).order_by('due_date')
     
     serializer = ExpenseSerializer(expenses, many=True)
@@ -369,7 +370,7 @@ def expense_upcoming(request):
         wedding=request.user.wedding,
         due_date__gte=today,
         due_date__lte=thirty_days_later,
-        payment_status__in=['pending', 'partial']
+        status__name__in=['pending', 'partial']
     ).order_by('due_date')
     
     serializer = ExpenseSerializer(expenses, many=True)
@@ -389,10 +390,10 @@ def expense_summary(request):
         for expense in recent_expenses:
             recent_data.append({
                 'id': expense.id,
-                'description': expense.description,
-                'category': expense.get_category_display(),
-                'amount': expense.actual_cost or expense.estimated_cost,
-                'payment_status': expense.get_payment_status_display(),
+                'title': expense.title,
+                'category': expense.budget_category.name if expense.budget_category else '',
+                'amount': expense.amount,
+                'status': expense.status.name if expense.status else '',
                 'date': expense.created_at
             })
         
@@ -401,16 +402,16 @@ def expense_summary(request):
         today = timezone.now().date()
         upcoming_payments = expenses.filter(
             due_date__gte=today,
-            payment_status__in=['pending', 'partial']
+            status__name__in=['pending', 'partial']
         ).order_by('due_date')[:5]
         
         upcoming_data = []
         for expense in upcoming_payments:
             upcoming_data.append({
                 'id': expense.id,
-                'description': expense.description,
+                'title': expense.title,
                 'due_date': expense.due_date,
-                'amount': expense.actual_cost or expense.estimated_cost,
+                'amount': expense.amount,
                 'remaining_balance': expense.remaining_balance()
             })
         
