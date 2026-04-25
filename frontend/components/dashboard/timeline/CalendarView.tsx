@@ -6,8 +6,9 @@ import { useMemo } from 'react';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import DayView from './DayView';
+import { TimelineEvent } from '../../../types/api';
 
-interface Event {
+interface LocalEvent {
   id: number;
   title: string;
   date: string;
@@ -19,7 +20,7 @@ interface Event {
 }
 
 interface CalendarViewProps {
-  events: Event[];
+  events: TimelineEvent[];
   calendarView: 'month' | 'week' | 'day';
   setCalendarView: (view: 'month' | 'week' | 'day') => void;
   currentDate: Date;
@@ -27,8 +28,42 @@ interface CalendarViewProps {
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
   getStatusColor: (status: string) => string;
-  getEventsForDate: (date: Date) => Event[];
+  getEventsForDate: (date: Date) => TimelineEvent[];
 }
+
+// Transform TimelineEvent to local Event format for child components
+const transformEvent = (event: TimelineEvent): LocalEvent => {
+  const typeToCategory: Record<string, 'milestone' | 'planning' | 'ceremony' | 'reception'> = {
+    'milestone': 'milestone',
+    'planning': 'planning',
+    'ceremony': 'ceremony',
+    'reception': 'reception',
+    'meeting': 'planning',
+    'payment': 'planning',
+    'deadline': 'planning',
+    'task': 'planning',
+    'reminder': 'planning',
+    'event': 'planning'
+  };
+
+  const statusMap: Record<string, 'completed' | 'in-progress' | 'upcoming'> = {
+    'completed': 'completed',
+    'pending': 'upcoming',
+    'overdue': 'upcoming',
+    'cancelled': 'upcoming'
+  };
+
+  return {
+    id: event.id,
+    title: event.title,
+    date: event.date,
+    time: event.time || '09:00 AM',
+    location: event.location || 'TBD',
+    status: statusMap[event.status] || 'upcoming',
+    category: typeToCategory[event.type] || 'planning',
+    color: undefined
+  };
+};
 
 export default function CalendarView({
   events,
@@ -41,6 +76,13 @@ export default function CalendarView({
   getStatusColor,
   getEventsForDate
 }: CalendarViewProps) {
+  // Transform events to local format
+  const transformedEvents = events.map(transformEvent);
+
+  // Transform getEventsForDate to return local events
+  const getTransformedEventsForDate = (date: Date): LocalEvent[] => {
+    return getEventsForDate(date).map(transformEvent);
+  };
   const timeSlots = Array.from({ length: 24 }, (_, i) => i);
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -193,26 +235,32 @@ export default function CalendarView({
 
       {/* View Content */}
       {calendarView === 'month' && (
-        <MonthView 
-          days={calendarDays} 
-          selectedDate={selectedDate} 
-          onSelectDate={setSelectedDate} 
+        <MonthView
+          days={calendarDays.map(day => ({
+            ...day,
+            events: day.events.map(transformEvent)
+          }))}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
         />
       )}
 
       {calendarView === 'week' && (
-        <WeekView 
-          weekDays={weekDays} 
-          timeSlots={timeSlots} 
+        <WeekView
+          weekDays={weekDays.map(day => ({
+            ...day,
+            events: day.events.map(transformEvent)
+          }))}
+          timeSlots={timeSlots}
         />
       )}
 
       {calendarView === 'day' && (
-        <DayView 
+        <DayView
           currentDate={currentDate}
           timeSlots={timeSlots}
-          events={events}
-          getEventsForDate={getEventsForDate}
+          events={transformedEvents}
+          getEventsForDate={getTransformedEventsForDate}
           getStatusColor={getStatusColor}
         />
       )}

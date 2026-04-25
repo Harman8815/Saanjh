@@ -1,8 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { TimelineEvent } from '../../../types/api';
 
-interface Event {
+interface LocalEvent {
   id: number;
   title: string;
   date: string;
@@ -12,8 +13,41 @@ interface Event {
   color?: string;
 }
 
+// Transform TimelineEvent to local Event format
+const transformEvent = (event: TimelineEvent): LocalEvent => {
+  const typeToCategory: Record<string, 'milestone' | 'planning' | 'ceremony' | 'reception'> = {
+    'milestone': 'milestone',
+    'planning': 'planning',
+    'ceremony': 'ceremony',
+    'reception': 'reception',
+    'meeting': 'planning',
+    'payment': 'planning',
+    'deadline': 'planning',
+    'task': 'planning',
+    'reminder': 'planning',
+    'event': 'planning'
+  };
+
+  const statusMap: Record<string, 'completed' | 'in-progress' | 'upcoming'> = {
+    'completed': 'completed',
+    'pending': 'upcoming',
+    'overdue': 'upcoming',
+    'cancelled': 'upcoming'
+  };
+
+  return {
+    id: event.id,
+    title: event.title,
+    date: event.date,
+    location: event.location || 'TBD',
+    status: statusMap[event.status] || 'upcoming',
+    category: typeToCategory[event.type] || 'planning',
+    color: undefined
+  };
+};
+
 // Get color border class based on event color or category
-const getEventBorderColor = (event: Event): string => {
+const getEventBorderColor = (event: LocalEvent): string => {
   if (event.color) {
     switch (event.color) {
       case 'rose': return 'border-l-rose-500';
@@ -40,11 +74,13 @@ const getEventBorderColor = (event: Event): string => {
 };
 
 interface ChecklistViewProps {
-  events: Event[];
+  events: TimelineEvent[];
   getStatusColor: (status: string) => string;
 }
 
 export default function ChecklistView({ events, getStatusColor }: ChecklistViewProps) {
+  // Transform events to local format
+  const transformedEvents = events.map(transformEvent);
   return (
     <motion.div
       key="checklist"
@@ -54,7 +90,7 @@ export default function ChecklistView({ events, getStatusColor }: ChecklistViewP
       transition={{ duration: 0.3 }}
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
     >
-      {events.map((event, index) => (
+      {transformedEvents.map((event, index) => (
         <motion.div
           key={event.id}
           initial={{ opacity: 0, scale: 0.95 }}
