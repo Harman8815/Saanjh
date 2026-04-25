@@ -3,29 +3,28 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/common/Modal';
 import { Calendar, Clock, MapPin, FileText, Tag, AlertCircle } from 'lucide-react';
-import { Event, suggestColorFromKeywords } from '../../../types/event';
-import ColorPicker from './ColorPicker';
+import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
 
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Omit<Event, 'id'> & { id?: number }) => void;
-  event?: Event | null;
+  onSubmit: (event: TimelineEventCreateRequest | TimelineEvent) => void;
+  event?: TimelineEvent | null;
   mode: 'create' | 'edit';
 }
 
-type FormData = Omit<Event, 'id'> & { id?: number };
+type FormData = TimelineEventCreateRequest & { id?: number };
 
 const initialFormData: FormData = {
   title: '',
   date: new Date().toISOString().split('T')[0],
   time: '09:00',
-  duration: 60,
+  type: 'event',
+  priority: 'medium',
   location: '',
   description: '',
-  status: 'upcoming',
-  category: 'planning',
-  color: undefined
+  notes: '',
+  attendees: []
 };
 
 export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode }: EventFormModalProps) {
@@ -34,7 +33,18 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
 
   useEffect(() => {
     if (event && mode === 'edit') {
-      setFormData(event);
+      setFormData({
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        time: event.time || '09:00',
+        type: event.type,
+        priority: event.priority || 'medium',
+        location: event.location || '',
+        description: event.description || '',
+        notes: event.notes || '',
+        attendees: event.attendees || []
+      });
     } else {
       setFormData(initialFormData);
     }
@@ -46,8 +56,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.time) newErrors.time = 'Time is required';
-    if (!formData.location.trim()) newErrors.location = 'Location is required';
-    if (formData.duration < 15) newErrors.duration = 'Minimum 15 minutes';
+    if (!formData.location?.trim()) newErrors.location = 'Location is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -61,21 +70,10 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
     }
   };
 
-  const handleChange = (field: keyof FormData, value: string | number | undefined) => {
+  const handleChange = (field: keyof FormData, value: string | number | string[] | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  // Auto-suggest color when title changes (only if no color is selected)
-  const handleTitleChange = (value: string) => {
-    handleChange('title', value);
-    if (!formData.color && value.trim()) {
-      const suggestedColor = suggestColorFromKeywords(value);
-      if (suggestedColor !== 'rose') { // Only auto-apply if it's a meaningful suggestion
-        handleChange('color', suggestedColor);
-      }
     }
   };
 
@@ -120,7 +118,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => handleTitleChange(e.target.value)}
+            onChange={(e) => handleChange('title', e.target.value)}
             placeholder="e.g., Wedding Ceremony"
             className={inputClasses('title')}
           />
@@ -169,81 +167,61 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
           </div>
         </div>
 
-        {/* Duration & Location Row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
-              <Clock size={16} />
-              Duration (minutes)
-            </label>
-            <select
-              value={formData.duration}
-              onChange={(e) => handleChange('duration', parseInt(e.target.value))}
-              className={inputClasses('duration')}
-            >
-              <option value={15}>15 min</option>
-              <option value={30}>30 min</option>
-              <option value={45}>45 min</option>
-              <option value={60}>1 hour</option>
-              <option value={90}>1.5 hours</option>
-              <option value={120}>2 hours</option>
-              <option value={180}>3 hours</option>
-              <option value={240}>4 hours</option>
-            </select>
-          </div>
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
-              <MapPin size={16} />
-              Location
-            </label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="e.g., Grand Ballroom"
-              className={inputClasses('location')}
-            />
-            {errors.location && (
-              <p className="flex items-center gap-1 mt-1 text-xs text-red-400">
-                <AlertCircle size={12} /> {errors.location}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Category & Status Row */}
+        {/* Type & Priority Row */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
               <Tag size={16} />
-              Category
+              Type
             </label>
             <select
-              value={formData.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-              className={inputClasses('category')}
+              value={formData.type}
+              onChange={(e) => handleChange('type', e.target.value as any)}
+              className={inputClasses('type')}
             >
-              <option value="milestone">Milestone</option>
-              <option value="planning">Planning</option>
-              <option value="ceremony">Ceremony</option>
-              <option value="reception">Reception</option>
+              <option value="event">Event</option>
+              <option value="meeting">Meeting</option>
+              <option value="payment">Payment</option>
+              <option value="deadline">Deadline</option>
+              <option value="task">Task</option>
+              <option value="reminder">Reminder</option>
             </select>
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
               <AlertCircle size={16} />
-              Status
+              Priority
             </label>
             <select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-              className={inputClasses('status')}
+              value={formData.priority}
+              onChange={(e) => handleChange('priority', e.target.value as any)}
+              className={inputClasses('priority')}
             >
-              <option value="upcoming">Upcoming</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
+        </div>
+
+        {/* Location */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
+            <MapPin size={16} />
+            Location
+          </label>
+          <input
+            type="text"
+            value={formData.location}
+            onChange={(e) => handleChange('location', e.target.value)}
+            placeholder="e.g., Grand Ballroom"
+            className={inputClasses('location')}
+          />
+          {errors.location && (
+            <p className="flex items-center gap-1 mt-1 text-xs text-red-400">
+              <AlertCircle size={12} /> {errors.location}
+            </p>
+          )}
         </div>
 
         {/* Description */}
@@ -261,13 +239,20 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
           />
         </div>
 
-        {/* Color Picker */}
-        <ColorPicker
-          value={formData.color}
-          onChange={(color) => handleChange('color', color)}
-          title={formData.title}
-          description={formData.description}
-        />
+        {/* Notes */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
+            <FileText size={16} />
+            Notes
+          </label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => handleChange('notes', e.target.value)}
+            placeholder="Additional notes..."
+            rows={2}
+            className={`${inputClasses('notes')} resize-none`}
+          />
+        </div>
       </form>
     </Modal>
   );

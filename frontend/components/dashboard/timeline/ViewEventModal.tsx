@@ -1,14 +1,14 @@
 'use client';
 
 import Modal from '../../../components/common/Modal';
-import { Calendar, Clock, MapPin, FileText, Tag, CheckCircle2, Loader2, Circle, Edit3, Trash2, Palette } from 'lucide-react';
-import { Event, getEventColor } from '../../../types/event';
+import { Calendar, Clock, MapPin, FileText, Tag, CheckCircle2, Loader2, Circle, Edit3, Trash2 } from 'lucide-react';
+import { TimelineEvent } from '../../../types/api';
 
 interface ViewEventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  event: Event | null;
-  onEdit: () => void;
+  event: TimelineEvent | null;
+  onEdit: (event: TimelineEvent) => void;
   onDelete: () => void;
 }
 
@@ -16,51 +16,52 @@ const getStatusConfig = (status: string) => {
   switch (status) {
     case 'completed':
       return { icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10', label: 'Completed' };
-    case 'in-progress':
-      return { icon: Loader2, color: 'text-yellow-400', bg: 'bg-yellow-500/10', label: 'In Progress' };
+    case 'overdue':
+      return { icon: Circle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Overdue' };
+    case 'cancelled':
+      return { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'Cancelled' };
     default:
-      return { icon: Circle, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Upcoming' };
+      return { icon: Circle, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Pending' };
   }
 };
 
-const getCategoryConfig = (category: string) => {
-  switch (category) {
-    case 'milestone':
-      return { color: 'text-rose-400', bg: 'bg-rose-500/10', label: 'Milestone' };
-    case 'planning':
-      return { color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Planning' };
-    case 'ceremony':
-      return { color: 'text-violet-400', bg: 'bg-violet-500/10', label: 'Ceremony' };
-    case 'reception':
-      return { color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Reception' };
+const getTypeConfig = (type: string) => {
+  switch (type) {
+    case 'meeting':
+      return { color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Meeting' };
+    case 'payment':
+      return { color: 'text-green-400', bg: 'bg-green-500/10', label: 'Payment' };
+    case 'deadline':
+      return { color: 'text-red-400', bg: 'bg-red-500/10', label: 'Deadline' };
+    case 'task':
+      return { color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Task' };
+    case 'reminder':
+      return { color: 'text-violet-400', bg: 'bg-violet-500/10', label: 'Reminder' };
     default:
-      return { color: 'text-slate-400', bg: 'bg-slate-500/10', label: category };
+      return { color: 'text-rose-400', bg: 'bg-rose-500/10', label: 'Event' };
   }
 };
 
-const formatTime = (time: string, duration: number): string => {
-  const [hours, minutes] = time.split(':').map(Number);
-  const startMinutes = hours * 60 + minutes;
-  const endMinutes = startMinutes + duration;
-  
-  const formatMinutes = (mins: number): string => {
-    const h = Math.floor(mins / 60) % 24;
-    const m = mins % 60;
-    const period = h >= 12 ? 'PM' : 'AM';
-    const displayH = h % 12 || 12;
-    return `${displayH}:${m.toString().padStart(2, '0')} ${period}`;
-  };
-  
-  return `${formatMinutes(startMinutes)} - ${formatMinutes(endMinutes)}`;
+const getPriorityConfig = (priority?: string) => {
+  switch (priority) {
+    case 'high':
+      return { color: 'text-red-400', bg: 'bg-red-500/10', label: 'High' };
+    case 'medium':
+      return { color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Medium' };
+    case 'low':
+      return { color: 'text-green-400', bg: 'bg-green-500/10', label: 'Low' };
+    default:
+      return { color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'None' };
+  }
 };
 
 export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelete }: ViewEventModalProps) {
   if (!event) return null;
 
   const statusConfig = getStatusConfig(event.status);
-  const categoryConfig = getCategoryConfig(event.category);
+  const typeConfig = getTypeConfig(event.type);
+  const priorityConfig = getPriorityConfig(event.priority);
   const StatusIcon = statusConfig.icon;
-  const eventColor = getEventColor(event.color);
 
   return (
     <Modal
@@ -84,7 +85,7 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
             Close
           </button>
           <button
-            onClick={onEdit}
+            onClick={() => onEdit(event)}
             className="flex items-center gap-2 px-6 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
           >
             <Edit3 size={18} />
@@ -98,34 +99,21 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-text-primary mb-2">{event.title}</h2>
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${categoryConfig.bg} ${categoryConfig.color}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${typeConfig.bg} ${typeConfig.color}`}>
                 <Tag size={12} />
-                {categoryConfig.label}
+                {typeConfig.label}
               </span>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
-                <StatusIcon size={12} className={event.status === 'in-progress' ? 'animate-spin' : ''} />
+                <StatusIcon size={12} />
                 {statusConfig.label}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${priorityConfig.bg} ${priorityConfig.color}`}>
+                {priorityConfig.label}
               </span>
             </div>
           </div>
         </div>
-
-        {/* Color Indicator */}
-        {event.color && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: eventColor.hex + '20' }}
-            >
-              <Palette size={20} style={{ color: eventColor.hex }} />
-            </div>
-            <div>
-              <p className="text-xs text-text-muted uppercase tracking-wide">Event Color</p>
-              <p className="text-text-primary font-medium">{eventColor.name}</p>
-            </div>
-          </div>
-        )}
 
         {/* Details Grid */}
         <div className="grid gap-4">
@@ -137,38 +125,41 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
             <div>
               <p className="text-xs text-text-muted uppercase tracking-wide">Date</p>
               <p className="text-text-primary font-medium">
-                {new Date(event.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric', 
-                  year: 'numeric' 
+                {new Date(event.date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
                 })}
               </p>
             </div>
           </div>
 
           {/* Time */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-              <Clock size={20} className="text-primary" />
+          {event.time && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                <Clock size={20} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-text-muted uppercase tracking-wide">Time</p>
+                <p className="text-text-primary font-medium">{event.time}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-text-muted uppercase tracking-wide">Time</p>
-              <p className="text-text-primary font-medium">{formatTime(event.time, event.duration)}</p>
-              <p className="text-xs text-text-muted">{event.duration} minutes</p>
-            </div>
-          </div>
+          )}
 
           {/* Location */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-              <MapPin size={20} className="text-primary" />
+          {event.location && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                <MapPin size={20} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-text-muted uppercase tracking-wide">Location</p>
+                <p className="text-text-primary font-medium">{event.location}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-text-muted uppercase tracking-wide">Location</p>
-              <p className="text-text-primary font-medium">{event.location}</p>
-            </div>
-          </div>
+          )}
 
           {/* Description */}
           {event.description && (
@@ -179,6 +170,32 @@ export default function ViewEventModal({ isOpen, onClose, event, onEdit, onDelet
               <div>
                 <p className="text-xs text-text-muted uppercase tracking-wide">Description</p>
                 <p className="text-text-primary">{event.description}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          {event.notes && (
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                <FileText size={20} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-text-muted uppercase tracking-wide">Notes</p>
+                <p className="text-text-primary">{event.notes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Attendees */}
+          {event.attendees && event.attendees.length > 0 && (
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                <Tag size={20} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-text-muted uppercase tracking-wide">Attendees</p>
+                <p className="text-text-primary">{event.attendees.join(', ')}</p>
               </div>
             </div>
           )}
