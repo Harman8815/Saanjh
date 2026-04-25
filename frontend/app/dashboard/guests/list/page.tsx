@@ -13,7 +13,7 @@ export default function GuestListPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [apiPage, setApiPage] = useState(1);
   const [totalGuests, setTotalGuests] = useState(0);
 
   // Fetch guests from API
@@ -21,7 +21,7 @@ export default function GuestListPage() {
     const fetchGuests = async () => {
       try {
         setIsLoading(true);
-        const response = await GuestService.getGuests(currentPage, 50);
+        const response = await GuestService.getGuests(apiPage, 50);
         setGuests(response.results);
         setTotalGuests(response.count);
       } catch (err: any) {
@@ -33,7 +33,7 @@ export default function GuestListPage() {
     };
 
     fetchGuests();
-  }, [currentPage]);
+  }, [apiPage]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTable, setSelectedTable] = useState('all');
@@ -165,21 +165,14 @@ export default function GuestListPage() {
     setShowAddGuestModal(true);
   };
 
-  const handleSaveGuest = async (guest: Omit<Guest, 'id'>) => {
-    try {
-      if (editingGuest) {
-        const updated = await GuestService.updateGuest(editingGuest.id, guest);
-        setGuests(guests.map(g => g.id === editingGuest.id ? updated : g));
-      } else {
-        const created = await GuestService.createGuest(guest);
-        setGuests([...guests, created]);
-      }
-      setShowAddGuestModal(false);
-      setEditingGuest(null);
-    } catch (err: any) {
-      console.error('Error saving guest:', err);
-      alert(err.message || 'Failed to save guest');
+  const handleSaveGuest = (guest: Guest) => {
+    if (editingGuest) {
+      setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
+    } else {
+      setGuests([...guests, guest]);
     }
+    setShowAddGuestModal(false);
+    setEditingGuest(null);
   };
 
   const handleDeleteGuest = async (guestId: number) => {
