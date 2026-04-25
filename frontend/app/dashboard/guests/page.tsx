@@ -8,9 +8,11 @@ import { motion } from 'framer-motion';
 import { Users, Check, Clock, X, List, MapPin, Utensils, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../components/dashboard/GuestLayoutSkeleton';
+import { GuestService } from '../../../services/guests';
 
 export default function GuestManagementDashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     confirmed: 0,
@@ -18,19 +20,26 @@ export default function GuestManagementDashboard() {
     declined: 0
   });
 
-  // Simulate data loading
+  // Fetch guest statistics from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats({
-        total: 150,
-        confirmed: 89,
-        pending: 45,
-        declined: 16
-      });
-      setIsLoading(false);
-    }, 1500); // Simulate 1.5 second loading time
+    const fetchStats = async () => {
+      try {
+        const statistics = await GuestService.getStatistics();
+        setStats({
+          total: statistics.total_guests,
+          confirmed: statistics.confirmed,
+          pending: statistics.pending,
+          declined: statistics.declined
+        });
+      } catch (err: any) {
+        console.error('Error fetching guest statistics:', err);
+        setError(err.message || 'Failed to load guest statistics');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchStats();
   }, []);
 
   const dashboardCards = [
