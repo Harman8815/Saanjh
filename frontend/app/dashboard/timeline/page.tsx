@@ -104,7 +104,7 @@ export default function TimelinePage() {
   };
 
   const handleDeleteEvent = async () => {
-    if (selectedEventData) {
+    if (selectedEventData && selectedEventData.id) {
       try {
         await TimelineService.deleteTimelineEvent(selectedEventData.id);
         setEvents(prev => prev.filter(e => e.id !== selectedEventData.id));
@@ -114,6 +114,8 @@ export default function TimelinePage() {
         console.error('Error deleting event:', err);
         alert(err.message || 'Failed to delete event');
       }
+    } else {
+      alert('Invalid event: Missing event ID');
     }
   };
 
@@ -155,6 +157,11 @@ export default function TimelinePage() {
   };
 
   const handleDayModalDelete = (event: TimelineEvent) => {
+    if (!event.id) {
+      console.error('Event has no ID:', event);
+      alert('Invalid event: Missing event ID');
+      return;
+    }
     setSelectedEventData(event);
     setIsDayModalOpen(false);
     setIsDeleteModalOpen(true);
@@ -170,10 +177,11 @@ export default function TimelinePage() {
   };
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
+    const filteredEvents = events.filter(event => {
       const eventDate = new Date(event.date);
       return eventDate.toDateString() === date.toDateString();
     });
+    return filteredEvents;
   };
 
   if (error) {
