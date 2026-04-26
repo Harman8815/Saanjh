@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { X, Download, Upload, Info, Filter, ChevronRight, Edit2, Trash2, UserPlus, CheckSquare, Square } from 'lucide-react';
 // import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
+import DeleteGuestModal from '../../../../components/dashboard/DeleteGuestModal';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
 import { Guest } from '../../../../types/api';
 import { GuestService } from '../../../../services/guests';
@@ -54,6 +55,9 @@ export default function GuestListPage() {
   const [selectedGuestForDetail, setSelectedGuestForDetail] = useState<Guest | null>(null);
   const [showGroupGuestsModal, setShowGroupGuestsModal] = useState(false);
   const [selectedGroupForModal, setSelectedGroupForModal] = useState<{ name: string; guests: Guest[] } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filters, setFilters] = useState({
     rsvpStatus: 'all',
     side: 'all',
@@ -64,23 +68,21 @@ export default function GuestListPage() {
 
   // Filter guests based on table assignment and advanced filters
   const filteredGuests = guests.filter((guest: Guest) => {
-    const matchesTable = selectedTable === 'all' || guest.table === selectedTable;
+    const matchesTable = selectedTable === 'all' || guest.table?.id?.toString() === selectedTable;
 
     // Advanced filters
-    const matchesRSVP = filters.rsvpStatus === 'all' || guest.rsvpStatus === filters.rsvpStatus;
-    const matchesSide = filters.side === 'all' || guest.side === filters.side;
-    const matchesPlusOne = filters.plusOne === 'all' ||
-      (filters.plusOne === 'yes' && guest.plusOne) ||
-      (filters.plusOne === 'no' && !guest.plusOne);
+    const matchesRSVP = filters.rsvpStatus === 'all' || guest.rsvp_status?.name === filters.rsvpStatus;
+    const matchesSide = filters.side === 'all'; // Side is not in the backend model anymore
+    const matchesPlusOne = filters.plusOne === 'all'; // PlusOne is not in the backend model anymore
     const matchesMeal = filters.mealPreference === 'all' ||
-      guest.mealPreference?.toLowerCase().includes(filters.mealPreference.toLowerCase());
+      guest.dietary_restrictions?.toLowerCase().includes(filters.mealPreference.toLowerCase());
 
     return matchesTable && matchesRSVP && matchesSide && matchesPlusOne && matchesMeal;
   });
 
   // Additional filtering for table view
   const tableFilteredGuests = filteredGuests.filter((guest: Guest) => {
-    const matchesTable = selectedTable === 'all' || guest.table === selectedTable;
+    const matchesTable = selectedTable === 'all' || guest.table?.id?.toString() === selectedTable;
     return matchesTable;
   });
 
@@ -104,7 +106,7 @@ export default function GuestListPage() {
 
     filteredGuests.forEach(guest => {
       const matchesKeyword =
-        guest.name.toLowerCase().includes(keyword) ||
+        guest.full_name.toLowerCase().includes(keyword) ||
         guest.email.toLowerCase().includes(keyword) ||
         (guest.address && guest.address.toLowerCase().includes(keyword)) ||
         (guest.notes && guest.notes.toLowerCase().includes(keyword));
@@ -129,34 +131,21 @@ export default function GuestListPage() {
   // Calculate statistics
   const stats = {
     total: guests.length,
-    confirmed: guests.filter(g => g.rsvpStatus === 'confirmed').length,
-    pending: guests.filter(g => g.rsvpStatus === 'pending').length,
-    declined: guests.filter(g => g.rsvpStatus === 'declined').length,
+    confirmed: guests.filter(g => g.rsvp_status?.name === 'confirmed').length,
+    pending: guests.filter(g => g.rsvp_status?.name === 'pending').length,
+    declined: guests.filter(g => g.rsvp_status?.name === 'declined').length,
     tentative: 0
   };
 
   // Calculate table counts
   const tableCounts = guests.reduce((acc, guest) => {
-    const table = guest.table || 'Unassigned';
+    const table = guest.table ? `Table ${guest.table.table_number}` : 'Unassigned';
     acc[table] = (acc[table] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const handleAddGuest = () => {
-    setEditingGuest({
-      id: guests.length + 1,
-      name: '',
-      email: '',
-      phone: '',
-      whatsapp: '',
-      table: 'A1',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'pending',
-      mealPreference: '',
-      address: '',
-      notes: ''
-    });
+    setEditingGuest(null); // null indicates we're adding a new guest
     setShowAddGuestModal(true);
   };
 
@@ -175,19 +164,29 @@ export default function GuestListPage() {
     setEditingGuest(null);
   };
 
-  const handleDeleteGuest = async (guestId: number) => {
-    if (confirm('Are you sure you want to delete this guest?')) {
-      try {
-        await GuestService.deleteGuest(guestId);
-        setGuests(guests.filter(g => g.id !== guestId));
-        if (editingGuest?.id === guestId) {
-          setEditingGuest(null);
-          setShowAddGuestModal(false);
-        }
-      } catch (err: any) {
-        console.error('Error deleting guest:', err);
-        alert(err.message || 'Failed to delete guest');
+  const handleDeleteGuest = (guest: Guest) => {
+    setGuestToDelete(guest);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteGuest = async () => {
+    if (!guestToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await GuestService.deleteGuest(guestToDelete.id);
+      setGuests(guests.filter(g => g.id !== guestToDelete.id));
+      if (editingGuest?.id === guestToDelete.id) {
+        setEditingGuest(null);
+        setShowAddGuestModal(false);
       }
+      setShowDeleteModal(false);
+      setGuestToDelete(null);
+    } catch (err: any) {
+      console.error('Error deleting guest:', err);
+      alert(err.message || 'Failed to delete guest');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -222,11 +221,11 @@ export default function GuestListPage() {
     }
   };
 
-  const handleBulkRearrange = (newTable: string) => {
+  const handleBulkRearrange = (newTableId: number) => {
     if (selectedGuests.length === 0) return;
 
     setGuests(guests.map(g =>
-      selectedGuests.includes(g.id) ? { ...g, table: newTable } : g
+      selectedGuests.includes(g.id) ? { ...g, table_id: newTableId } : g
     ));
     setSelectedGuests([]);
   };
@@ -374,16 +373,16 @@ export default function GuestListPage() {
                   </button>
                   <select
                     onChange={(e) => {
-                      const table = e.target.value;
-                      if (table && table !== '') {
-                        handleBulkRearrange(table);
+                      const tableId = Number(e.target.value);
+                      if (!isNaN(tableId)) {
+                        handleBulkRearrange(tableId);
                       }
                     }}
                     className="px-3 py-1 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
                   >
                     <option value="">Move to table...</option>
-                    {['A1', 'A2', 'A3', 'B1'].map(table => (
-                      <option key={table} value={table}>Table {table.slice(1)}</option>
+                    {[1, 2, 3].map(tableId => (
+                      <option key={tableId} value={tableId}>Table {tableId}</option>
                     ))}
                   </select>
                 </div>
@@ -477,8 +476,8 @@ export default function GuestListPage() {
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Side</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">+1</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">RSVP</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Meals</th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
                         </tr>
                       </thead>
@@ -508,29 +507,33 @@ export default function GuestListPage() {
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                                   <span className="text-white text-sm font-bold">
-                                    {guest.name.charAt(0)}
+                                    {guest.full_name.charAt(0)}
                                   </span>
                                 </div>
-                                <span className="text-text-primary">{guest.name}</span>
+                                <span className="text-text-primary">{guest.full_name}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-text-muted">{guest.email}</td>
                             <td className="px-6 py-4 text-text-muted">{guest.phone}</td>
                             <td className="px-6 py-4">
                               <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
-                                {guest.table}
+                                {guest.table ? `Table ${guest.table.table_number}` : 'Unassigned'}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`px-3 py-1 rounded-full text-sm ${guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
-                                }`}>
-                                {guest.side}
+                              <span className={`px-3 py-1 rounded-full text-sm ${
+                                guest.rsvp_status?.name === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                                guest.rsvp_status?.name === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-400' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {guest.rsvp_status?.name ? guest.rsvp_status.name.charAt(0).toUpperCase() + guest.rsvp_status.name.slice(1) : 'Unknown'}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              {guest.plusOne && (
-                                <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
-                                  +1
+                              {guest.meal_preferences && guest.meal_preferences.length > 0 && (
+                                <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs">
+                                  {guest.meal_preferences.length} meal{guest.meal_preferences.length > 1 ? 's' : ''}
                                 </span>
                               )}
                             </td>
@@ -544,16 +547,37 @@ export default function GuestListPage() {
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
-                                      handleDeleteGuest(guest.id);
-                                    }
-                                  }}
+                                  onClick={() => handleDeleteGuest(guest)}
                                   className="btn-secondary btn-sm text-red-400 hover:text-red-300"
                                 >
                                   <Trash2 size={14} className="mr-1" />
                                   Delete
                                 </button>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="space-y-2">
+                                <p className="text-sm text-text-secondary">Rearrange to:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => handleBulkRearrange(1)}
+                                    className="px-3 py-1 bg-surface border border-white/20 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                                  >
+                                    Table 1
+                                  </button>
+                                  <button
+                                    onClick={() => handleBulkRearrange(2)}
+                                    className="px-3 py-1 bg-surface border border-white/20 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                                  >
+                                    Table 2
+                                  </button>
+                                  <button
+                                    onClick={() => handleBulkRearrange(3)}
+                                    className="px-3 py-1 bg-surface border border-white/20 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                                  >
+                                    Table 3
+                                  </button>
+                                </div>
                               </div>
                             </td>
                           </motion.tr>
@@ -594,7 +618,7 @@ export default function GuestListPage() {
                     {groupGuests.slice(0, 3).map((guest, index) => (
                       <div key={guest.id} className="flex items-center gap-2 text-text-primary">
                         <span className="text-text-muted text-sm">{index + 1}.</span>
-                        <span className="font-medium">{guest.name}</span>
+                        <span className="font-medium">{guest.full_name}</span>
                       </div>
                     ))}
                     {groupGuests.length > 3 && (
@@ -761,6 +785,18 @@ export default function GuestListPage() {
         editingGuest={editingGuest}
       />
 
+      {/* Delete Guest Modal */}
+      <DeleteGuestModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setGuestToDelete(null);
+        }}
+        onConfirm={confirmDeleteGuest}
+        guestName={guestToDelete?.full_name || ''}
+        isDeleting={isDeleting}
+      />
+
       {/* Graph Modal */}
       {showGraphModal && (
         <motion.div
@@ -837,23 +873,24 @@ export default function GuestListPage() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-2xl font-bold">
-                      {selectedGuestForDetail?.name.charAt(0)}
+                      {selectedGuestForDetail?.full_name.charAt(0)}
                     </span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-text-primary">
-                      {selectedGuestForDetail?.name}
+                      {selectedGuestForDetail?.full_name}
                     </h3>
                     <div className="text-sm text-text-muted space-y-2">
                       <div>Guest #{selectedGuestForDetail?.id}</div>
                       <div>Email: {selectedGuestForDetail?.email}</div>
                       <div>Phone: {selectedGuestForDetail?.phone}</div>
-                      {selectedGuestForDetail?.whatsapp && <div>WhatsApp: {selectedGuestForDetail?.whatsapp}</div>}
-                      <div>Table: {selectedGuestForDetail?.table}</div>
-                      <div>Side: {selectedGuestForDetail?.side}</div>
-                      <div>RSVP: {selectedGuestForDetail?.rsvpStatus}</div>
-                      <div>Plus One: {selectedGuestForDetail?.plusOne ? 'Yes' : 'No'}</div>
-                      <div>Meal: {selectedGuestForDetail?.mealPreference || 'None'}</div>
+                      <div>Table: {selectedGuestForDetail?.table ? `Table ${selectedGuestForDetail.table.table_number}` : 'Unassigned'}</div>
+                      <div>RSVP: {selectedGuestForDetail?.rsvp_status?.name}</div>
+                      <div>Relationship: {selectedGuestForDetail?.relationship}</div>
+                      {selectedGuestForDetail?.dietary_restrictions && <div>Dietary Restrictions: {selectedGuestForDetail?.dietary_restrictions}</div>}
+                      {selectedGuestForDetail?.meal_preferences && selectedGuestForDetail.meal_preferences.length > 0 && (
+                        <div>Meals: {selectedGuestForDetail.meal_preferences.map(m => m.name).join(', ')}</div>
+                      )}
                       {selectedGuestForDetail?.address && <div>Address: {selectedGuestForDetail?.address}</div>}
                       {selectedGuestForDetail?.notes && <div>Notes: {selectedGuestForDetail?.notes}</div>}
                     </div>
@@ -865,8 +902,8 @@ export default function GuestListPage() {
               <div className="flex gap-3 pt-6 border-t border-white/10">
                 <button
                   onClick={() => {
-                    if (confirm(`Are you sure you want to delete ${selectedGuestForDetail?.name}?`)) {
-                      handleDeleteGuest(selectedGuestForDetail!.id);
+                    if (selectedGuestForDetail) {
+                      handleDeleteGuest(selectedGuestForDetail);
                       setShowGuestDetailModal(false);
                       setSelectedGuestForDetail(null);
                     }
@@ -989,17 +1026,16 @@ export default function GuestListPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                           <span className="text-white text-sm font-bold">
-                            {guest.name.charAt(0)}
+                            {guest.full_name.charAt(0)}
                           </span>
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-text-primary">
-                            {guest.name}
+                            {guest.full_name}
                           </h3>
                           <div className="text-sm text-text-muted space-y-1">
                             <div>{guest.email}</div>
                             <div>{guest.phone}</div>
-                            {guest.whatsapp && <div>WhatsApp: {guest.whatsapp}</div>}
                             {guest.address && <div>{guest.address}</div>}
                           </div>
                         </div>
@@ -1007,35 +1043,22 @@ export default function GuestListPage() {
                       <div className="text-right space-y-2">
                         <div className="flex items-center gap-2 justify-end">
                           <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
-                            {guest.table}
+                            {guest.table ? `Table ${guest.table.table_number}` : 'Unassigned'}
                           </span>
-                          <span className={`px-3 py-1 rounded-full text-sm ${guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
-                            }`}>
-                            {guest.side}
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            guest.rsvp_status?.name === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                            guest.rsvp_status?.name === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-400' :
+                            'bg-gray-500/20 text-gray-400'
+                          }`}>
+                            {guest.rsvp_status?.name ? guest.rsvp_status.name.charAt(0).toUpperCase() + guest.rsvp_status.name.slice(1) : 'Unknown'}
                           </span>
                         </div>
-                        {guest.plusOne && (
-                          <span className="px-3 py-1 bg-gold text-white rounded-full text-xs">
-                            +1
-                          </span>
-                        )}
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              handleEditGuest(guest);
+                              handleDeleteGuest(guest);
                               setExpandedCard(null);
-                            }}
-                            className="btn-secondary btn-sm"
-                          >
-                            <Edit2 size={14} className="mr-1" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to delete ${guest.name}?`)) {
-                                handleDeleteGuest(guest.id);
-                                setExpandedCard(null);
-                              }
                             }}
                             className="btn-secondary btn-sm text-red-400 hover:text-red-300"
                           >
@@ -1046,10 +1069,10 @@ export default function GuestListPage() {
                       </div>
                     </div>
 
-                    {guest.mealPreference && (
+                    {guest.dietary_restrictions && (
                       <div className="mt-3 pt-3 border-t border-white/10">
-                        <span className="text-sm text-text-muted">Meal Preference: </span>
-                        <span className="text-sm text-text-primary">{guest.mealPreference}</span>
+                        <span className="text-sm text-text-muted">Dietary Restrictions: </span>
+                        <span className="text-sm text-text-primary">{guest.dietary_restrictions}</span>
                       </div>
                     )}
 
@@ -1059,15 +1082,6 @@ export default function GuestListPage() {
                         <span className="text-sm text-text-primary">{guest.notes}</span>
                       </div>
                     )}
-
-                    <div className="mt-3 pt-3 border-t border-white/10">
-                      <span className={`px-3 py-1 rounded-full text-sm ${guest.rsvpStatus === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                          guest.rsvpStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                        }`}>
-                        RSVP: {guest.rsvpStatus}
-                      </span>
-                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -1128,29 +1142,25 @@ export default function GuestListPage() {
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-bold">
-                          {guest.name.charAt(0)}
+                          {guest.full_name.charAt(0)}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-text-primary truncate">
-                          {guest.name}
+                          {guest.full_name}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'
+                            guest.rsvp_status?.name === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                            guest.rsvp_status?.name === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-400' :
+                            'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {guest.side}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            guest.rsvpStatus === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                            guest.rsvpStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}>
-                            {guest.rsvpStatus}
+                            {guest.rsvp_status?.name ? guest.rsvp_status.name.charAt(0).toUpperCase() + guest.rsvp_status.name.slice(1) : 'Unknown'}
                           </span>
                         </div>
                         <div className="text-sm text-text-muted mt-1">
-                          Table {guest.table}
+                          {guest.table ? `Table ${guest.table.table_number}` : 'Unassigned'}
                         </div>
                       </div>
                     </div>
