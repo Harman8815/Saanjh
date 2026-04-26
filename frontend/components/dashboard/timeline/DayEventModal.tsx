@@ -94,7 +94,7 @@ export default function DayEventModal({
 
   const handleView = (e: React.MouseEvent, event: TimelineEvent) => {
     e.stopPropagation();
-    onViewEvent(event);
+    handleEventClick(event);
   };
 
   const handleEdit = (e: React.MouseEvent, event: TimelineEvent) => {

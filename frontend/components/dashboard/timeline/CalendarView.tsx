@@ -31,6 +31,10 @@ interface CalendarViewProps {
   getEventsForDate: (date: Date) => TimelineEvent[];
   isLoading?: boolean;
   onDayClick?: (date: Date) => void;
+  onEventView?: (event: LocalEvent) => void;
+  onEventEdit?: (event: LocalEvent) => void;
+  onEventDelete?: (event: LocalEvent) => void;
+  onEventClick?: (event: LocalEvent) => void;
 }
 
 // Transform TimelineEvent to local Event format for child components
@@ -78,7 +82,11 @@ export default function CalendarView({
   getStatusColor,
   getEventsForDate,
   isLoading = false,
-  onDayClick
+  onDayClick,
+  onEventView,
+  onEventEdit,
+  onEventDelete,
+  onEventClick
 }: CalendarViewProps) {
   // Transform events to local format
   const transformedEvents = events.map(transformEvent);
@@ -286,6 +294,10 @@ export default function CalendarView({
               events={transformedEvents}
               getEventsForDate={getTransformedEventsForDate}
               getStatusColor={getStatusColor}
+              onEventClick={onEventClick}
+              onEventView={onEventView}
+              onEventEdit={onEventEdit}
+              onEventDelete={onEventDelete}
             />
           )}
         </>

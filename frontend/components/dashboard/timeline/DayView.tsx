@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { MapPin, Eye, Edit3, Trash2 } from 'lucide-react';
 
 interface Event {
   id: number;
@@ -47,9 +47,31 @@ interface DayViewProps {
   events: Event[];
   getEventsForDate: (date: Date) => Event[];
   getStatusColor: (status: string) => string;
+  onEventClick?: (event: Event) => void;
+  onEventView?: (event: Event) => void;
+  onEventEdit?: (event: Event) => void;
+  onEventDelete?: (event: Event) => void;
 }
 
-export default function DayView({ currentDate, timeSlots, events, getEventsForDate, getStatusColor }: DayViewProps) {
+export default function DayView({ currentDate, timeSlots, events, getEventsForDate, getStatusColor, onEventClick, onEventView, onEventEdit, onEventDelete }: DayViewProps) {
+  const handleEventClick = (event: Event) => {
+    onEventClick?.(event);
+  };
+
+  const handleView = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
+    onEventView?.(event);
+  };
+
+  const handleEdit = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
+    onEventEdit?.(event);
+  };
+
+  const handleDelete = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation();
+    onEventDelete?.(event);
+  };
   const dayEvents = getEventsForDate(currentDate);
   const formatTime = (timeStr: string) => {
     const [time, period] = timeStr.split(' ');
@@ -85,7 +107,8 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                     return hourEvents.map((event) => (
                       <div
                         key={event.id}
-                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border ${getEventColorClasses(event)}`}
+                        onClick={() => handleEventClick(event)}
+                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border cursor-pointer hover:scale-[1.02] transition-transform ${getEventColorClasses(event)}`}
                         style={{ height: `90%`, top:'5%' }}
                       >
                         <div className="flex items-center justify-between">
@@ -95,6 +118,30 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                         <div className="text-sm text-text-secondary my-1 flex items-center gap-2">
                           <MapPin size={12} />
                           {event.location}
+                        </div>
+                        {/* Action Icons */}
+                        <div className="flex items-center gap-1 mt-2">
+                          <button
+                            onClick={(e) => handleView(e, event)}
+                            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
+                            title="View"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => handleEdit(e, event)}
+                            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
+                            title="Edit"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(e, event)}
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-text-secondary hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
                     ));
@@ -115,13 +162,39 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
               {dayEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all"
+                  onClick={() => handleEventClick(event)}
+                  className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <span className="font-medium text-text-primary text-sm">{event.title}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(event.status)}`}>
-                      {event.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(event.status)}`}>
+                        {event.status}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => handleView(e, event)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
+                          title="View"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => handleEdit(e, event)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
+                          title="Edit"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, event)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-text-secondary hover:text-red-400"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div className="text-xs text-text-secondary">{event.time} · {event.location}</div>
                 </div>

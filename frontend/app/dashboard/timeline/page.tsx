@@ -138,6 +138,11 @@ export default function TimelinePage() {
     setIsDayModalOpen(true);
   };
 
+  const handleEventClick = (event: any) => {
+    setSelectedDate(currentDate);
+    setIsDayModalOpen(true);
+  };
+
   const handleDayModalCreate = () => {
     setIsDayModalOpen(false);
     setIsCreateModalOpen(true);
@@ -145,8 +150,7 @@ export default function TimelinePage() {
 
   const handleDayModalView = (event: TimelineEvent) => {
     setSelectedEventData(event);
-    setIsDayModalOpen(false);
-    setIsViewModalOpen(true);
+    // Keep day modal open and show details
   };
 
   const handleDayModalEdit = (event: TimelineEvent) => {
@@ -248,6 +252,10 @@ export default function TimelinePage() {
               getEventsForDate={getEventsForDate}
               isLoading={isCalendarLoading}
               onDayClick={handleDayClick}
+              onEventView={(event) => handleDayModalView(event as any)}
+              onEventEdit={(event) => handleDayModalEdit(event as any)}
+              onEventDelete={(event) => handleDayModalDelete(event as any)}
+              onEventClick={handleEventClick as any}
             />
           )}
 
