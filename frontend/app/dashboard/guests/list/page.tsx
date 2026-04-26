@@ -27,8 +27,16 @@ export default function GuestListPage() {
       try {
         setIsLoading(true);
         const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-        // Fetch all guests at once for client-side pagination
-        const response = await GuestService.getGuests(1, 1000, ordering, searchQuery);
+        // Fetch all guests at once for client-side pagination with backend filtering
+        const response = await GuestService.getGuests(
+          1,
+          1000,
+          ordering,
+          searchQuery,
+          filters.rsvpStatus,
+          filters.relationship,
+          selectedTable
+        );
         // API returns a plain array, not a paginated response
         const guestsArray = Array.isArray(response) ? response : (response.results || []);
         setGuests(guestsArray);
@@ -43,7 +51,7 @@ export default function GuestListPage() {
     };
 
     fetchGuests();
-  }, [sortField, sortOrder, searchQuery]);
+  }, [sortField, sortOrder, searchQuery, filters, selectedTable]);
   const [selectedTable, setSelectedTable] = useState('all');
   const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
@@ -66,10 +74,8 @@ export default function GuestListPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [filters, setFilters] = useState({
     rsvpStatus: 'all',
-    side: 'all',
-    table: 'all',
-    plusOne: 'all',
-    mealPreference: 'all'
+    relationship: 'all',
+    dietaryRestrictions: ''
   });
 
   const handleSort = (field: string) => {
@@ -83,45 +89,24 @@ export default function GuestListPage() {
     }
   };
 
-  // Filter guests based on table assignment and advanced filters
-  const filteredGuests = (guests || []).filter((guest: Guest) => {
-    const matchesTable = selectedTable === 'all' || guest.table?.id?.toString() === selectedTable;
-
-    // Advanced filters
-    const matchesRSVP = filters.rsvpStatus === 'all' || guest.rsvp_status?.name === filters.rsvpStatus;
-    const matchesSide = filters.side === 'all'; // Side is not in the backend model anymore
-    const matchesPlusOne = filters.plusOne === 'all'; // PlusOne is not in the backend model anymore
-    const matchesMeal = filters.mealPreference === 'all' ||
-      guest.dietary_restrictions?.toLowerCase().includes(filters.mealPreference.toLowerCase());
-
-    return matchesTable && matchesRSVP && matchesSide && matchesPlusOne && matchesMeal;
-  });
-
-  // Additional filtering for table view
-  const tableFilteredGuests = filteredGuests.filter((guest: Guest) => {
-    const matchesTable = selectedTable === 'all' || guest.table?.id?.toString() === selectedTable;
-    return matchesTable;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(tableFilteredGuests.length / itemsPerPage);
+  // Pagination logic (using guests directly since backend handles filtering)
+  const totalPages = Math.ceil(guests.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedGuests = tableFilteredGuests.slice(startIndex, endIndex);
+  const paginatedGuests = guests.slice(startIndex, endIndex);
 
   // Group guests by keyword
   const getGroupedGuests = () => {
     if (!groupByKeyword || !groupKeyword.trim()) {
-      return { 'All Guests': filteredGuests };
+      return { 'All Guests': guests };
     }
 
     const keyword = groupKeyword.toLowerCase().trim();
     const groups: { [key: string]: Guest[] } = {
       [`Matches "${groupKeyword}"`]: [],
-      'Others': []
     };
 
-    filteredGuests.forEach(guest => {
+    guests.forEach(guest => {
       const matchesKeyword =
         guest.full_name.toLowerCase().includes(keyword) ||
         guest.email.toLowerCase().includes(keyword) ||
@@ -176,8 +161,16 @@ export default function GuestListPage() {
     try {
       setIsLoading(true);
       const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-      // Fetch all guests at once for client-side pagination
-      const response = await GuestService.getGuests(1, 1000, ordering, searchQuery);
+      // Fetch all guests at once for client-side pagination with backend filtering
+      const response = await GuestService.getGuests(
+        1,
+        1000,
+        ordering,
+        searchQuery,
+        filters.rsvpStatus,
+        filters.relationship,
+        selectedTable
+      );
       const guestsArray = Array.isArray(response) ? response : (response.results || []);
       setGuests(guestsArray);
       setTotalGuests(guestsArray.length);
@@ -231,10 +224,10 @@ export default function GuestListPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedGuests.length === filteredGuests.length) {
+    if (selectedGuests.length === guests.length) {
       setSelectedGuests([]);
     } else {
-      setSelectedGuests(filteredGuests.map(g => g.id));
+      setSelectedGuests(guests.map(g => g.id));
     }
   };
 
@@ -280,20 +273,12 @@ export default function GuestListPage() {
   };
 
   // Filter handling functions
-  const handleFilterChange = (filterType: string, value: string) => {
-    setFilters(prev => ({ ...prev, [filterType]: value }));
-    setCurrentPage(1); // Reset to first page when applying filters
-  };
-
   const clearFilters = () => {
     setFilters({
       rsvpStatus: 'all',
-      side: 'all',
-      table: 'all',
-      plusOne: 'all',
-      mealPreference: 'all'
+      relationship: 'all',
+      dietaryRestrictions: ''
     });
-    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -440,7 +425,7 @@ export default function GuestListPage() {
                   onClick={handleSelectAll}
                   className="btn-secondary flex items-center gap-1 px-2 py-1 text-sm"
                 >
-                  {selectedGuests.length === filteredGuests.length ? (
+                  {selectedGuests.length === guests.length ? (
                     <><Square size={12} className="mr-1" />Deselect All</>
                   ) : (
                     <><CheckSquare size={12} className="mr-1" />Select All</>
@@ -486,7 +471,7 @@ export default function GuestListPage() {
 
                 {/* Pagination info */}
                 <div className="text-sm text-text-muted">
-                  Showing {paginatedGuests.length} of {tableFilteredGuests.length} guests
+                  Showing {paginatedGuests.length} of {guests.length} guests
                 </div>
               </div>
 
@@ -508,7 +493,7 @@ export default function GuestListPage() {
                               onClick={handleSelectAll}
                               className="flex items-center gap-2 hover:text-primary transition-colors"
                             >
-                              {selectedGuests.length === filteredGuests.length && filteredGuests.length > 0 ? (
+                              {selectedGuests.length === guests.length && guests.length > 0 ? (
                                 <CheckSquare size={18} />
                               ) : (
                                 <Square size={18} />
@@ -521,11 +506,10 @@ export default function GuestListPage() {
                               className="flex items-center gap-1 hover:text-primary transition-colors"
                             >
                               Name
-                              {sortField === 'full_name' && (
-                                <span className="text-xs">
-                                  {sortOrder === 'asc' ? '↑' : '↓'}
-                                </span>
-                              )}
+                              <span className="flex flex-col text-xs leading-none">
+                                <span className={sortField === 'full_name' && sortOrder === 'asc' ? 'text-primary' : 'text-text-muted'}>▲</span>
+                                <span className={sortField === 'full_name' && sortOrder === 'desc' ? 'text-primary' : 'text-text-muted'}>▼</span>
+                              </span>
                             </button>
                           </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">
@@ -534,11 +518,10 @@ export default function GuestListPage() {
                               className="flex items-center gap-1 hover:text-primary transition-colors"
                             >
                               Email
-                              {sortField === 'email' && (
-                                <span className="text-xs">
-                                  {sortOrder === 'asc' ? '↑' : '↓'}
-                                </span>
-                              )}
+                              <span className="flex flex-col text-xs leading-none">
+                                <span className={sortField === 'email' && sortOrder === 'asc' ? 'text-primary' : 'text-text-muted'}>▲</span>
+                                <span className={sortField === 'email' && sortOrder === 'desc' ? 'text-primary' : 'text-text-muted'}>▼</span>
+                              </span>
                             </button>
                           </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">
@@ -547,11 +530,10 @@ export default function GuestListPage() {
                               className="flex items-center gap-1 hover:text-primary transition-colors"
                             >
                               Phone
-                              {sortField === 'phone' && (
-                                <span className="text-xs">
-                                  {sortOrder === 'asc' ? '↑' : '↓'}
-                                </span>
-                              )}
+                              <span className="flex flex-col text-xs leading-none">
+                                <span className={sortField === 'phone' && sortOrder === 'asc' ? 'text-primary' : 'text-text-muted'}>▲</span>
+                                <span className={sortField === 'phone' && sortOrder === 'desc' ? 'text-primary' : 'text-text-muted'}>▼</span>
+                              </span>
                             </button>
                           </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">
@@ -560,11 +542,10 @@ export default function GuestListPage() {
                               className="flex items-center gap-1 hover:text-primary transition-colors"
                             >
                               Table
-                              {sortField === 'table' && (
-                                <span className="text-xs">
-                                  {sortOrder === 'asc' ? '↑' : '↓'}
-                                </span>
-                              )}
+                              <span className="flex flex-col text-xs leading-none">
+                                <span className={sortField === 'table' && sortOrder === 'asc' ? 'text-primary' : 'text-text-muted'}>▲</span>
+                                <span className={sortField === 'table' && sortOrder === 'desc' ? 'text-primary' : 'text-text-muted'}>▼</span>
+                              </span>
                             </button>
                           </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">
@@ -573,11 +554,10 @@ export default function GuestListPage() {
                               className="flex items-center gap-1 hover:text-primary transition-colors"
                             >
                               RSVP
-                              {sortField === 'rsvp_status' && (
-                                <span className="text-xs">
-                                  {sortOrder === 'asc' ? '↑' : '↓'}
-                                </span>
-                              )}
+                              <span className="flex flex-col text-xs leading-none">
+                                <span className={sortField === 'rsvp_status' && sortOrder === 'asc' ? 'text-primary' : 'text-text-muted'}>▲</span>
+                                <span className={sortField === 'rsvp_status' && sortOrder === 'desc' ? 'text-primary' : 'text-text-muted'}>▼</span>
+                              </span>
                             </button>
                           </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Meals</th>
@@ -1064,7 +1044,58 @@ export default function GuestListPage() {
               </button>
             </div>
 
+            {/* Filter Options */}
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              {/* RSVP Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  RSVP Status
+                </label>
+                <select
+                  value={filters.rsvpStatus}
+                  onChange={(e) => setFilters({ ...filters, rsvpStatus: e.target.value })}
+                  className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="declined">Declined</option>
+                  <option value="tentative">Tentative</option>
+                </select>
+              </div>
 
+              {/* Relationship Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  Relationship
+                </label>
+                <select
+                  value={filters.relationship}
+                  onChange={(e) => setFilters({ ...filters, relationship: e.target.value })}
+                  className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
+                >
+                  <option value="all">All Relationships</option>
+                  <option value="family">Family</option>
+                  <option value="friend">Friend</option>
+                  <option value="colleague">Colleague</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Dietary Restrictions Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  Dietary Restrictions
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., vegetarian, gluten-free"
+                  value={filters.dietaryRestrictions}
+                  onChange={(e) => setFilters({ ...filters, dietaryRestrictions: e.target.value })}
+                  className="w-full px-4 py-2 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
 
             {/* Filter Actions */}
             <div className="flex gap-3 pt-6 border-t border-white/10 mt-6">
