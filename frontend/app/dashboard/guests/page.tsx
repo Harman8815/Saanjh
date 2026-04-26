@@ -17,7 +17,8 @@ export default function GuestManagementDashboard() {
     total: 0,
     confirmed: 0,
     pending: 0,
-    declined: 0
+    declined: 0,
+    mealPreferences: 0
   });
 
   // Fetch guest statistics from API
@@ -29,7 +30,8 @@ export default function GuestManagementDashboard() {
           total: statistics.total_guests,
           confirmed: statistics.confirmed,
           pending: statistics.pending,
-          declined: statistics.declined
+          declined: statistics.declined,
+          mealPreferences: statistics.dietary_restrictions || 0
         });
       } catch (err: any) {
         console.error('Error fetching guest statistics:', err);
@@ -76,7 +78,7 @@ export default function GuestManagementDashboard() {
       description: 'Manage dietary requirements and choices',
       icon: <Utensils size={32} />,
       color: 'accent',
-      count: 23,
+      count: stats.mealPreferences,
       href: '/dashboard/guests/meals'
     }
   ];
