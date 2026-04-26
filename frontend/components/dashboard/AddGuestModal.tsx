@@ -64,10 +64,12 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
         GuestService.getAllTables(),
         GuestService.getRsvpStatuses()
       ]);
-      setTables(tablesData);
-      setRsvpStatuses(rsvpData);
+      setTables(Array.isArray(tablesData) ? tablesData : []);
+      setRsvpStatuses(Array.isArray(rsvpData) ? rsvpData : []);
     } catch (error) {
       console.error('Error fetching options:', error);
+      setTables([]);
+      setRsvpStatuses([]);
     } finally {
       setIsLoadingOptions(false);
     }

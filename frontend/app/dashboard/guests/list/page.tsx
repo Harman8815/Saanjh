@@ -23,8 +23,10 @@ export default function GuestListPage() {
       try {
         setIsLoading(true);
         const response = await GuestService.getGuests(apiPage, 50);
-        setGuests(response.results || []);
-        setTotalGuests(response.count || 0);
+        // API returns a plain array, not a paginated response
+        const guestsArray = Array.isArray(response) ? response : (response.results || []);
+        setGuests(guestsArray);
+        setTotalGuests(guestsArray.length);
       } catch (err: any) {
         console.error('Error fetching guests:', err);
         setError(err.message || 'Failed to load guests');
@@ -155,11 +157,24 @@ export default function GuestListPage() {
     setShowAddGuestModal(true);
   };
 
-  const handleSaveGuest = (guest: Guest) => {
-    if (editingGuest) {
-      setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
-    } else {
-      setGuests([...guests, guest]);
+  const handleSaveGuest = async (guest: Guest) => {
+    // Refetch guest list to get complete data including full_name from backend
+    try {
+      setIsLoading(true);
+      const response = await GuestService.getGuests(apiPage, 50);
+      const guestsArray = Array.isArray(response) ? response : (response.results || []);
+      setGuests(guestsArray);
+      setTotalGuests(guestsArray.length);
+    } catch (err: any) {
+      console.error('Error refetching guests:', err);
+      // Fallback to updating local state if refetch fails
+      if (editingGuest) {
+        setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
+      } else {
+        setGuests([...guests, guest]);
+      }
+    } finally {
+      setIsLoading(false);
     }
     setShowAddGuestModal(false);
     setEditingGuest(null);
@@ -508,10 +523,10 @@ export default function GuestListPage() {
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                                   <span className="text-white text-sm font-bold">
-                                    {guest.full_name.charAt(0)}
+                                    {guest.full_name?.charAt(0) || '?'}
                                   </span>
                                 </div>
-                                <span className="text-text-primary">{guest.full_name}</span>
+                                <span className="text-text-primary">{guest.full_name || 'Unknown'}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-text-muted">{guest.email}</td>
@@ -619,7 +634,7 @@ export default function GuestListPage() {
                     {groupGuests.slice(0, 3).map((guest, index) => (
                       <div key={guest.id} className="flex items-center gap-2 text-text-primary">
                         <span className="text-text-muted text-sm">{index + 1}.</span>
-                        <span className="font-medium">{guest.full_name}</span>
+                        <span className="font-medium">{guest.full_name || 'Unknown'}</span>
                       </div>
                     ))}
                     {groupGuests.length > 3 && (
@@ -874,7 +889,7 @@ export default function GuestListPage() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-2xl font-bold">
-                      {selectedGuestForDetail?.full_name.charAt(0)}
+                      {selectedGuestForDetail?.full_name?.charAt(0) || '?'}
                     </span>
                   </div>
                   <div>
@@ -1027,12 +1042,12 @@ export default function GuestListPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                           <span className="text-white text-sm font-bold">
-                            {guest.full_name.charAt(0)}
+                            {guest.full_name?.charAt(0) || '?'}
                           </span>
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-text-primary">
-                            {guest.full_name}
+                            {guest.full_name || 'Unknown'}
                           </h3>
                           <div className="text-sm text-text-muted space-y-1">
                             <div>{guest.email}</div>
@@ -1143,12 +1158,12 @@ export default function GuestListPage() {
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-bold">
-                          {guest.full_name.charAt(0)}
+                          {guest.full_name?.charAt(0) || '?'}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-text-primary truncate">
-                          {guest.full_name}
+                          {guest.full_name || 'Unknown'}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
