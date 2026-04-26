@@ -9,6 +9,7 @@ import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { metadata } from "./metadata";
 import { LocalizationProvider } from "../components/providers/LocalizationProvider";
 import AuthProvider from "../components/providers/AuthProvider";
+import { Toaster } from "react-hot-toast";
 // import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
 // Primary font for data-heavy sections - clean, modern, highly readable
@@ -51,6 +52,7 @@ export default function RootLayout({
               <LayoutWrapper>
                 {children}
               </LayoutWrapper>
+              <Toaster position="top-right" />
             </AuthProvider>
           </ThemeProvider>
         </LocalizationProvider>

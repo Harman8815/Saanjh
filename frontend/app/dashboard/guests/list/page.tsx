@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Upload, Info, Filter, ChevronRight, Edit2, Trash2, UserPlus, CheckSquare, Square } from 'lucide-react';
+import toast from 'react-hot-toast';
 // import GuestRelationshipGraph from '../../../../components/dashboard/GuestRelationshipGraph';
 import AddGuestModal from '../../../../components/dashboard/AddGuestModal';
 import DeleteGuestModal from '../../../../components/dashboard/DeleteGuestModal';
@@ -175,8 +176,10 @@ export default function GuestListPage() {
       const guestsArray = Array.isArray(response) ? response : (response.results || []);
       setGuests(guestsArray);
       setTotalGuests(guestsArray.length);
+      toast.success(editingGuest ? 'Guest updated successfully' : 'Guest added successfully');
     } catch (err: any) {
       console.error('Error refetching guests:', err);
+      toast.error(err.message || 'Failed to save guest');
       // Fallback to updating local state if refetch fails
       if (editingGuest) {
         setGuests(guests.map(g => g.id === editingGuest.id ? guest : g));
@@ -206,6 +209,7 @@ export default function GuestListPage() {
         }
         setGuests(guests.filter(g => !selectedGuests.includes(g.id)));
         setSelectedGuests([]);
+        toast.success(`${selectedGuests.length} guest(s) deleted successfully`);
       } else {
         // Handle single delete
         if (!guestToDelete) return;
@@ -216,11 +220,12 @@ export default function GuestListPage() {
           setShowAddGuestModal(false);
         }
         setGuestToDelete(null);
+        toast.success('Guest deleted successfully');
       }
       setShowDeleteModal(false);
     } catch (err: any) {
       console.error('Error deleting guest(s):', err);
-      alert(err.message || 'Failed to delete guest(s)');
+      toast.error(err.message || 'Failed to delete guest(s)');
     } finally {
       setIsDeleting(false);
       setIsBulkDelete(false);
@@ -244,9 +249,7 @@ export default function GuestListPage() {
   };
 
   const handleRemoveGuest = (guestId: number) => {
-    if (confirm(`Are you sure you want to remove ${guestId} from the list?`)) {
-      setGuests(prev => prev.filter(g => g.id !== guestId));
-    }
+    toast.error('Please use the delete button to remove guests');
   };
 
   const handleBulkDelete = () => {
