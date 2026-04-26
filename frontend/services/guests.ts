@@ -13,10 +13,13 @@ import {
 
 export class GuestService {
   // Guest CRUD operations
-  static async getGuests(page = 1, pageSize = 20, ordering?: string): Promise<PaginatedResponse<Guest>> {
+  static async getGuests(page = 1, pageSize = 20, ordering?: string, search?: string): Promise<PaginatedResponse<Guest>> {
     let url = `/guests/?page=${page}&page_size=${pageSize}`;
     if (ordering) {
       url += `&ordering=${ordering}`;
+    }
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
     }
     return apiClient.get<PaginatedResponse<Guest>>(url);
   }

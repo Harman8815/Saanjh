@@ -18,6 +18,7 @@ export default function GuestListPage() {
   const [totalGuests, setTotalGuests] = useState(0);
   const [sortField, setSortField] = useState('last_name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch guests from API
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function GuestListPage() {
       try {
         setIsLoading(true);
         const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-        const response = await GuestService.getGuests(apiPage, 50, ordering);
+        const response = await GuestService.getGuests(apiPage, 50, ordering, searchQuery);
         // API returns a plain array, not a paginated response
         const guestsArray = Array.isArray(response) ? response : (response.results || []);
         setGuests(guestsArray);
@@ -40,9 +41,7 @@ export default function GuestListPage() {
     };
 
     fetchGuests();
-  }, [apiPage, sortField, sortOrder]);
-
-  const [searchQuery, setSearchQuery] = useState('');
+  }, [apiPage, sortField, sortOrder, searchQuery]);
   const [selectedTable, setSelectedTable] = useState('all');
   const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
@@ -176,7 +175,7 @@ export default function GuestListPage() {
     try {
       setIsLoading(true);
       const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-      const response = await GuestService.getGuests(apiPage, 50, ordering);
+      const response = await GuestService.getGuests(apiPage, 50, ordering, searchQuery);
       const guestsArray = Array.isArray(response) ? response : (response.results || []);
       setGuests(guestsArray);
       setTotalGuests(guestsArray.length);
@@ -470,6 +469,17 @@ export default function GuestListPage() {
                     <option value={50}>50</option>
                   </select>
                   <span className="text-sm text-text-muted">per page</span>
+                </div>
+
+                {/* Search bar */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search guests..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="px-4 py-2 bg-surface border border-white/20 rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary w-64"
+                  />
                 </div>
 
                 {/* Pagination info */}
