@@ -204,18 +204,28 @@ export interface TimelineStatus {
 // Guest types
 export interface Guest {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
   email: string;
   phone: string;
-  whatsapp?: string;
-  table?: string;
-  side?: 'Bride' | 'Groom';
-  plusOne: boolean;
-  rsvpStatus: 'confirmed' | 'pending' | 'declined';
-  mealPreference?: string;
+  rsvp_status: RsvpStatus;
+  rsvp_status_id: number;
+  rsvp_date?: string;
+  table?: Table;
+  table_id?: number | null;
+  meal_preferences: Meal[];
+  meal_ids?: number[];
+  relationship: string;
   address?: string;
+  dietary_restrictions?: string;
   notes?: string;
-  gender?: 'male' | 'female';
+  invitation_sent: boolean;
+  invitation_sent_date?: string;
+  reminder_sent: boolean;
+  reminder_sent_date?: string;
+  added_date: string;
+  updated_at: string;
 }
 
 export interface RsvpStatus {
@@ -412,18 +422,15 @@ export interface WeddingCreateRequest {
 }
 
 export interface GuestCreateRequest {
-  name: string;
-  email: string;
-  phone: string;
-  whatsapp?: string;
-  table?: string;
-  side?: 'Bride' | 'Groom';
-  plusOne: boolean;
-  rsvpStatus: 'confirmed' | 'pending' | 'declined';
-  mealPreference?: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone?: string;
+  relationship?: string;
   address?: string;
+  dietary_restrictions?: string;
   notes?: string;
-  gender?: 'male' | 'female';
+  meal_ids?: number[];
 }
 
 export interface VendorCreateRequest {
