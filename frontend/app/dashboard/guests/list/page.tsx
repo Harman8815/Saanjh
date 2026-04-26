@@ -19,6 +19,7 @@ export default function GuestListPage() {
   const [sortField, setSortField] = useState('last_name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Fetch guests from API
   useEffect(() => {
@@ -52,7 +53,6 @@ export default function GuestListPage() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [showGraphModal, setShowGraphModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [tableSearchQuery, setTableSearchQuery] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showImportExportModal, setShowImportExportModal] = useState(false);
