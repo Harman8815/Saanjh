@@ -7,11 +7,14 @@ interface DeleteGuestModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  guestName: string;
+  guestName?: string;
+  guestCount?: number;
   isDeleting?: boolean;
 }
 
-export default function DeleteGuestModal({ isOpen, onClose, onConfirm, guestName, isDeleting = false }: DeleteGuestModalProps) {
+export default function DeleteGuestModal({ isOpen, onClose, onConfirm, guestName, guestCount, isDeleting = false }: DeleteGuestModalProps) {
+  const isBulkDelete = guestCount !== undefined && guestCount > 1;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -39,7 +42,9 @@ export default function DeleteGuestModal({ isOpen, onClose, onConfirm, guestName
                 <div className="p-2 bg-red-500/20 rounded-lg">
                   <AlertTriangle size={24} className="text-red-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-text-primary">Delete Guest</h2>
+                <h2 className="text-2xl font-bold text-text-primary">
+                  {isBulkDelete ? 'Delete Guests' : 'Delete Guest'}
+                </h2>
               </div>
               <button
                 onClick={onClose}
@@ -53,11 +58,16 @@ export default function DeleteGuestModal({ isOpen, onClose, onConfirm, guestName
             <div className="p-6">
               <div className="mb-6">
                 <p className="text-text-secondary mb-2">
-                  Are you sure you want to delete the following guest?
+                  {isBulkDelete
+                    ? `Are you sure you want to delete ${guestCount} guest(s)?`
+                    : 'Are you sure you want to delete the following guest?'
+                  }
                 </p>
-                <p className="text-lg font-semibold text-text-primary">
-                  {guestName}
-                </p>
+                {!isBulkDelete && guestName && (
+                  <p className="text-lg font-semibold text-text-primary">
+                    {guestName}
+                  </p>
+                )}
               </div>
 
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-6">
@@ -89,7 +99,7 @@ export default function DeleteGuestModal({ isOpen, onClose, onConfirm, guestName
                   ) : (
                     <>
                       <Trash2 size={18} />
-                      Delete Guest
+                      {isBulkDelete ? 'Delete Guests' : 'Delete Guest'}
                     </>
                   )}
                 </button>

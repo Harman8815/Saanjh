@@ -72,6 +72,7 @@ export default function GuestListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
   const [filters, setFilters] = useState({
     rsvpStatus: 'all',
     relationship: 'all',
@@ -191,27 +192,38 @@ export default function GuestListPage() {
 
   const handleDeleteGuest = (guest: Guest) => {
     setGuestToDelete(guest);
+    setIsBulkDelete(false);
     setShowDeleteModal(true);
   };
 
   const confirmDeleteGuest = async () => {
-    if (!guestToDelete) return;
-
     setIsDeleting(true);
     try {
-      await GuestService.deleteGuest(guestToDelete.id);
-      setGuests(guests.filter(g => g.id !== guestToDelete.id));
-      if (editingGuest?.id === guestToDelete.id) {
-        setEditingGuest(null);
-        setShowAddGuestModal(false);
+      if (isBulkDelete) {
+        // Handle bulk delete
+        for (const guestId of selectedGuests) {
+          await GuestService.deleteGuest(guestId);
+        }
+        setGuests(guests.filter(g => !selectedGuests.includes(g.id)));
+        setSelectedGuests([]);
+      } else {
+        // Handle single delete
+        if (!guestToDelete) return;
+        await GuestService.deleteGuest(guestToDelete.id);
+        setGuests(guests.filter(g => g.id !== guestToDelete.id));
+        if (editingGuest?.id === guestToDelete.id) {
+          setEditingGuest(null);
+          setShowAddGuestModal(false);
+        }
+        setGuestToDelete(null);
       }
       setShowDeleteModal(false);
-      setGuestToDelete(null);
     } catch (err: any) {
-      console.error('Error deleting guest:', err);
-      alert(err.message || 'Failed to delete guest');
+      console.error('Error deleting guest(s):', err);
+      alert(err.message || 'Failed to delete guest(s)');
     } finally {
       setIsDeleting(false);
+      setIsBulkDelete(false);
     }
   };
 
@@ -239,11 +251,8 @@ export default function GuestListPage() {
 
   const handleBulkDelete = () => {
     if (selectedGuests.length === 0) return;
-
-    if (confirm(`Are you sure you want to delete ${selectedGuests.length} guest(s)?`)) {
-      setGuests(guests.filter(g => !selectedGuests.includes(g.id)));
-      setSelectedGuests([]);
-    }
+    setIsBulkDelete(true);
+    setShowDeleteModal(true);
   };
 
   const handleBulkRearrange = (newTableId: number) => {
@@ -876,9 +885,11 @@ export default function GuestListPage() {
         onClose={() => {
           setShowDeleteModal(false);
           setGuestToDelete(null);
+          setIsBulkDelete(false);
         }}
         onConfirm={confirmDeleteGuest}
         guestName={guestToDelete?.full_name || ''}
+        guestCount={isBulkDelete ? selectedGuests.length : undefined}
         isDeleting={isDeleting}
       />
 
