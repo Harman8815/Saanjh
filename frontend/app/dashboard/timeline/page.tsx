@@ -145,7 +145,8 @@ export default function TimelinePage() {
 
   const handleDayModalView = (event: TimelineEvent) => {
     setSelectedEventData(event);
-    // Keep day modal open and show details
+    setIsDayModalOpen(false);
+    setIsViewModalOpen(true);
   };
 
   const handleDayModalEdit = (event: TimelineEvent) => {
