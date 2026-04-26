@@ -104,11 +104,9 @@ export default function DayEventModal({
 
   const handleDelete = (e: React.MouseEvent, event: TimelineEvent) => {
     e.stopPropagation();
-    if (!event.id) {
-      console.error('Event has no ID:', event);
-      alert('Invalid event: Missing event ID');
-      return;
-    }
+    console.log('DayEventModal handleDelete - event object:', event);
+    console.log('DayEventModal handleDelete - event.id:', event.id);
+    console.log('DayEventModal handleDelete - event keys:', Object.keys(event));
     onDeleteEvent(event);
   };
 
