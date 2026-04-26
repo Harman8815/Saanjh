@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, UserPlus } from 'lucide-react';
-import { Guest, GuestCreateRequest } from '../../types/api';
+import { X, Save, Loader2 } from 'lucide-react';
+import { Guest } from '../../types/api';
 import { GuestService } from '../../services/guests';
+import { Table, RsvpStatus } from '../../types/api';
 
 interface AddGuestModalProps {
   isOpen: boolean;
@@ -14,8 +15,22 @@ interface AddGuestModalProps {
   editingGuest?: Guest | null;
 }
 
+interface GuestFormData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  relationship: string;
+  address: string;
+  dietary_restrictions: string;
+  notes: string;
+  rsvp_status_id?: number;
+  table_id?: number | null;
+  meal_ids?: number[];
+}
+
 export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingGuests = [], editingGuest }: AddGuestModalProps) {
-  const [formData, setFormData] = useState<GuestCreateRequest>({
+  const [formData, setFormData] = useState<GuestFormData>({
     first_name: '',
     last_name: '',
     email: '',
@@ -24,35 +39,55 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
     address: '',
     dietary_restrictions: '',
     notes: '',
-    wedding: 1, // This should be dynamically set based on current wedding
-    rsvp_status: 'pending',
-    invitation_sent: false,
-    reminder_sent: false,
-    table: null,
-    side: 'bride'
+    rsvp_status_id: 1, // Default to pending
+    table_id: null,
+    meal_ids: []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [tables, setTables] = useState<Table[]>([]);
+  const [rsvpStatuses, setRsvpStatuses] = useState<RsvpStatus[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+  // Fetch tables and RSVP statuses when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchOptions();
+    }
+  }, [isOpen]);
+
+  const fetchOptions = async () => {
+    setIsLoadingOptions(true);
+    try {
+      const [tablesData, rsvpData] = await Promise.all([
+        GuestService.getAllTables(),
+        GuestService.getRsvpStatuses()
+      ]);
+      setTables(tablesData);
+      setRsvpStatuses(rsvpData);
+    } catch (error) {
+      console.error('Error fetching options:', error);
+    } finally {
+      setIsLoadingOptions(false);
+    }
+  };
 
   // Update form data when editing guest changes
   useEffect(() => {
     if (editingGuest) {
       setFormData({
-        first_name: editingGuest.first_name,
-        last_name: editingGuest.last_name,
+        first_name: editingGuest.first_name || '',
+        last_name: editingGuest.last_name || '',
         email: editingGuest.email || '',
         phone: editingGuest.phone || '',
         relationship: editingGuest.relationship || 'family',
         address: editingGuest.address || '',
         dietary_restrictions: editingGuest.dietary_restrictions || '',
         notes: editingGuest.notes || '',
-        wedding: editingGuest.wedding,
-        rsvp_status: editingGuest.rsvp_status,
-        invitation_sent: editingGuest.invitation_sent,
-        reminder_sent: editingGuest.reminder_sent,
-        table: editingGuest.table,
-        side: editingGuest.side || 'bride'
+        rsvp_status_id: editingGuest.rsvp_status_id || 1,
+        table_id: editingGuest.table_id || null,
+        meal_ids: editingGuest.meal_ids || []
       });
     } else {
       setFormData({
@@ -64,12 +99,9 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
         address: '',
         dietary_restrictions: '',
         notes: '',
-        wedding: 1,
-        rsvp_status: 'pending',
-        invitation_sent: false,
-        reminder_sent: false,
-        table: null,
-        side: 'bride'
+        rsvp_status_id: 1,
+        table_id: null,
+        meal_ids: []
       });
     }
     setErrors({});
@@ -107,11 +139,35 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
       let savedGuest: Guest;
       
       if (editingGuest) {
-        // Update existing guest
-        savedGuest = await GuestService.updateGuest(editingGuest.id, formData);
+        // Update existing guest - use update structure with rsvp_status_id and table_id
+        const updateData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          relationship: formData.relationship,
+          address: formData.address,
+          dietary_restrictions: formData.dietary_restrictions,
+          notes: formData.notes,
+          rsvp_status_id: formData.rsvp_status_id,
+          table_id: formData.table_id,
+          meal_ids: formData.meal_ids
+        };
+        savedGuest = await GuestService.updateGuest(editingGuest.id, updateData);
       } else {
-        // Create new guest
-        savedGuest = await GuestService.createGuest(formData);
+        // Create new guest - use create structure without rsvp_status_id and table_id
+        const createData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          relationship: formData.relationship,
+          address: formData.address,
+          dietary_restrictions: formData.dietary_restrictions,
+          notes: formData.notes,
+          meal_ids: formData.meal_ids
+        };
+        savedGuest = await GuestService.createGuest(createData);
       }
       
       // Callback to parent component
@@ -126,41 +182,21 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
     } finally {
       setIsSaving(false);
     }
-    onAddGuest(newGuest);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      rsvpStatus: 'pending',
-      mealPreference: '',
-      plusOne: false,
-      gender: 'male'
-    });
-    onClose();
   };
 
-  const handleInputChange = (field: keyof Omit<Guest, 'id'>) => (
+  const handleInputChange = (field: keyof GuestFormData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const value = e.target.type === 'checkbox' 
       ? (e.target as HTMLInputElement).checked 
+      : e.target.type === 'number'
+      ? Number(e.target.value)
       : e.target.value;
     
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
-
-  const getGenderIcon = () => {
-    switch (formData.gender) {
-      case 'male':
-        return <User size={20} className="text-blue-400" />;
-      case 'female':
-        return <User size={20} className="text-pink-400" />;
-      default:
-        return <UserPlus size={20} className="text-gray-400" />;
-    }
   };
 
   return (
@@ -199,39 +235,62 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
+              {errors.submit && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                  {errors.submit}
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Basic Information */}
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold text-text-primary mb-4">Basic Information</h3>
                   
-                  {/* Name Input */}
+                  {/* First Name Input */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Name *
+                      First Name *
                     </label>
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name')(e)}
-                      placeholder="Enter guest name"
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      value={formData.first_name}
+                      onChange={(e) => handleInputChange('first_name')(e)}
+                      placeholder="Enter first name"
+                      className={`w-full px-4 py-3 bg-surface border ${errors.first_name ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20`}
                       required
                     />
+                    {errors.first_name && <p className="text-red-400 text-xs mt-1">{errors.first_name}</p>}
+                  </div>
+
+                  {/* Last Name Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) => handleInputChange('last_name')(e)}
+                      placeholder="Enter last name"
+                      className={`w-full px-4 py-3 bg-surface border ${errors.last_name ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                      required
+                    />
+                    {errors.last_name && <p className="text-red-400 text-xs mt-1">{errors.last_name}</p>}
                   </div>
 
                   {/* Email Input */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Email *
+                      Email
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email')(e)}
                       placeholder="Enter email address"
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      required
+                      className={`w-full px-4 py-3 bg-surface border ${errors.email ? 'border-red-500' : 'border-white/20'} rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20`}
                     />
+                    {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                   </div>
 
                   {/* Phone Input */}
@@ -248,150 +307,104 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
                     />
                   </div>
 
-                  {/* Gender Selection */}
+                  {/* Relationship Selection */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Gender
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="male"
-                          checked={formData.gender === 'male'}
-                          onChange={(e) => handleInputChange('gender')(e)}
-                          className="sr-only"
-                        />
-                        <div className="flex items-center gap-2">
-                          {getGenderIcon()}
-                          <span className="text-sm font-medium">Male</span>
-                        </div>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="female"
-                          checked={formData.gender === 'female'}
-                          onChange={(e) => handleInputChange('gender')(e)}
-                          className="sr-only"
-                        />
-                        <div className="flex items-center gap-2">
-                          {getGenderIcon()}
-                          <span className="text-sm font-medium">Female</span>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* RSVP Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      RSVP Status
+                      Relationship
                     </label>
                     <select
-                      value={formData.rsvpStatus}
-                      onChange={(e) => handleInputChange('rsvpStatus')(e)}
+                      value={formData.relationship}
+                      onChange={(e) => handleInputChange('relationship')(e)}
                       className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="declined">Declined</option>
+                      <option value="family">Family</option>
+                      <option value="friend">Friend</option>
+                      <option value="colleague">Colleague</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
+
+                  {/* RSVP Status Selection (for editing) */}
+                  {editingGuest && (
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        RSVP Status
+                      </label>
+                      <select
+                        value={formData.rsvp_status_id}
+                        onChange={(e) => handleInputChange('rsvp_status_id')(e)}
+                        disabled={isLoadingOptions}
+                        className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                      >
+                        {isLoadingOptions ? (
+                          <option value="">Loading...</option>
+                        ) : (
+                          rsvpStatuses.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.name.charAt(0).toUpperCase() + status.name.slice(1)}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Table Assignment (for editing) */}
+                  {editingGuest && (
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-2">
+                        Table Assignment
+                      </label>
+                      <select
+                        value={formData.table_id || ''}
+                        onChange={(e) => handleInputChange('table_id')(e)}
+                        disabled={isLoadingOptions}
+                        className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                      >
+                        <option value="">No table assigned</option>
+                        {isLoadingOptions ? (
+                          <option value="">Loading...</option>
+                        ) : (
+                          tables.map((table) => (
+                            <option key={table.id} value={table.id}>
+                              Table {table.table_number} (Capacity: {table.capacity})
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Column - Additional Details */}
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold text-text-primary mb-4">Additional Details</h3>
                   
-                  {/* Meal Preference */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Meal Preference
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.mealPreference || ''}
-                      onChange={(e) => handleInputChange('mealPreference')(e)}
-                      placeholder="Enter dietary preferences (optional)"
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-
-                  {/* Plus One */}
-                  <div>
-                    <label className="flex items-center gap-3 cursor-pointer p-3 bg-surface border border-white/20 rounded-lg hover:bg-white/5 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={formData.plusOne}
-                        onChange={(e) => handleInputChange('plusOne')(e)}
-                        className="w-5 h-5 text-primary bg-surface border-white/20 rounded focus:ring-primary focus:ring-2"
-                      />
-                      <span className="text-sm font-medium text-text-primary">Plus One</span>
-                    </label>
-                  </div>
-
-                  {/* Table Assignment */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Table Assignment
-                    </label>
-                    <select
-                      value={formData.table || ''}
-                      onChange={(e) => handleInputChange('table')(e)}
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    >
-                      <option value="">Select table...</option>
-                      <option value="A1">Table A1</option>
-                      <option value="A2">Table A2</option>
-                      <option value="A3">Table A3</option>
-                      <option value="B1">Table B1</option>
-                    </select>
-                  </div>
-
-                  {/* Side Selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Side
-                    </label>
-                    <select
-                      value={formData.side || ''}
-                      onChange={(e) => handleInputChange('side')(e)}
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    >
-                      <option value="">Select side...</option>
-                      <option value="Bride">Bride</option>
-                      <option value="Groom">Groom</option>
-                    </select>
-                  </div>
-
-                  {/* WhatsApp Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      WhatsApp
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.whatsapp || ''}
-                      onChange={(e) => handleInputChange('whatsapp')(e)}
-                      placeholder="Enter WhatsApp number (optional)"
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-
                   {/* Address Input */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
                       Address
                     </label>
-                    <input
-                      type="text"
+                    <textarea
                       value={formData.address || ''}
                       onChange={(e) => handleInputChange('address')(e)}
                       placeholder="Enter address (optional)"
-                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      rows={2}
+                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                    />
+                  </div>
+
+                  {/* Dietary Restrictions */}
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Dietary Restrictions
+                    </label>
+                    <textarea
+                      value={formData.dietary_restrictions || ''}
+                      onChange={(e) => handleInputChange('dietary_restrictions')(e)}
+                      placeholder="Enter dietary restrictions (optional)"
+                      rows={2}
+                      className="w-full px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                     />
                   </div>
 
@@ -416,15 +429,27 @@ export default function AddGuestModal({ isOpen, onClose, onGuestAdded, existingG
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 bg-surface border border-white/20 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editingGuest ? 'Update Guest' : 'Add Guest'}
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      {editingGuest ? 'Update Guest' : 'Add Guest'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
