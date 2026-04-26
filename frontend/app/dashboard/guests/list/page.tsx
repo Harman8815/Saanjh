@@ -16,13 +16,16 @@ export default function GuestListPage() {
   const [error, setError] = useState<string | null>(null);
   const [apiPage, setApiPage] = useState(1);
   const [totalGuests, setTotalGuests] = useState(0);
+  const [sortField, setSortField] = useState('last_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Fetch guests from API
   useEffect(() => {
     const fetchGuests = async () => {
       try {
         setIsLoading(true);
-        const response = await GuestService.getGuests(apiPage, 50);
+        const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
+        const response = await GuestService.getGuests(apiPage, 50, ordering);
         // API returns a plain array, not a paginated response
         const guestsArray = Array.isArray(response) ? response : (response.results || []);
         setGuests(guestsArray);
@@ -37,7 +40,7 @@ export default function GuestListPage() {
     };
 
     fetchGuests();
-  }, [apiPage]);
+  }, [apiPage, sortField, sortOrder]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTable, setSelectedTable] = useState('all');
@@ -68,6 +71,17 @@ export default function GuestListPage() {
     plusOne: 'all',
     mealPreference: 'all'
   });
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Toggle between asc and desc if clicking the same field
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to asc
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
 
   // Filter guests based on table assignment and advanced filters
   const filteredGuests = (guests || []).filter((guest: Guest) => {
@@ -161,7 +175,8 @@ export default function GuestListPage() {
     // Refetch guest list to get complete data including full_name from backend
     try {
       setIsLoading(true);
-      const response = await GuestService.getGuests(apiPage, 50);
+      const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
+      const response = await GuestService.getGuests(apiPage, 50, ordering);
       const guestsArray = Array.isArray(response) ? response : (response.results || []);
       setGuests(guestsArray);
       setTotalGuests(guestsArray.length);
@@ -488,11 +503,71 @@ export default function GuestListPage() {
                               )}
                             </button>
                           </th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Name</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Email</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Phone</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">Table</th>
-                          <th className="text-left px-6 py-3 text-text-primary font-semibold">RSVP</th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={() => handleSort('full_name')}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                              Name
+                              {sortField === 'full_name' && (
+                                <span className="text-xs">
+                                  {sortOrder === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={() => handleSort('email')}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                              Email
+                              {sortField === 'email' && (
+                                <span className="text-xs">
+                                  {sortOrder === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={() => handleSort('phone')}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                              Phone
+                              {sortField === 'phone' && (
+                                <span className="text-xs">
+                                  {sortOrder === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={() => handleSort('table')}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                              Table
+                              {sortField === 'table' && (
+                                <span className="text-xs">
+                                  {sortOrder === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="text-left px-6 py-3 text-text-primary font-semibold">
+                            <button
+                              onClick={() => handleSort('rsvp_status')}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
+                              RSVP
+                              {sortField === 'rsvp_status' && (
+                                <span className="text-xs">
+                                  {sortOrder === 'asc' ? '↑' : '↓'}
+                                </span>
+                              )}
+                            </button>
+                          </th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Meals</th>
                           <th className="text-left px-6 py-3 text-text-primary font-semibold">Actions</th>
                         </tr>
