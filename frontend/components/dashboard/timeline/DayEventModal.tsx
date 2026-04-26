@@ -108,10 +108,10 @@ export default function DayEventModal({
   };
 
   const hasEvents = events.length > 0;
-  
+
   // Modal size logic
-  const modalWidth = 'w-[70%]'; // Fixed 70% width (between 60-80%)
-  const modalHeight = hasEvents ? 'min-h-[75vh]' : 'aspect-square'; // Square if no events, 75% min-height if events exist
+  const modalWidth = hasEvents ? 'w-[70%]' : 'w-[400px]'; // Smaller when no events
+  const modalHeight = hasEvents ? 'min-h-[75vh]' : 'h-auto'; // Auto height when no events
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -292,7 +292,7 @@ export default function DayEventModal({
                       className="flex flex-col bg-white/[0.02] lg:flex hidden"
                     >
                       <div className="flex-1 overflow-y-auto p-6">
-                        {selectedEvent && <EventDetailContent event={selectedEvent} />}
+                        {selectedEvent && <EventDetailContent event={selectedEvent} onEdit={onEditEvent} onDelete={onDeleteEvent} />}
                       </div>
                     </motion.div>
                   )}
@@ -325,7 +325,7 @@ export default function DayEventModal({
                       </button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-6">
-                      {selectedEvent && <EventDetailContent event={selectedEvent} />}
+                      {selectedEvent && <EventDetailContent event={selectedEvent} onEdit={onEditEvent} onDelete={onDeleteEvent} />}
                     </div>
                   </motion.div>
                 )}
@@ -339,7 +339,7 @@ export default function DayEventModal({
 }
 
 // Separate component for event details content to avoid duplication
-function EventDetailContent({ event }: { event: TimelineEvent }) {
+function EventDetailContent({ event, onEdit, onDelete }: { event: TimelineEvent; onEdit: (event: TimelineEvent) => void; onDelete: (event: TimelineEvent) => void }) {
   const statusConfig = getStatusConfig(event.status);
   const typeConfig = getTypeConfig(event.type);
   const priorityConfig = getPriorityConfig(event.priority);
@@ -365,6 +365,24 @@ function EventDetailContent({ event }: { event: TimelineEvent }) {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => onEdit(event)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
+        >
+          <Edit3 size={18} />
+          Edit Event
+        </button>
+        <button
+          onClick={() => onDelete(event)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+        >
+          <Trash2 size={18} />
+          Delete
+        </button>
       </div>
 
       {/* Details Grid */}
