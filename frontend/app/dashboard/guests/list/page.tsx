@@ -27,7 +27,8 @@ export default function GuestListPage() {
       try {
         setIsLoading(true);
         const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-        const response = await GuestService.getGuests(apiPage, itemsPerPage, ordering, searchQuery);
+        // Fetch all guests at once for client-side pagination
+        const response = await GuestService.getGuests(1, 1000, ordering, searchQuery);
         // API returns a plain array, not a paginated response
         const guestsArray = Array.isArray(response) ? response : (response.results || []);
         setGuests(guestsArray);
@@ -42,7 +43,7 @@ export default function GuestListPage() {
     };
 
     fetchGuests();
-  }, [apiPage, itemsPerPage, sortField, sortOrder, searchQuery]);
+  }, [sortField, sortOrder, searchQuery]);
   const [selectedTable, setSelectedTable] = useState('all');
   const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
@@ -175,7 +176,8 @@ export default function GuestListPage() {
     try {
       setIsLoading(true);
       const ordering = sortOrder === 'desc' ? `-${sortField}` : sortField;
-      const response = await GuestService.getGuests(apiPage, itemsPerPage, ordering, searchQuery);
+      // Fetch all guests at once for client-side pagination
+      const response = await GuestService.getGuests(1, 1000, ordering, searchQuery);
       const guestsArray = Array.isArray(response) ? response : (response.results || []);
       setGuests(guestsArray);
       setTotalGuests(guestsArray.length);
