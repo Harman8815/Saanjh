@@ -108,19 +108,21 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                       <div
                         key={event.id}
                         onClick={() => handleEventClick(event)}
-                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border cursor-pointer hover:scale-[1.02] transition-transform ${getEventColorClasses(event)}`}
+                        className={`absolute left-0 right-0 rounded-xl p-3 mx-2 border cursor-pointer hover:scale-[1.02] transition-transform flex flex-col justify-between ${getEventColorClasses(event)}`}
                         style={{ height: `90%`, top:'5%' }}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-text-primary">{event.title}</span>
-                          <span className="text-xs text-text-secondary">{event.time}</span>
-                        </div>
-                        <div className="text-sm text-text-secondary my-1 flex items-center gap-2">
-                          <MapPin size={12} />
-                          {event.location}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-text-primary truncate flex-1">{event.title}</span>
+                            <span className="text-xs text-text-secondary ml-2 flex-shrink-0">{event.time}</span>
+                          </div>
+                          <div className="text-sm text-text-secondary flex items-center gap-2">
+                            <MapPin size={12} />
+                            <span className="truncate">{event.location}</span>
+                          </div>
                         </div>
                         {/* Action Icons */}
-                        <div className="flex items-center gap-1 mt-2">
+                        <div className="flex items-center justify-end gap-1 mt-2">
                           <button
                             onClick={(e) => handleView(e, event)}
                             className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-text-secondary hover:text-text-primary"
