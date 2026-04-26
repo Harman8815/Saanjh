@@ -104,9 +104,6 @@ export default function DayEventModal({
 
   const handleDelete = (e: React.MouseEvent, event: TimelineEvent) => {
     e.stopPropagation();
-    console.log('DayEventModal handleDelete - event object:', event);
-    console.log('DayEventModal handleDelete - event.id:', event.id);
-    console.log('DayEventModal handleDelete - event keys:', Object.keys(event));
     onDeleteEvent(event);
   };
 
