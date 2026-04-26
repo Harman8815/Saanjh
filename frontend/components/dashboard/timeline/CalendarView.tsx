@@ -30,6 +30,7 @@ interface CalendarViewProps {
   getStatusColor: (status: string) => string;
   getEventsForDate: (date: Date) => TimelineEvent[];
   isLoading?: boolean;
+  onDayClick?: (date: Date) => void;
 }
 
 // Transform TimelineEvent to local Event format for child components
@@ -76,7 +77,8 @@ export default function CalendarView({
   setSelectedDate,
   getStatusColor,
   getEventsForDate,
-  isLoading = false
+  isLoading = false,
+  onDayClick
 }: CalendarViewProps) {
   // Transform events to local format
   const transformedEvents = events.map(transformEvent);
@@ -259,7 +261,10 @@ export default function CalendarView({
                 events: day.events.map(transformEvent)
               }))}
               selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                onDayClick?.(date);
+              }}
             />
           )}
 
@@ -270,6 +275,7 @@ export default function CalendarView({
                 events: day.events.map(transformEvent)
               }))}
               timeSlots={timeSlots}
+              onDayClick={onDayClick}
             />
           )}
 

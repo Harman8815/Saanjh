@@ -9,6 +9,7 @@ import ChecklistView from '../../../components/dashboard/timeline/ChecklistView'
 import EventFormModal from '../../../components/dashboard/timeline/EventFormModal';
 import ViewEventModal from '../../../components/dashboard/timeline/ViewEventModal';
 import DeleteConfirmModal from '../../../components/dashboard/timeline/DeleteConfirmModal';
+import DayEventModal from '../../../components/dashboard/timeline/DayEventModal';
 import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
 import { TimelineService } from '../../../services/timeline';
 
@@ -24,6 +25,7 @@ export default function TimelinePage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDayModalOpen, setIsDayModalOpen] = useState(false);
   const [selectedEventData, setSelectedEventData] = useState<TimelineEvent | null>(null);
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
@@ -131,6 +133,33 @@ export default function TimelinePage() {
     setIsDeleteModalOpen(true);
   };
 
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date);
+    setIsDayModalOpen(true);
+  };
+
+  const handleDayModalCreate = () => {
+    setIsDayModalOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleDayModalView = (event: TimelineEvent) => {
+    setSelectedEventData(event);
+    // Keep day modal open and show details
+  };
+
+  const handleDayModalEdit = (event: TimelineEvent) => {
+    setSelectedEventData(event);
+    setIsDayModalOpen(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDayModalDelete = (event: TimelineEvent) => {
+    setSelectedEventData(event);
+    setIsDayModalOpen(false);
+    setIsDeleteModalOpen(true);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-500/20 text-green-400';
@@ -216,6 +245,7 @@ export default function TimelinePage() {
               getStatusColor={getStatusColor}
               getEventsForDate={getEventsForDate}
               isLoading={isCalendarLoading}
+              onDayClick={handleDayClick}
             />
           )}
 
@@ -257,6 +287,17 @@ export default function TimelinePage() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteEvent}
         eventTitle={selectedEventData?.title || ''}
+      />
+
+      <DayEventModal
+        isOpen={isDayModalOpen}
+        onClose={() => setIsDayModalOpen(false)}
+        selectedDate={selectedDate}
+        events={getEventsForDate(selectedDate)}
+        onCreateEvent={handleDayModalCreate}
+        onViewEvent={handleDayModalView}
+        onEditEvent={handleDayModalEdit}
+        onDeleteEvent={handleDayModalDelete}
       />
     </div>
   );

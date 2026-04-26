@@ -46,9 +46,10 @@ interface WeekDay {
 interface WeekViewProps {
   weekDays: WeekDay[];
   timeSlots: number[];
+  onDayClick?: (date: Date) => void;
 }
 
-export default function WeekView({ weekDays, timeSlots }: WeekViewProps) {
+export default function WeekView({ weekDays, timeSlots, onDayClick }: WeekViewProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -62,12 +63,16 @@ export default function WeekView({ weekDays, timeSlots }: WeekViewProps) {
           <span className="text-sm text-text-secondary">Time</span>
         </div>
         {weekDays.map((day, i) => (
-          <div key={i} className={`text-center p-2 rounded-lg ${day.isToday ? 'bg-primary/20' : ''}`}>
+          <button
+            key={i}
+            onClick={() => onDayClick?.(day.date)}
+            className={`text-center p-2 rounded-lg ${day.isToday ? 'bg-primary/20' : ''} hover:bg-white/5 transition-colors`}
+          >
             <div className="text-sm text-text-secondary">{day.date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
             <div className={`text-lg font-semibold ${day.isToday ? 'text-primary' : 'text-text-primary'}`}>
               {day.date.getDate()}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
