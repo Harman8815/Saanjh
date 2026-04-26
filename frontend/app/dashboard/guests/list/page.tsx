@@ -596,11 +596,11 @@ export default function GuestListPage() {
                                 <span className="text-text-primary">{guest.full_name || 'Unknown'}</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-text-muted">{guest.email}</td>
-                            <td className="px-6 py-4 text-text-muted">{guest.phone}</td>
+                            <td className="px-6 py-4 text-text-muted">{guest.email || '--'}</td>
+                            <td className="px-6 py-4 text-text-muted">{guest.phone || '--'}</td>
                             <td className="px-6 py-4">
                               <span className="px-3 py-1 bg-surface border border-white/20 rounded-full text-sm text-text-primary">
-                                {guest.table ? `Table ${guest.table.table_number}` : 'Unassigned'}
+                                {guest.table ? `Table ${guest.table.table_number}` : '--'}
                               </span>
                             </td>
                             <td className="px-6 py-4">
@@ -610,14 +610,16 @@ export default function GuestListPage() {
                                 guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-400' :
                                 'bg-gray-500/20 text-gray-400'
                               }`}>
-                                {guest.rsvp_status?.name ? guest.rsvp_status.name.charAt(0).toUpperCase() + guest.rsvp_status.name.slice(1) : 'Unknown'}
+                                {guest.rsvp_status?.name ? guest.rsvp_status.name.charAt(0).toUpperCase() + guest.rsvp_status.name.slice(1) : '--'}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              {guest.meal_preferences && guest.meal_preferences.length > 0 && (
+                              {guest.meal_preferences && guest.meal_preferences.length > 0 ? (
                                 <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs">
                                   {guest.meal_preferences.length} meal{guest.meal_preferences.length > 1 ? 's' : ''}
                                 </span>
+                              ) : (
+                                <span className="text-text-muted">--</span>
                               )}
                             </td>
                             <td className="px-6 py-4">
