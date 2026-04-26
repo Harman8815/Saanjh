@@ -23,11 +23,12 @@ export default function GuestListPage() {
       try {
         setIsLoading(true);
         const response = await GuestService.getGuests(apiPage, 50);
-        setGuests(response.results);
-        setTotalGuests(response.count);
+        setGuests(response.results || []);
+        setTotalGuests(response.count || 0);
       } catch (err: any) {
         console.error('Error fetching guests:', err);
         setError(err.message || 'Failed to load guests');
+        setGuests([]); // Set empty array on error to prevent filter errors
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +68,7 @@ export default function GuestListPage() {
   });
 
   // Filter guests based on table assignment and advanced filters
-  const filteredGuests = guests.filter((guest: Guest) => {
+  const filteredGuests = (guests || []).filter((guest: Guest) => {
     const matchesTable = selectedTable === 'all' || guest.table?.id?.toString() === selectedTable;
 
     // Advanced filters
