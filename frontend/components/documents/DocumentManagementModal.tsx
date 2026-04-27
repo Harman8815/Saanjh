@@ -180,25 +180,28 @@ export default function DocumentManagementModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate upload/save process
-    if (uploadedFiles.length > 0) {
+    // Set uploading state for new documents
+    if (!document && uploadedFiles.length > 0) {
       setIsUploading(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setIsUploading(false);
     }
 
-    // Simulate save process
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Prepare document data for parent component
+      // For new uploads, include the file; for edits, just metadata
+      const savedDocument = {
+        ...formData,
+        id: document?.id || `temp-${Date.now()}`,
+        url: document?.url || (uploadedFiles.length > 0 ? URL.createObjectURL(uploadedFiles[0]) : '/api/placeholder/400/300'),
+        file: uploadedFiles.length > 0 ? uploadedFiles[0] : undefined,
+        tags: formData.tags
+      };
 
-    const savedDocument: Document = {
-      ...formData,
-      id: document?.id || Date.now().toString(),
-      url: document?.url || '/api/placeholder/400/300'
-    };
-
-    onSave(savedDocument);
-    setIsSubmitting(false);
-    onClose();
+      onSave(savedDocument);
+    } finally {
+      setIsSubmitting(false);
+      setIsUploading(false);
+      onClose();
+    }
   };
 
   const handleClose = () => {

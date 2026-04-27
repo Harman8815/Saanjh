@@ -472,6 +472,63 @@ export interface TimelineEventCreateRequest {
   notes?: string;
 }
 
+// Document types
+export interface Document {
+  id: number;
+  name: string;
+  description?: string;
+  category: 'contracts' | 'invoices' | 'ids' | 'miscellaneous';
+  category_display: string;
+  file: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  file_size_display: string;
+  tags: DocumentTag[];
+  uploaded_at: string;
+  updated_at: string;
+  uploaded_by?: number;
+  uploaded_by_name?: string;
+}
+
+export interface DocumentTag {
+  id: number;
+  name: string;
+}
+
+export interface DocumentCategory {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface DocumentStatistics {
+  total_count: number;
+  total_size: number;
+  total_size_display: string;
+  by_category: Record<string, {
+    name: string;
+    count: number;
+    size: number;
+  }>;
+  recent_uploads: Document[];
+}
+
+export interface DocumentCreateRequest {
+  name: string;
+  description?: string;
+  category: 'contracts' | 'invoices' | 'ids' | 'miscellaneous';
+  file: File;
+  tag_names?: string[];
+}
+
+export interface DocumentUpdateRequest {
+  name?: string;
+  description?: string;
+  category?: 'contracts' | 'invoices' | 'ids' | 'miscellaneous';
+  tag_names?: string[];
+}
+
 // Error types
 export interface ApiError {
   message: string;

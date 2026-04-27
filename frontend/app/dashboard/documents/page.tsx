@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { 
@@ -23,104 +23,16 @@ import {
   FileVideo,
   FileAudio,
   Archive,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import DocumentCard from '../../../components/documents/DocumentCard';
 import DocumentPreviewModal from '../../../components/documents/DocumentPreviewModal';
 import DocumentManagementModal from '../../../components/documents/DocumentManagementModal';
 import DeleteConfirmationModal from '../../../components/gallery/DeleteConfirmationModal';
-
-// Mock data for documents
-const mockDocuments = [
-  {
-    id: '1',
-    name: 'Venue Contract - The Grand Ballroom',
-    type: 'pdf',
-    category: 'contracts',
-    uploadDate: '2024-03-15',
-    size: '2.4 MB',
-    description: 'Signed venue rental agreement for wedding reception',
-    tags: ['venue', 'contract', 'signed'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '2',
-    name: 'Photography Package Invoice',
-    type: 'pdf',
-    category: 'invoices',
-    uploadDate: '2024-03-18',
-    size: '156 KB',
-    description: 'Invoice from Moments Photography Studio',
-    tags: ['photography', 'invoice', 'vendor'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '3',
-    name: 'Marriage Certificate',
-    type: 'pdf',
-    category: 'ids',
-    uploadDate: '2024-03-20',
-    size: '1.2 MB',
-    description: 'Official marriage license and certificate',
-    tags: ['legal', 'certificate', 'official'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '4',
-    name: 'Wedding Invitation Design',
-    type: 'image',
-    category: 'miscellaneous',
-    uploadDate: '2024-03-22',
-    size: '4.8 MB',
-    description: 'Final design for wedding invitations',
-    tags: ['design', 'invitation', 'creative'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '5',
-    name: 'Catering Service Agreement',
-    type: 'doc',
-    category: 'contracts',
-    uploadDate: '2024-03-25',
-    size: '890 KB',
-    description: 'Catering contract with Gourmet Delights',
-    tags: ['catering', 'food', 'contract'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '6',
-    name: 'Florist Invoice - March',
-    type: 'pdf',
-    category: 'invoices',
-    uploadDate: '2024-03-28',
-    size: '234 KB',
-    description: 'Monthly invoice from Blooms & Petals',
-    tags: ['flowers', 'invoice', 'decoration'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '7',
-    name: 'Guest List Final',
-    type: 'xlsx',
-    category: 'miscellaneous',
-    uploadDate: '2024-04-01',
-    size: '45 KB',
-    description: 'Complete guest list with contact information',
-    tags: ['guests', 'planning', 'list'],
-    url: '/api/placeholder/400/300'
-  },
-  {
-    id: '8',
-    name: 'Wedding Timeline',
-    type: 'pdf',
-    category: 'miscellaneous',
-    uploadDate: '2024-04-05',
-    size: '1.8 MB',
-    description: 'Detailed wedding day schedule',
-    tags: ['timeline', 'schedule', 'planning'],
-    url: '/api/placeholder/400/300'
-  }
-];
+import { useDocuments, useSearchDocuments, useCreateDocument, useUpdateDocument, useDeleteDocument } from '../../../hooks/useDocuments';
+import type { Document } from '../../../types/api';
 
 const categories = [
   { value: 'all', label: 'All Documents' },
@@ -139,10 +51,22 @@ const sortOptions = [
   { value: 'size-asc', label: 'Smallest First' }
 ];
 
+function formatDocumentForDisplay(doc: Document) {
+  return {
+    id: String(doc.id),
+    name: doc.name,
+    type: doc.file_type,
+    category: doc.category,
+    uploadDate: doc.uploaded_at,
+    size: doc.file_size_display || '0 B',
+    description: doc.description || '',
+    tags: doc.tags.map(t => t.name),
+    url: doc.file_url
+  };
+}
+
 function DocumentsContent() {
   const searchParams = useSearchParams();
-  const [documents, setDocuments] = useState(mockDocuments);
-  const [filteredDocuments, setFilteredDocuments] = useState(mockDocuments);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('date-desc');
@@ -153,6 +77,13 @@ function DocumentsContent() {
   const [managementModalOpen, setManagementModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+
+  // API hooks
+  const { documents, isLoading, error, mutate } = useDocuments(1, 100, selectedCategory);
+  const { documents: searchResults, isLoading: isSearching } = useSearchDocuments(searchQuery, selectedCategory);
+  const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument();
+  const deleteDocument = useDeleteDocument();
 
   // Handle query parameters
   useEffect(() => {
@@ -171,46 +102,34 @@ function DocumentsContent() {
     }
   }, [searchParams]);
 
-  // Filter and sort documents
-  useEffect(() => {
-    let filtered = [...documents];
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(doc =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(doc => doc.category === selectedCategory);
-    }
-
+  // Get filtered and sorted documents
+  const filteredDocuments = useMemo(() => {
+    let docs = searchQuery ? searchResults : documents;
+    
+    if (!docs) return [];
+    
     // Apply sorting
-    filtered.sort((a, b) => {
+    const sorted = [...docs].sort((a: Document, b: Document) => {
       switch (selectedSort) {
         case 'date-desc':
-          return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
         case 'date-asc':
-          return new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime();
+          return new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime();
         case 'name-asc':
           return a.name.localeCompare(b.name);
         case 'name-desc':
           return b.name.localeCompare(a.name);
         case 'size-desc':
-          return parseFloat(b.size) - parseFloat(a.size);
+          return (b.file_size || 0) - (a.file_size || 0);
         case 'size-asc':
-          return parseFloat(a.size) - parseFloat(b.size);
+          return (a.file_size || 0) - (b.file_size || 0);
         default:
           return 0;
       }
     });
-
-    setFilteredDocuments(filtered);
-  }, [documents, searchQuery, selectedCategory, selectedSort]);
+    
+    return sorted.map(formatDocumentForDisplay);
+  }, [documents, searchResults, searchQuery, selectedSort]);
 
   // Document management handlers
   const handlePreviewDocument = (document: any) => {
@@ -228,24 +147,101 @@ function DocumentsContent() {
     setDeleteModalOpen(true);
   };
 
-  const handleDownloadDocument = (document: any) => {
-    console.log('Downloading document:', document.name);
-    // Implement download functionality
-  };
-
-  const handleSaveDocument = (updatedDocument: any) => {
-    setDocuments(prev => prev.map(doc => 
-      doc.id === updatedDocument.id ? updatedDocument : doc
-    ));
-  };
-
-  const handleDeleteDocumentConfirm = () => {
-    if (selectedDocument) {
-      setDocuments(prev => prev.filter(doc => doc.id !== selectedDocument.id));
-      setDeleteModalOpen(false);
-      setSelectedDocument(null);
+  const handleDownloadDocument = async (document: any) => {
+    try {
+      const response = await fetch(document.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
     }
   };
+
+  const handleSaveDocument = async (updatedDocument: any) => {
+    try {
+      if (updatedDocument.id) {
+        // Update existing document
+        await updateDocument.mutateAsync({
+          documentId: parseInt(updatedDocument.id),
+          documentData: {
+            name: updatedDocument.name,
+            description: updatedDocument.description,
+            category: updatedDocument.category,
+            tag_names: updatedDocument.tags
+          }
+        });
+      } else {
+        // Create new document
+        const file = updatedDocument.file;
+        if (file) {
+          await createDocument.mutateAsync({
+            name: updatedDocument.name,
+            description: updatedDocument.description,
+            category: updatedDocument.category,
+            file: file,
+            tag_names: updatedDocument.tags
+          });
+        }
+      }
+      
+      // Refresh the documents list
+      mutate();
+      setManagementModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error) {
+      console.error('Failed to save document:', error);
+    }
+  };
+
+  const handleDeleteDocumentConfirm = async () => {
+    if (selectedDocument) {
+      try {
+        await deleteDocument.mutateAsync(parseInt(selectedDocument.id));
+        mutate();
+        setDeleteModalOpen(false);
+        setSelectedDocument(null);
+      } catch (error) {
+        console.error('Failed to delete document:', error);
+      }
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-3 text-text-muted">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Loading documents...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-red-400">
+          <AlertCircle className="w-12 h-12" />
+          <p>Failed to load documents</p>
+          <button 
+            onClick={() => mutate()}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -336,7 +332,10 @@ function DocumentsContent() {
 
             {/* Upload Button */}
             <button
-              onClick={() => setManagementModalOpen(true)}
+              onClick={() => {
+                setSelectedDocument(null);
+                setManagementModalOpen(true);
+              }}
               className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
             >
               <Upload size={18} />
@@ -371,8 +370,15 @@ function DocumentsContent() {
         ))}
       </motion.div>
 
+      {/* Loading Indicator */}
+      {(isLoading || isSearching) && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      )}
+
       {/* Empty State */}
-      {filteredDocuments.length === 0 && (
+      {!isLoading && !isSearching && filteredDocuments.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -390,7 +396,10 @@ function DocumentsContent() {
           </p>
           {!searchQuery && selectedCategory === 'all' && (
             <button
-              onClick={() => setManagementModalOpen(true)}
+              onClick={() => {
+                setSelectedDocument(null);
+                setManagementModalOpen(true);
+              }}
               className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               Upload First Document
