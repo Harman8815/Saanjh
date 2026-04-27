@@ -41,7 +41,7 @@ export default function BudgetTrackerPage() {
       expenses: categoryExpenses.map(exp => ({
         id: exp.id.toString(),
         vendorName: exp.title || 'Unknown',
-        amount: exp.amount,
+        amount: exp.amount || 0,
         paidAmount: exp.paid_amount || 0,
         status: exp.status?.name === 'paid' ? 'paid' : exp.status?.name === 'partial' ? 'partial' : 'pending',
         date: exp.expense_date || exp.date,
@@ -182,6 +182,11 @@ export default function BudgetTrackerPage() {
     };
   }, [categories, currentTotalBudget]);
 
+  // Get selected category data for modal
+  const selectedCategoryData = useMemo(() => {
+    return categories.find(cat => cat.id === selectedCategory);
+  }, [categories, selectedCategory]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -224,114 +229,62 @@ export default function BudgetTrackerPage() {
     setIsAddModalOpen(true);
   };
 
-  const saveExpense = async (expenseData: Omit<Expense, 'id'> & { id?: string }) => {
-    try {
-      const selectedCat = categories.find(c => c.id === selectedCategory);
-      if (!selectedCat) {
-        throw new Error('Selected category not found');
-      }
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
 
-      let savedExpense;
-      
-      if (expenseData.id) {
+  // Save expense handler
+  const saveExpense = async (expenseData: any) => {
+    try {
+      if (editingExpense) {
         // Update existing expense
-        const apiExpenseData = {
+        await ExpenseService.updateExpense(parseInt(editingExpense.id), {
           title: expenseData.vendorName,
           amount: expenseData.amount,
           paid_amount: expenseData.paidAmount,
           expense_date: expenseData.date,
-          notes: expenseData.notes
-        };
-        
-        savedExpense = await ExpenseService.updateExpense(parseInt(expenseData.id), apiExpenseData);
+          notes: expenseData.notes,
+          status_id: expenseData.status === 'paid' ? 3 : expenseData.status === 'partial' ? 2 : 1,
+          budget_category_id: parseInt(selectedCategory)
+        });
       } else {
         // Create new expense
-        const apiExpenseData = {
+        await ExpenseService.createExpense({
           title: expenseData.vendorName,
           amount: expenseData.amount,
+          paid_amount: expenseData.paidAmount,
           expense_date: expenseData.date,
           notes: expenseData.notes,
-          budget_category_id: parseInt(selectedCat.id)
-        };
-        
-        savedExpense = await ExpenseService.createExpense(apiExpenseData);
+          status_id: expenseData.status === 'paid' ? 3 : expenseData.status === 'partial' ? 2 : 1,
+          budget_category_id: parseInt(selectedCategory)
+        });
       }
-
-      // Refresh data to get updated state
-      const [budgetCategories, expensesData] = await Promise.all([
-        ExpenseService.getBudgetCategories(),
-        ExpenseService.getExpenses(1, 100)
-      ]);
-
-      // Process the updated data
-      const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
-      const expensesByCategory: Record<number, any[]> = {};
-      expensesArray.forEach(exp => {
-        if (exp && exp.budget_category) {
-          const categoryId = exp.budget_category.id;
-          if (!expensesByCategory[categoryId]) {
-            expensesByCategory[categoryId] = [];
-          }
-          expensesByCategory[categoryId].push(exp);
-        }
-      });
-
-      const localCategories = budgetCategories.map(cat =>
-        transformApiToLocal(cat, expensesByCategory[cat.id] || [])
-      );
       
-      setCategories(localCategories);
+      // Refresh data after save
+      await refreshData();
       setIsAddModalOpen(false);
+      setEditingExpense(null);
     } catch (err: any) {
       console.error('Error saving expense:', err);
       setError(err.message || 'Failed to save expense');
     }
   };
 
+  // Delete expense handler
   const deleteExpense = async (categoryId: string, expenseId: string) => {
     try {
       await ExpenseService.deleteExpense(parseInt(expenseId));
-      
-      // Refresh data to get updated state
-      const [budgetCategories, expensesData] = await Promise.all([
-        ExpenseService.getBudgetCategories(),
-        ExpenseService.getExpenses(1, 100)
-      ]);
-
-      // Process the updated data
-      const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
-      const expensesByCategory: Record<number, any[]> = {};
-      expensesArray.forEach(exp => {
-        if (exp && exp.budget_category) {
-          const categoryId = exp.budget_category.id;
-          if (!expensesByCategory[categoryId]) {
-            expensesByCategory[categoryId] = [];
-          }
-          expensesByCategory[categoryId].push(exp);
-        }
-      });
-
-      const localCategories = budgetCategories.map(cat =>
-        transformApiToLocal(cat, expensesByCategory[cat.id] || [])
-      );
-      
-      setCategories(localCategories);
+      await refreshData();
     } catch (err: any) {
       console.error('Error deleting expense:', err);
       setError(err.message || 'Failed to delete expense');
     }
   };
 
-  const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-  };
-
-  // Get category for modal
-  const selectedCategoryData = categories.find(c => c.id === selectedCategory) || null;
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -403,7 +356,7 @@ export default function BudgetTrackerPage() {
         onClose={() => setIsAddModalOpen(false)}
         onSave={saveExpense}
         editingExpense={editingExpense}
-        category={selectedCategoryData}
+        category={selectedCategoryData ?? null}
       />
     </div>
   );
