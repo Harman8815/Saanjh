@@ -19,30 +19,31 @@ export default function RSVPStatusPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Fetch guests and RSVP statuses in parallel
-        const [guestsResponse, rsvpStatusesResponse] = await Promise.all([
-          GuestService.getGuests(1, 1000), // Get all guests
-          GuestService.getRsvpStatuses()
-        ]);
-        
-        const guestsArray = Array.isArray(guestsResponse) ? guestsResponse : (guestsResponse.results || []);
-        setGuests(guestsArray);
-        setRsvpStatuses(rsvpStatusesResponse);
-      } catch (err: any) {
-        console.error('Error fetching RSVP data:', err);
-        setError(err.message || 'Failed to load RSVP data');
-        toast.error('Failed to load RSVP data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Fetch guests and RSVP statuses in parallel
+      const [guestsResponse, rsvpStatusesResponse] = await Promise.all([
+        GuestService.getGuests(1, 1000), // Get all guests
+        GuestService.getRsvpStatuses()
+      ]);
+      
+      const guestsArray = Array.isArray(guestsResponse) ? guestsResponse : (guestsResponse.results || []);
+      console.log('Fetched guests:', guestsArray);
+      setGuests(guestsArray);
+      setRsvpStatuses(rsvpStatusesResponse);
+    } catch (err: any) {
+      console.error('Error fetching RSVP data:', err);
+      setError(err.message || 'Failed to load RSVP data');
+      toast.error('Failed to load RSVP data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -79,7 +80,31 @@ export default function RSVPStatusPage() {
       ));
 
       // Make actual API call to update the guest's RSVP status
-      await GuestService.updateGuest(guestId, { rsvp_status_id: statusObj.id });
+      const updateData = { 
+        rsvp_status_id: statusObj.id,
+        rsvp_status: statusObj
+      };
+      console.log('Sending update data:', updateData);
+      console.log('Guest ID:', guestId);
+      console.log('Status object:', statusObj);
+      
+      const updatedGuest = await GuestService.updateGuest(guestId, updateData);
+      
+      console.log('API Response after update:', updatedGuest);
+      console.log('Updated guest RSVP status:', updatedGuest.rsvp_status);
+      console.log('Updated guest RSVP status ID:', updatedGuest.rsvp_status_id);
+      
+      // Update the guest in state with the response from server
+      setGuests(prev => prev.map(g => 
+        g.id === guestId 
+          ? { ...g, ...updatedGuest }
+          : g
+      ));
+      
+      // Refetch data to ensure consistency with backend
+      setTimeout(() => {
+        fetchData();
+      }, 500);
       
       toast.success(`RSVP status updated to ${newStatus}`);
     } catch (err: any) {
