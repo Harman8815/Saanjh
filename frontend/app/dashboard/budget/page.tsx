@@ -40,15 +40,65 @@ export default function BudgetTrackerPage() {
       allocated: apiCategory.allocated_amount || 0,
       expenses: categoryExpenses.map(exp => ({
         id: exp.id.toString(),
-        vendorName: exp.description || 'Unknown',
+        vendorName: exp.title || 'Unknown',
         amount: exp.amount,
         paidAmount: exp.paid_amount || 0,
-        status: exp.status === 'paid' ? 'paid' : exp.status === 'partial' ? 'partial' : 'pending',
-        date: exp.date,
+        status: exp.status?.name === 'paid' ? 'paid' : exp.status?.name === 'partial' ? 'partial' : 'pending',
+        date: exp.expense_date || exp.date,
         notes: exp.notes
       })),
       color: '#8B5CF6' // Default color
     };
+  };
+
+  // Refresh function to reload data
+  const refreshData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const [budgetCategories, expensesData] = await Promise.all([
+        ExpenseService.getBudgetCategories(),
+        ExpenseService.getExpenses(1, 100)
+      ]);
+
+      // Ensure we have valid data
+      if (!budgetCategories || !Array.isArray(budgetCategories)) {
+        throw new Error('Invalid budget categories data received');
+      }
+
+      const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
+
+      // Group expenses by category
+      const expensesByCategory: Record<number, any[]> = {};
+      expensesArray.forEach(exp => {
+        if (exp && exp.budget_category) {
+          const categoryId = exp.budget_category.id;
+          if (!expensesByCategory[categoryId]) {
+            expensesByCategory[categoryId] = [];
+          }
+          expensesByCategory[categoryId].push(exp);
+        }
+      });
+
+      // Transform categories with their expenses
+      const localCategories = budgetCategories.map(cat =>
+        transformApiToLocal(cat, expensesByCategory[cat.id] || [])
+      );
+      
+      // Calculate total budget from API data
+      const totalBudget = budgetCategories.reduce((sum, cat) => sum + (cat.allocated_amount || 0), 0);
+      
+      setCategories(localCategories);
+      setCurrentTotalBudget(totalBudget);
+    } catch (err: any) {
+      console.error('Error refreshing budget data:', err);
+      setError(err.message || 'Failed to refresh budget data');
+      setCategories([]);
+      setCurrentTotalBudget(0);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Fetch budget categories and expenses from API
@@ -56,15 +106,24 @@ export default function BudgetTrackerPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        
         const [budgetCategories, expensesData] = await Promise.all([
           ExpenseService.getBudgetCategories(),
           ExpenseService.getExpenses(1, 100)
         ]);
 
+        // Ensure we have valid data
+        if (!budgetCategories || !Array.isArray(budgetCategories)) {
+          throw new Error('Invalid budget categories data received');
+        }
+
+        const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
+
         // Group expenses by category
         const expensesByCategory: Record<number, any[]> = {};
-        expensesData.results.forEach(exp => {
-          if (exp.budget_category) {
+        expensesArray.forEach(exp => {
+          if (exp && exp.budget_category) {
             const categoryId = exp.budget_category.id;
             if (!expensesByCategory[categoryId]) {
               expensesByCategory[categoryId] = [];
@@ -77,10 +136,17 @@ export default function BudgetTrackerPage() {
         const localCategories = budgetCategories.map(cat =>
           transformApiToLocal(cat, expensesByCategory[cat.id] || [])
         );
+        
+        // Calculate total budget from API data
+        const totalBudget = budgetCategories.reduce((sum, cat) => sum + (cat.allocated_amount || 0), 0);
+        
         setCategories(localCategories);
+        setCurrentTotalBudget(totalBudget);
       } catch (err: any) {
         console.error('Error fetching budget data:', err);
         setError(err.message || 'Failed to load budget data');
+        setCategories([]); // Set empty array to prevent forEach errors
+        setCurrentTotalBudget(0);
       } finally {
         setIsLoading(false);
       }
@@ -88,27 +154,6 @@ export default function BudgetTrackerPage() {
 
     fetchData();
   }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-text-muted">Loading budget data...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button onClick={() => window.location.reload()} className="btn-primary">
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>('budget');
@@ -123,15 +168,40 @@ export default function BudgetTrackerPage() {
 
   // Computed values
   const { totalSpent, totalPaid, totalRemaining, budgetProgress } = useMemo(() => {
-    const spent = categories.reduce((acc, cat) => acc + cat.expenses.reduce((sum, exp) => sum + exp.amount, 0), 0);
-    const paid = categories.reduce((acc, cat) => acc + cat.expenses.reduce((sum, exp) => sum + exp.paidAmount, 0), 0);
+    const spent = categories.reduce((acc, cat) => 
+      acc + cat.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0), 0
+    );
+    const paid = categories.reduce((acc, cat) => 
+      acc + cat.expenses.reduce((sum, exp) => sum + (exp.paidAmount || 0), 0), 0
+    );
     return {
       totalSpent: spent,
       totalPaid: paid,
       totalRemaining: currentTotalBudget - spent,
-      budgetProgress: (spent / currentTotalBudget) * 100
+      budgetProgress: currentTotalBudget > 0 ? (spent / currentTotalBudget) * 100 : 0
     };
   }, [categories, currentTotalBudget]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Loading budget data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={refreshData} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Handlers
   const toggleCategory = (categoryId: string) => {
@@ -154,38 +224,102 @@ export default function BudgetTrackerPage() {
     setIsAddModalOpen(true);
   };
 
-  const saveExpense = (expenseData: Omit<Expense, 'id'> & { id?: string }) => {
-    const newExpense: Expense = {
-      id: expenseData.id || Date.now().toString(),
-      vendorName: expenseData.vendorName,
-      amount: expenseData.amount,
-      paidAmount: expenseData.paidAmount,
-      status: expenseData.status,
-      date: expenseData.date,
-      notes: expenseData.notes
-    };
+  const saveExpense = async (expenseData: Omit<Expense, 'id'> & { id?: string }) => {
+    try {
+      const selectedCat = categories.find(c => c.id === selectedCategory);
+      if (!selectedCat) {
+        throw new Error('Selected category not found');
+      }
 
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== selectedCategory) return cat;
+      let savedExpense;
       
       if (expenseData.id) {
-        return {
-          ...cat,
-          expenses: cat.expenses.map(exp => exp.id === expenseData.id ? newExpense : exp)
+        // Update existing expense
+        const apiExpenseData = {
+          title: expenseData.vendorName,
+          amount: expenseData.amount,
+          paid_amount: expenseData.paidAmount,
+          expense_date: expenseData.date,
+          notes: expenseData.notes
         };
+        
+        savedExpense = await ExpenseService.updateExpense(parseInt(expenseData.id), apiExpenseData);
+      } else {
+        // Create new expense
+        const apiExpenseData = {
+          title: expenseData.vendorName,
+          amount: expenseData.amount,
+          expense_date: expenseData.date,
+          notes: expenseData.notes,
+          budget_category_id: parseInt(selectedCat.id)
+        };
+        
+        savedExpense = await ExpenseService.createExpense(apiExpenseData);
       }
-      return { ...cat, expenses: [...cat.expenses, newExpense] };
-    }));
 
-    setIsAddModalOpen(false);
+      // Refresh data to get updated state
+      const [budgetCategories, expensesData] = await Promise.all([
+        ExpenseService.getBudgetCategories(),
+        ExpenseService.getExpenses(1, 100)
+      ]);
+
+      // Process the updated data
+      const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
+      const expensesByCategory: Record<number, any[]> = {};
+      expensesArray.forEach(exp => {
+        if (exp && exp.budget_category) {
+          const categoryId = exp.budget_category.id;
+          if (!expensesByCategory[categoryId]) {
+            expensesByCategory[categoryId] = [];
+          }
+          expensesByCategory[categoryId].push(exp);
+        }
+      });
+
+      const localCategories = budgetCategories.map(cat =>
+        transformApiToLocal(cat, expensesByCategory[cat.id] || [])
+      );
+      
+      setCategories(localCategories);
+      setIsAddModalOpen(false);
+    } catch (err: any) {
+      console.error('Error saving expense:', err);
+      setError(err.message || 'Failed to save expense');
+    }
   };
 
-  const deleteExpense = (categoryId: string, expenseId: string) => {
-    setCategories(prev => prev.map(cat =>
-      cat.id === categoryId
-        ? { ...cat, expenses: cat.expenses.filter(exp => exp.id !== expenseId) }
-        : cat
-    ));
+  const deleteExpense = async (categoryId: string, expenseId: string) => {
+    try {
+      await ExpenseService.deleteExpense(parseInt(expenseId));
+      
+      // Refresh data to get updated state
+      const [budgetCategories, expensesData] = await Promise.all([
+        ExpenseService.getBudgetCategories(),
+        ExpenseService.getExpenses(1, 100)
+      ]);
+
+      // Process the updated data
+      const expensesArray = Array.isArray(expensesData) ? expensesData : (expensesData.results || []);
+      const expensesByCategory: Record<number, any[]> = {};
+      expensesArray.forEach(exp => {
+        if (exp && exp.budget_category) {
+          const categoryId = exp.budget_category.id;
+          if (!expensesByCategory[categoryId]) {
+            expensesByCategory[categoryId] = [];
+          }
+          expensesByCategory[categoryId].push(exp);
+        }
+      });
+
+      const localCategories = budgetCategories.map(cat =>
+        transformApiToLocal(cat, expensesByCategory[cat.id] || [])
+      );
+      
+      setCategories(localCategories);
+    } catch (err: any) {
+      console.error('Error deleting expense:', err);
+      setError(err.message || 'Failed to delete expense');
+    }
   };
 
   const toggleSortOrder = () => {

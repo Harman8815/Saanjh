@@ -49,11 +49,16 @@ export default function HistoryTab({
 }: HistoryTabProps) {
   // Prepare all expenses
   const allExpenses = useMemo(() => {
+    if (!categories || !Array.isArray(categories)) {
+      return [];
+    }
     const expenses: ExpenseWithCategory[] = [];
     categories.forEach(cat => {
-      cat.expenses.forEach(exp => {
-        expenses.push({ ...exp, category: cat.name, categoryColor: cat.color });
-      });
+      if (cat && cat.expenses && Array.isArray(cat.expenses)) {
+        cat.expenses.forEach(exp => {
+          expenses.push({ ...exp, category: cat.name, categoryColor: cat.color });
+        });
+      }
     });
     return expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [categories]);

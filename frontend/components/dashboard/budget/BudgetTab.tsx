@@ -91,18 +91,25 @@ export default function BudgetTab({
       >
         <h2 className="text-lg font-semibold mb-4 text-text-primary">Expense Categories</h2>
 
-        {categories.map((category, index) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            isExpanded={expandedCategories.includes(category.id)}
-            onToggle={() => onToggleCategory(category.id)}
-            onAddExpense={() => onAddExpense(category.id)}
-            onEditExpense={(expense) => onEditExpense(category.id, expense)}
-            onDeleteExpense={(expenseId) => onDeleteExpense(category.id, expenseId)}
-            index={index}
-          />
-        ))}
+        {!categories || categories.length === 0 ? (
+          <div className="text-center py-12 text-text-muted">
+            <p className="text-lg mb-2">No budget categories found</p>
+            <p className="text-sm">Create your first budget category to start tracking expenses</p>
+          </div>
+        ) : (
+          categories.map((category, index) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              isExpanded={expandedCategories.includes(category.id)}
+              onToggle={() => onToggleCategory(category.id)}
+              onAddExpense={() => onAddExpense(category.id)}
+              onEditExpense={(expense) => onEditExpense(category.id, expense)}
+              onDeleteExpense={(expenseId) => onDeleteExpense(category.id, expenseId)}
+              index={index}
+            />
+          ))
+        )}
       </motion.div>
     </motion.div>
   );
