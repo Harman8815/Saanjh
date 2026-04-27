@@ -109,7 +109,7 @@ export function useExpenseSummary() {
 
 // Search expenses
 export function useSearchExpenses(query: string) {
-  const { data, error, isLoading, mutate } = useSWR<Expense[]>(
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Expense>>(
     query ? `search-expenses-${query}` : null,
     () => ExpenseService.searchExpenses(query),
     {
@@ -119,7 +119,7 @@ export function useSearchExpenses(query: string) {
   );
 
   return {
-    expenses: data || [],
+    expenses: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -127,10 +127,10 @@ export function useSearchExpenses(query: string) {
 }
 
 // Filter expenses by category
-export function useFilterExpensesByCategory(category: string) {
-  const { data, error, isLoading, mutate } = useSWR<Expense[]>(
-    category ? `expenses-filter-category-${category}` : null,
-    () => ExpenseService.filterExpensesByCategory(category),
+export function useFilterExpensesByCategory(categoryId: number) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Expense>>(
+    categoryId ? `expenses-filter-category-${categoryId}` : null,
+    () => ExpenseService.filterExpensesByCategory(categoryId),
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000, // 30 seconds
@@ -138,7 +138,7 @@ export function useFilterExpensesByCategory(category: string) {
   );
 
   return {
-    expenses: data || [],
+    expenses: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -147,7 +147,7 @@ export function useFilterExpensesByCategory(category: string) {
 
 // Filter expenses by payment status
 export function useFilterExpensesByPaymentStatus(paid: boolean) {
-  const { data, error, isLoading, mutate } = useSWR<Expense[]>(
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Expense>>(
     `expenses-filter-payment-${paid}`,
     () => ExpenseService.filterExpensesByPaymentStatus(paid),
     {
@@ -157,7 +157,7 @@ export function useFilterExpensesByPaymentStatus(paid: boolean) {
   );
 
   return {
-    expenses: data || [],
+    expenses: data?.results || [],
     isLoading,
     error,
     mutate,

@@ -21,6 +21,12 @@ export default function GuestListPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [searchQuery, setSearchQuery] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filters, setFilters] = useState({
+    rsvpStatus: 'all',
+    relationship: 'all',
+    dietaryRestrictions: ''
+  });
+  const [selectedTable, setSelectedTable] = useState('all');
 
   // Fetch guests from API
   useEffect(() => {
@@ -53,7 +59,6 @@ export default function GuestListPage() {
 
     fetchGuests();
   }, [sortField, sortOrder, searchQuery, filters, selectedTable]);
-  const [selectedTable, setSelectedTable] = useState('all');
   const [selectedGuests, setSelectedGuests] = useState<number[]>([]);
   const [showAddGuestModal, setShowAddGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -74,11 +79,6 @@ export default function GuestListPage() {
   const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-  const [filters, setFilters] = useState({
-    rsvpStatus: 'all',
-    relationship: 'all',
-    dietaryRestrictions: ''
-  });
 
   const handleSort = (field: string) => {
     if (sortField === field) {

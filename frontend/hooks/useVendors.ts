@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { VendorService } from '../services';
-import { Vendor, VendorStatistics, BulkVendorStatusUpdate, PaginatedResponse } from '../types/api';
+import { Vendor, VendorStatistics, BulkVendorStatusUpdate, PaginatedResponse, VendorCreateRequest } from '../types/api';
 
 // Fetch vendors with pagination
 export function useVendors(page = 1, pageSize = 20) {
@@ -71,7 +71,7 @@ export function useVendorFollowUps() {
 
 // Search vendors
 export function useSearchVendors(query: string) {
-  const { data, error, isLoading, mutate } = useSWR<Vendor[]>(
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Vendor>>(
     query ? `search-vendors-${query}` : null,
     () => VendorService.searchVendors(query),
     {
@@ -81,7 +81,7 @@ export function useSearchVendors(query: string) {
   );
 
   return {
-    vendors: data || [],
+    vendors: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -89,10 +89,10 @@ export function useSearchVendors(query: string) {
 }
 
 // Filter vendors by category
-export function useFilterVendorsByCategory(category: string) {
-  const { data, error, isLoading, mutate } = useSWR<Vendor[]>(
-    category ? `vendors-filter-category-${category}` : null,
-    () => VendorService.filterVendorsByCategory(category),
+export function useFilterVendorsByCategory(categoryId: number) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Vendor>>(
+    categoryId ? `vendors-filter-category-${categoryId}` : null,
+    () => VendorService.filterVendorsByCategory(categoryId),
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000, // 30 seconds
@@ -100,7 +100,7 @@ export function useFilterVendorsByCategory(category: string) {
   );
 
   return {
-    vendors: data || [],
+    vendors: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -108,10 +108,10 @@ export function useFilterVendorsByCategory(category: string) {
 }
 
 // Filter vendors by status
-export function useFilterVendorsByStatus(status: string) {
-  const { data, error, isLoading, mutate } = useSWR<Vendor[]>(
-    status ? `vendors-filter-status-${status}` : null,
-    () => VendorService.filterVendorsByStatus(status),
+export function useFilterVendorsByStatus(statusId: number) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Vendor>>(
+    statusId ? `vendors-filter-status-${statusId}` : null,
+    () => VendorService.filterVendorsByStatus(statusId),
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000, // 30 seconds
@@ -119,7 +119,7 @@ export function useFilterVendorsByStatus(status: string) {
   );
 
   return {
-    vendors: data || [],
+    vendors: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -130,7 +130,7 @@ export function useFilterVendorsByStatus(status: string) {
 export function useCreateVendor() {
   const queryClient = useQueryClient();
 
-  return useMutation<Vendor, Error, Omit<Vendor, 'id' | 'created_at' | 'updated_at'>>({
+  return useMutation<Vendor, Error, VendorCreateRequest>({
     mutationFn: (vendorData) => VendorService.createVendor(vendorData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });

@@ -52,7 +52,7 @@ export function useGuestStatistics() {
 
 // Search guests
 export function useSearchGuests(query: string) {
-  const { data, error, isLoading, mutate } = useSWR<Guest[]>(
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Guest>>(
     query ? `search-guests-${query}` : null,
     () => GuestService.searchGuests(query),
     {
@@ -62,7 +62,7 @@ export function useSearchGuests(query: string) {
   );
 
   return {
-    guests: data || [],
+    guests: data?.results || [],
     isLoading,
     error,
     mutate,
@@ -70,8 +70,8 @@ export function useSearchGuests(query: string) {
 }
 
 // Filter guests by RSVP status
-export function useFilterGuestsByRSVP(rsvpStatus: string) {
-  const { data, error, isLoading, mutate } = useSWR<Guest[]>(
+export function useFilterGuestsByRSVP(rsvpStatus: number) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Guest>>(
     rsvpStatus ? `guests-filter-rsvp-${rsvpStatus}` : null,
     () => GuestService.filterGuestsByRSVP(rsvpStatus),
     {
@@ -81,7 +81,7 @@ export function useFilterGuestsByRSVP(rsvpStatus: string) {
   );
 
   return {
-    guests: data || [],
+    guests: data?.results || [],
     isLoading,
     error,
     mutate,
