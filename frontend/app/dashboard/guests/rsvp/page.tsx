@@ -78,8 +78,8 @@ export default function RSVPStatusPage() {
           : g
       ));
 
-      // TODO: Call API to update the guest's RSVP status
-      // await GuestService.updateGuestRsvpStatus(guestId, statusObj.id);
+      // Make actual API call to update the guest's RSVP status
+      await GuestService.updateGuest(guestId, { rsvp_status_id: statusObj.id });
       
       toast.success(`RSVP status updated to ${newStatus}`);
     } catch (err: any) {
@@ -317,33 +317,23 @@ export default function RSVPStatusPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleStatusChange(guest.id, 'confirmed')}
-                          className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvp_status?.name === 'confirmed' ? 'bg-green-500/20 text-green-500' : 'hover:bg-white/5 text-text-muted'
-                          }`}
-                          title="Mark as Confirmed"
-                        >
-                          <Check size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(guest.id, 'pending')}
-                          className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvp_status?.name === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'hover:bg-white/5 text-text-muted'
-                          }`}
-                          title="Mark as Pending"
-                        >
-                          <Clock size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(guest.id, 'declined')}
-                          className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-500' : 'hover:bg-white/5 text-text-muted'
-                          }`}
-                          title="Mark as Declined"
-                        >
-                          <X size={18} />
-                        </button>
+                        {guest.rsvp_status?.name === 'confirmed' ? (
+                          <button
+                            onClick={() => handleStatusChange(guest.id, 'pending')}
+                            className="p-2 rounded-lg transition-colors bg-green-500/20 text-green-500 hover:bg-green-500/30"
+                            title="Change to Pending"
+                          >
+                            <Check size={18} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleStatusChange(guest.id, 'confirmed')}
+                            className="p-2 rounded-lg transition-colors bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
+                            title="Approve Guest"
+                          >
+                            <Clock size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
