@@ -29,7 +29,7 @@ export default function SummaryCards({
     {
       label: 'Total Spent',
       value: totalSpent,
-      subtext: totalSpent > totalBudget ? 'Over budget!' : `${Math.round((totalSpent / totalBudget) * 100)}% used`,
+      subtext: totalBudget > 0 ? (totalSpent > totalBudget ? 'Over budget!' : `${Math.round((totalSpent / totalBudget) * 100)}% used`) : 'No budget set',
       icon: TrendingUp,
       iconColor: '#d4a574',
       valueColor: totalSpent > totalBudget ? 'text-red-400' : 'text-text-primary',

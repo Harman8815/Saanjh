@@ -298,8 +298,11 @@ export interface Expense {
   id: number;
   wedding: number;
   budget_category?: BudgetCategory;
+  budget_category_id?: number;
   vendor?: Vendor;
+  vendor_id?: number;
   status: ExpenseStatus;
+  status_id?: number;
   title: string;
   amount: number;
   paid_amount: number;
@@ -443,9 +446,11 @@ export interface ExpenseCreateRequest {
   vendor_id?: number;
   title: string;
   amount: number;
+  paid_amount?: number;
   expense_date?: string;
   due_date?: string;
   notes?: string;
+  status_id?: number;
 }
 
 export interface WeddingCardCreateRequest {

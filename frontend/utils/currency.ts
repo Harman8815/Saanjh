@@ -12,6 +12,11 @@ import { useLocalizationStore, currencies } from '../store/localizationStore';
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number, currencyCode?: string): string {
+  // Handle null/undefined/invalid amounts
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    amount = 0;
+  }
+  
   const store = useLocalizationStore.getState();
   const currency = currencyCode 
     ? currencies.find((c: any) => c.code === currencyCode) || store.getCurrentCurrency()
@@ -117,6 +122,11 @@ export function parseCurrency(currencyString: string, currencyCode?: string): nu
  * @returns Short formatted string (e.g., "Rs. 50K")
  */
 export function formatCurrencyShort(amount: number, currencyCode?: string): string {
+  // Handle null/undefined/invalid amounts
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    amount = 0;
+  }
+  
   const store = useLocalizationStore.getState();
   const currency = currencyCode 
     ? currencies.find((c: any) => c.code === currencyCode) || store.getCurrentCurrency()
