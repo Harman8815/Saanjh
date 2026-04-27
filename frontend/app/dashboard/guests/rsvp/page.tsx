@@ -5,104 +5,95 @@ import { motion } from 'framer-motion';
 import { Check, Clock, X, Users, ArrowLeft, Filter, Search, Download, Mail } from 'lucide-react';
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
-import { Guest } from '../../../../types/guest';
+import { Guest, RsvpStatus } from '../../../../types/api';
+import { GuestService } from '../../../../services/guests';
+import toast from 'react-hot-toast';
 
 export default function RSVPStatusPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending' | 'declined'>('all');
   
-  const [guests, setGuests] = useState<Guest[]>([
-    {
-      id: 1,
-      name: 'Emily Johnson',
-      email: 'emily@email.com',
-      phone: '+1-555-0123',
-      side: 'Bride',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'vegetarian',
-    },
-    {
-      id: 2,
-      name: 'Michael Smith',
-      email: 'michael@email.com',
-      phone: '+1-555-0456',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'pending',
-      mealPreference: 'none',
-    },
-    {
-      id: 3,
-      name: 'Jessica Davis',
-      email: 'jessica@email.com',
-      phone: '+1-555-0789',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'declined',
-      mealPreference: 'gluten-free',
-    },
-    {
-      id: 4,
-      name: 'Robert Wilson',
-      email: 'robert@email.com',
-      phone: '+1-555-0321',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'pending',
-      mealPreference: 'vegan',
-    },
-    {
-      id: 5,
-      name: 'Sarah Brown',
-      email: 'sarah@email.com',
-      phone: '+1-555-0654',
-      side: 'Bride',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'none',
-    },
-    {
-      id: 6,
-      name: 'David Lee',
-      email: 'david@email.com',
-      phone: '+1-555-0987',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'halal',
-    },
-  ]);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [rsvpStatuses, setRsvpStatuses] = useState<RsvpStatus[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate data loading
+  // Fetch data from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch guests and RSVP statuses in parallel
+        const [guestsResponse, rsvpStatusesResponse] = await Promise.all([
+          GuestService.getGuests(1, 1000), // Get all guests
+          GuestService.getRsvpStatuses()
+        ]);
+        
+        const guestsArray = Array.isArray(guestsResponse) ? guestsResponse : (guestsResponse.results || []);
+        setGuests(guestsArray);
+        setRsvpStatuses(rsvpStatusesResponse);
+      } catch (err: any) {
+        console.error('Error fetching RSVP data:', err);
+        setError(err.message || 'Failed to load RSVP data');
+        toast.error('Failed to load RSVP data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Calculate stats
   const stats = {
     total: guests.length,
-    confirmed: guests.filter(g => g.rsvpStatus === 'confirmed').length,
-    pending: guests.filter(g => g.rsvpStatus === 'pending').length,
-    declined: guests.filter(g => g.rsvpStatus === 'declined').length,
+    confirmed: guests.filter(g => g.rsvp_status?.name === 'confirmed').length,
+    pending: guests.filter(g => g.rsvp_status?.name === 'pending').length,
+    declined: guests.filter(g => g.rsvp_status?.name === 'declined').length,
   };
 
   // Filter guests
   const filteredGuests = guests.filter(guest => {
-    const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         guest.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || guest.rsvpStatus === filterStatus;
+    const matchesSearch = guest.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guest.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || guest.rsvp_status?.name === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (guestId: number, newStatus: 'confirmed' | 'pending' | 'declined') => {
-    setGuests(prev => prev.map(g => 
-      g.id === guestId ? { ...g, rsvpStatus: newStatus } : g
-    ));
+  const handleStatusChange = async (guestId: number, newStatus: string) => {
+    try {
+      // Find the RSVP status ID for the new status
+      const statusObj = rsvpStatuses.find(s => s.name === newStatus);
+      if (!statusObj) {
+        toast.error('Invalid RSVP status');
+        return;
+      }
+
+      // Update guest locally for immediate UI feedback
+      setGuests(prev => prev.map(g => 
+        g.id === guestId 
+          ? { ...g, rsvp_status: statusObj, rsvp_status_id: statusObj.id }
+          : g
+      ));
+
+      // TODO: Call API to update the guest's RSVP status
+      // await GuestService.updateGuestRsvpStatus(guestId, statusObj.id);
+      
+      toast.success(`RSVP status updated to ${newStatus}`);
+    } catch (err: any) {
+      console.error('Error updating RSVP status:', err);
+      toast.error('Failed to update RSVP status');
+      
+      // Revert the change on error
+      const originalGuest = guests.find(g => g.id === guestId);
+      if (originalGuest) {
+        setGuests(prev => prev.map(g => 
+          g.id === guestId ? { ...g, rsvp_status: originalGuest.rsvp_status, rsvp_status_id: originalGuest.rsvp_status_id } : g
+        ));
+      }
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -294,29 +285,34 @@ export default function RSVPStatusPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                          {guest.name.charAt(0)}
+                          {guest.full_name?.charAt(0) || '?'}
                         </div>
                         <div>
-                          <p className="text-text-primary font-medium">{guest.name}</p>
-                          <p className="text-text-muted text-sm">{guest.mealPreference !== 'none' ? guest.mealPreference : 'No dietary restrictions'}</p>
+                          <p className="text-text-primary font-medium">{guest.full_name || 'Unknown'}</p>
+                          <p className="text-text-muted text-sm">
+                            {guest.meal_preferences && guest.meal_preferences.length > 0 
+                              ? guest.meal_preferences.map(mp => mp.name).join(', ')
+                              : 'No dietary restrictions'
+                            }
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-sm ${
-                        guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-500' : 'bg-blue-500/20 text-blue-500'
+                        guest.relationship?.toLowerCase().includes('bride') ? 'bg-pink-500/20 text-pink-500' : 'bg-blue-500/20 text-blue-500'
                       }`}>
-                        {guest.side}
+                        {guest.relationship || 'Unassigned'}
                       </span>
                     </td>
                     <td className="p-4">
-                      <p className="text-text-primary">{guest.email}</p>
-                      <p className="text-text-muted text-sm">{guest.phone}</p>
+                      <p className="text-text-primary">{guest.email || '--'}</p>
+                      <p className="text-text-muted text-sm">{guest.phone || '--'}</p>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${getStatusColor(guest.rsvpStatus)}`}>
-                        {getStatusIcon(guest.rsvpStatus)}
-                        <span className="capitalize">{guest.rsvpStatus}</span>
+                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${getStatusColor(guest.rsvp_status?.name || '')}`}>
+                        {getStatusIcon(guest.rsvp_status?.name || '')}
+                        <span className="capitalize">{guest.rsvp_status?.name || 'Unknown'}</span>
                       </span>
                     </td>
                     <td className="p-4">
@@ -324,7 +320,7 @@ export default function RSVPStatusPage() {
                         <button
                           onClick={() => handleStatusChange(guest.id, 'confirmed')}
                           className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvpStatus === 'confirmed' ? 'bg-green-500/20 text-green-500' : 'hover:bg-white/5 text-text-muted'
+                            guest.rsvp_status?.name === 'confirmed' ? 'bg-green-500/20 text-green-500' : 'hover:bg-white/5 text-text-muted'
                           }`}
                           title="Mark as Confirmed"
                         >
@@ -333,7 +329,7 @@ export default function RSVPStatusPage() {
                         <button
                           onClick={() => handleStatusChange(guest.id, 'pending')}
                           className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvpStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'hover:bg-white/5 text-text-muted'
+                            guest.rsvp_status?.name === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'hover:bg-white/5 text-text-muted'
                           }`}
                           title="Mark as Pending"
                         >
@@ -342,7 +338,7 @@ export default function RSVPStatusPage() {
                         <button
                           onClick={() => handleStatusChange(guest.id, 'declined')}
                           className={`p-2 rounded-lg transition-colors ${
-                            guest.rsvpStatus === 'declined' ? 'bg-red-500/20 text-red-500' : 'hover:bg-white/5 text-text-muted'
+                            guest.rsvp_status?.name === 'declined' ? 'bg-red-500/20 text-red-500' : 'hover:bg-white/5 text-text-muted'
                           }`}
                           title="Mark as Declined"
                         >

@@ -5,13 +5,15 @@ import { motion } from 'framer-motion';
 import { MapPin, Users, ArrowLeft, Plus, Trash2, Edit2, Download, UserPlus, Search, Filter, Armchair, LayoutGrid, Settings } from 'lucide-react';
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
-import { Guest } from '../../../../types/guest';
+import { Guest, Table as ApiTable } from '../../../../types/api';
+import { GuestService } from '../../../../services/guests';
+import toast from 'react-hot-toast';
 
-interface Table {
-  id: string;
+interface LocalTable {
+  id: number;
   name: string;
-  seats: number;
-  guests: Guest[];
+  capacity: number;
+  assigned_guests: number;
   shape: 'round' | 'rectangular';
   position: { x: number; y: number };
 }
@@ -19,117 +21,130 @@ interface Table {
 export default function SeatingChartPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'manage' | 'visual'>('manage');
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [selectedTable, setSelectedTable] = useState<LocalTable | null>(null);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterUnassigned, setFilterUnassigned] = useState(false);
 
-  const [tables, setTables] = useState<Table[]>([
-    {
-      id: 'table-1',
-      name: 'Table 1 - VIP',
-      seats: 8,
-      shape: 'round',
-      position: { x: 100, y: 100 },
-      guests: [
-        { id: 1, name: 'Emily Johnson', email: 'emily@email.com', side: 'Bride', rsvpStatus: 'confirmed' },
-        { id: 5, name: 'Sarah Brown', email: 'sarah@email.com', side: 'Bride', rsvpStatus: 'confirmed' },
-      ] as Guest[],
-    },
-    {
-      id: 'table-2',
-      name: 'Table 2 - Family',
-      seats: 8,
-      shape: 'round',
-      position: { x: 300, y: 100 },
-      guests: [
-        { id: 2, name: 'Michael Smith', email: 'michael@email.com', side: 'Groom', rsvpStatus: 'pending' },
-      ] as Guest[],
-    },
-    {
-      id: 'table-3',
-      name: 'Table 3 - Friends',
-      seats: 10,
-      shape: 'rectangular',
-      position: { x: 500, y: 100 },
-      guests: [],
-    },
-    {
-      id: 'table-4',
-      name: 'Table 4 - Colleagues',
-      seats: 8,
-      shape: 'round',
-      position: { x: 100, y: 300 },
-      guests: [
-        { id: 3, name: 'Jessica Davis', email: 'jessica@email.com', side: 'Bride', rsvpStatus: 'declined' },
-      ] as Guest[],
-    },
-  ]);
+  const [tables, setTables] = useState<LocalTable[]>([]);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const [unassignedGuests, setUnassignedGuests] = useState<Guest[]>([
-    { id: 4, name: 'Robert Wilson', email: 'robert@email.com', side: 'Groom', rsvpStatus: 'pending' },
-    { id: 6, name: 'David Lee', email: 'david@email.com', side: 'Groom', rsvpStatus: 'confirmed' },
-    { id: 7, name: 'Amanda Taylor', email: 'amanda@email.com', side: 'Bride', rsvpStatus: 'confirmed' },
-    { id: 8, name: 'Chris Martinez', email: 'chris@email.com', side: 'Groom', rsvpStatus: 'pending' },
-  ] as Guest[]);
-
-  // Simulate data loading
+  // Fetch data from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch tables and guests in parallel
+        const [tablesResponse, guestsResponse] = await Promise.all([
+          GuestService.getAllTables(),
+          GuestService.getGuests(1, 1000) // Get all guests
+        ]);
+        
+        const guestsArray = Array.isArray(guestsResponse) ? guestsResponse : (guestsResponse.results || []);
+        // Convert API tables to local table format
+        const localTables = tablesResponse.map((table: ApiTable) => ({
+          id: table.id,
+          name: `Table ${table.table_number}`,
+          capacity: table.capacity || 8,
+          assigned_guests: guests.filter(g => g.table_id === table.id).length,
+          shape: 'round' as const,
+          position: { x: 0, y: 0 }
+        }));
+        
+        setTables(localTables);
+        setGuests(guestsArray);
+      } catch (err: any) {
+        console.error('Error fetching seating data:', err);
+        setError(err.message || 'Failed to load seating data');
+        toast.error('Failed to load seating data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  // Calculate unassigned guests from API data
+  const unassignedGuests = guests.filter((guest: Guest) => 
+    !guest.table_id && guest.rsvp_status?.name === 'confirmed'
+  );
 
   // Calculate stats
   const stats = {
     totalTables: tables.length,
-    totalSeats: tables.reduce((sum, t) => sum + t.seats, 0),
-    assignedGuests: tables.reduce((sum, t) => sum + t.guests.length, 0),
+    totalSeats: tables.reduce((sum, t) => sum + (t.capacity || 0), 0),
+    assignedGuests: guests.filter(g => g.table_id && g.rsvp_status?.name === 'confirmed').length,
     unassignedCount: unassignedGuests.length,
-    availableSeats: tables.reduce((sum, t) => sum + (t.seats - t.guests.length), 0),
+    availableSeats: tables.reduce((sum, t) => sum + ((t.capacity || 0) - (t.assigned_guests || 0)), 0),
   };
 
-  const handleAddGuestToTable = (tableId: string, guest: Guest) => {
-    setTables(prev => prev.map(t => 
-      t.id === tableId 
-        ? { ...t, guests: [...t.guests, guest] }
-        : t
-    ));
-    setUnassignedGuests(prev => prev.filter(g => g.id !== guest.id));
-  };
-
-  const handleRemoveGuestFromTable = (tableId: string, guestId: number) => {
-    const guest = tables.find(t => t.id === tableId)?.guests.find(g => g.id === guestId);
-    if (guest) {
-      setTables(prev => prev.map(t => 
-        t.id === tableId 
-          ? { ...t, guests: t.guests.filter(g => g.id !== guestId) }
-          : t
+  const handleAddGuestToTable = async (tableId: number, guest: Guest) => {
+    try {
+      // TODO: Call API to assign guest to table
+      // await GuestService.assignGuestToTable(guest.id, tableId);
+      
+      // Update local state for immediate UI feedback
+      setGuests(prev => prev.map(g => 
+        g.id === guest.id ? { ...g, table_id: tableId } : g
       ));
-      setUnassignedGuests(prev => [...prev, guest]);
+      
+      toast.success(`${guest.full_name} assigned to table`);
+    } catch (err: any) {
+      console.error('Error assigning guest to table:', err);
+      toast.error('Failed to assign guest to table');
     }
   };
 
-  const handleDeleteTable = (tableId: string) => {
-    const table = tables.find(t => t.id === tableId);
-    if (table) {
-      setUnassignedGuests(prev => [...prev, ...table.guests]);
+  const handleRemoveGuestFromTable = async (tableId: number, guestId: number) => {
+    try {
+      // TODO: Call API to remove guest from table
+      // await GuestService.removeGuestFromTable(guestId);
+      
+      // Update local state for immediate UI feedback
+      setGuests(prev => prev.map(g => 
+        g.id === guestId ? { ...g, table_id: null } : g
+      ));
+      
+      toast.success('Guest removed from table');
+    } catch (err: any) {
+      console.error('Error removing guest from table:', err);
+      toast.error('Failed to remove guest from table');
+    }
+  };
+
+  const handleDeleteTable = async (tableId: number) => {
+    try {
+      // TODO: Call API to delete table
+      // await GuestService.deleteTable(tableId);
+      
+      // Update local state for immediate UI feedback
       setTables(prev => prev.filter(t => t.id !== tableId));
+      setSelectedTable(null);
+      
+      toast.success('Table deleted successfully');
+    } catch (err: any) {
+      console.error('Error deleting table:', err);
+      toast.error('Failed to delete table');
     }
-    setSelectedTable(null);
   };
 
-  const filteredUnassigned = unassignedGuests.filter(guest => 
-    guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    guest.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUnassigned = unassignedGuests.filter((guest: Guest) => 
+    guest.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    guest.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getTableColor = (table: Table) => {
-    const occupancy = table.guests.length / table.seats;
-    if (occupancy === 0) return 'border-gray-500/50 bg-gray-500/10';
-    if (occupancy < 0.5) return 'border-green-500/50 bg-green-500/10';
-    if (occupancy < 0.8) return 'border-yellow-500/50 bg-yellow-500/10';
+  const getTableColor = (table: LocalTable) => {
+    const occupancy = table.assigned_guests || 0;
+    const capacity = table.capacity || 0;
+    const occupancyRate = capacity > 0 ? occupancy / capacity : 0;
+    
+    if (occupancyRate === 0) return 'border-gray-500/50 bg-gray-500/10';
+    if (occupancyRate < 0.5) return 'border-green-500/50 bg-green-500/10';
+    if (occupancyRate < 0.8) return 'border-yellow-500/50 bg-yellow-500/10';
     return 'border-red-500/50 bg-red-500/10';
   };
 
@@ -311,28 +326,28 @@ export default function SeatingChartPage() {
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-text-muted">Occupancy</span>
                             <span className="text-text-primary font-medium">
-                              {table.guests.length}/{table.seats}
+                              {table.assigned_guests}/{table.capacity}
                             </span>
                           </div>
                           <div className="w-full h-2 bg-surface rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-primary transition-all duration-300"
-                              style={{ width: `${(table.guests.length / table.seats) * 100}%` }}
+                              style={{ width: `${(table.assigned_guests / table.capacity) * 100}%` }}
                             />
                           </div>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-1">
-                          {table.guests.slice(0, 3).map((guest, idx) => (
+                          {guests.filter(g => g.table_id === table.id).slice(0, 3).map((guest: Guest, idx: number) => (
                             <span 
                               key={idx}
                               className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted truncate max-w-[80px]"
                             >
-                              {guest.name.split(' ')[0]}
+                              {guest.full_name?.split(' ')[0] || 'Guest'}
                             </span>
                           ))}
-                          {table.guests.length > 3 && (
+                          {guests.filter(g => g.table_id === table.id).length > 3 && (
                             <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-text-muted">
-                              +{table.guests.length - 3}
+                              +{guests.filter(g => g.table_id === table.id).length - 3}
                             </span>
                           )}
                         </div>
@@ -367,32 +382,32 @@ export default function SeatingChartPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-text-muted">Capacity</span>
-                        <span className="text-text-primary">{selectedTable.seats} seats</span>
+                        <span className="text-text-primary">{selectedTable.capacity} seats</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-text-muted">Occupancy</span>
-                        <span className="text-text-primary">{selectedTable.guests.length}/{selectedTable.seats}</span>
+                        <span className="text-text-primary">{selectedTable.assigned_guests}/{selectedTable.capacity}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-text-muted">Available</span>
-                        <span className="text-green-500">{selectedTable.seats - selectedTable.guests.length} seats</span>
+                        <span className="text-green-500">{selectedTable.capacity - selectedTable.assigned_guests} seats</span>
                       </div>
                     </div>
 
                     <h3 className="text-text-primary font-medium mb-3">Assigned Guests</h3>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto mb-4">
-                      {selectedTable.guests.map((guest) => (
+                      {guests.filter(g => g.table_id === selectedTable.id).map((guest: Guest) => (
                         <div 
                           key={guest.id}
                           className="flex items-center justify-between p-3 bg-surface rounded-lg"
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
-                              {guest.name.charAt(0)}
+                              {guest.full_name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <p className="text-text-primary text-sm font-medium">{guest.name}</p>
-                              <p className="text-text-muted text-xs">{guest.side}</p>
+                              <p className="text-text-primary text-sm font-medium">{guest.full_name || 'Unknown'}</p>
+                              <p className="text-text-muted text-xs">{guest.relationship}</p>
                             </div>
                           </div>
                           <button
@@ -403,7 +418,7 @@ export default function SeatingChartPage() {
                           </button>
                         </div>
                       ))}
-                      {selectedTable.guests.length === 0 && (
+                      {guests.filter(g => g.table_id === selectedTable.id).length === 0 && (
                         <p className="text-text-muted text-center py-4">No guests assigned</p>
                       )}
                     </div>
@@ -445,11 +460,11 @@ export default function SeatingChartPage() {
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold">
-                              {guest.name.charAt(0)}
+                              {guest.full_name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              <p className="text-text-primary text-sm font-medium">{guest.name}</p>
-                              <p className="text-text-muted text-xs">{guest.side} · {guest.rsvpStatus}</p>
+                              <p className="text-text-primary text-sm font-medium">{guest.full_name || 'Unknown'}</p>
+                              <p className="text-text-muted text-xs">{guest.relationship} · {guest.rsvp_status?.name || 'Unknown'}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
@@ -457,7 +472,7 @@ export default function SeatingChartPage() {
                               <button
                                 key={table.id}
                                 onClick={() => handleAddGuestToTable(table.id, guest)}
-                                disabled={table.guests.length >= table.seats}
+                                disabled={table.assigned_guests >= table.capacity}
                                 title={`Add to ${table.name}`}
                                 className="p-1 text-text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                               >

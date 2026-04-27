@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { Utensils, Users, ArrowLeft, Search, Download, Filter, Leaf, Wheat, Beef, Fish, AlertCircle, Info, Check, PieChart } from 'lucide-react';
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../../components/dashboard/GuestLayoutSkeleton';
-import { Guest } from '../../../../types/guest';
+import { Guest, Meal } from '../../../../types/api';
+import { GuestService } from '../../../../services/guests';
+import toast from 'react-hot-toast';
 
 interface MealPreference {
   id: string;
@@ -21,237 +23,128 @@ export default function MealPreferencesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPreference, setFilterPreference] = useState<string>('all');
 
-  const [guests, setGuests] = useState<Guest[]>([
-    {
-      id: 1,
-      name: 'Emily Johnson',
-      email: 'emily@email.com',
-      phone: '+1-555-0123',
-      side: 'Bride',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'vegetarian',
-    },
-    {
-      id: 2,
-      name: 'Michael Smith',
-      email: 'michael@email.com',
-      phone: '+1-555-0456',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'none',
-    },
-    {
-      id: 3,
-      name: 'Jessica Davis',
-      email: 'jessica@email.com',
-      phone: '+1-555-0789',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'gluten-free',
-    },
-    {
-      id: 4,
-      name: 'Robert Wilson',
-      email: 'robert@email.com',
-      phone: '+1-555-0321',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'vegan',
-    },
-    {
-      id: 5,
-      name: 'Sarah Brown',
-      email: 'sarah@email.com',
-      phone: '+1-555-0654',
-      side: 'Bride',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'none',
-    },
-    {
-      id: 6,
-      name: 'David Lee',
-      email: 'david@email.com',
-      phone: '+1-555-0987',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'halal',
-    },
-    {
-      id: 7,
-      name: 'Amanda Taylor',
-      email: 'amanda@email.com',
-      phone: '+1-555-0111',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'kosher',
-    },
-    {
-      id: 8,
-      name: 'Chris Martinez',
-      email: 'chris@email.com',
-      phone: '+1-555-0222',
-      side: 'Groom',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'pescatarian',
-    },
-    {
-      id: 9,
-      name: 'Lisa Anderson',
-      email: 'lisa@email.com',
-      phone: '+1-555-0333',
-      side: 'Bride',
-      plusOne: false,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'nut-free',
-    },
-    {
-      id: 10,
-      name: 'James Thompson',
-      email: 'james@email.com',
-      phone: '+1-555-0444',
-      side: 'Groom',
-      plusOne: true,
-      rsvpStatus: 'confirmed',
-      mealPreference: 'dairy-free',
-    },
-  ]);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulate data loading
+  // Fetch data from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch guests and meals in parallel
+        const [guestsResponse, mealsResponse] = await Promise.all([
+          GuestService.getGuests(1, 1000), // Get all guests
+          GuestService.getMeals()
+        ]);
+        
+        const guestsArray = Array.isArray(guestsResponse) ? guestsResponse : (guestsResponse.results || []);
+        setGuests(guestsArray);
+        setMeals(mealsResponse);
+      } catch (err: any) {
+        console.error('Error fetching meal preferences data:', err);
+        setError(err.message || 'Failed to load meal preferences');
+        toast.error('Failed to load meal preferences');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  // Calculate meal preferences
-  const mealPreferences: MealPreference[] = [
-    {
-      id: 'none',
-      name: 'Standard',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && (!g.mealPreference || g.mealPreference === 'none')).length,
-      icon: <Utensils size={24} />,
-      color: 'blue',
-      description: 'No special requirements',
-    },
-    {
-      id: 'vegetarian',
-      name: 'Vegetarian',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'vegetarian').length,
-      icon: <Leaf size={24} />,
-      color: 'green',
-      description: 'No meat products',
-    },
-    {
-      id: 'vegan',
-      name: 'Vegan',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'vegan').length,
-      icon: <Leaf size={24} />,
-      color: 'emerald',
-      description: 'No animal products',
-    },
-    {
-      id: 'gluten-free',
-      name: 'Gluten-Free',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'gluten-free').length,
-      icon: <Wheat size={24} />,
-      color: 'amber',
-      description: 'No gluten-containing foods',
-    },
-    {
-      id: 'pescatarian',
-      name: 'Pescatarian',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'pescatarian').length,
-      icon: <Fish size={24} />,
-      color: 'cyan',
-      description: 'Vegetarian + fish',
-    },
-    {
-      id: 'halal',
-      name: 'Halal',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'halal').length,
-      icon: <Beef size={24} />,
-      color: 'teal',
-      description: 'Islamic dietary laws',
-    },
-    {
-      id: 'kosher',
-      name: 'Kosher',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'kosher').length,
-      icon: <Check size={24} />,
-      color: 'indigo',
-      description: 'Jewish dietary laws',
-    },
-    {
-      id: 'nut-free',
-      name: 'Nut-Free',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'nut-free').length,
-      icon: <AlertCircle size={24} />,
-      color: 'red',
-      description: 'Nut allergy - severe',
-    },
-    {
-      id: 'dairy-free',
-      name: 'Dairy-Free',
-      count: guests.filter(g => g.rsvpStatus === 'confirmed' && g.mealPreference === 'dairy-free').length,
-      icon: <AlertCircle size={24} />,
-      color: 'orange',
-      description: 'No dairy products',
-    },
-  ];
+  // Calculate meal preferences from API data
+  const mealPreferences: MealPreference[] = meals.map((meal) => ({
+    id: meal.id.toString(),
+    name: meal.name,
+    count: guests.filter(g => 
+      g.rsvp_status?.name === 'confirmed' && 
+      g.meal_preferences?.some(mp => mp.id === meal.id)
+    ).length,
+    icon: getMealIcon(meal.name),
+    color: getMealColor(meal.name),
+    description: `${meal.name} meal preference`,
+  }));
+
+  // Add standard meal option for guests with no preferences
+  const standardMealCount = guests.filter(g => 
+    g.rsvp_status?.name === 'confirmed' && 
+    (!g.meal_preferences || g.meal_preferences.length === 0)
+  ).length;
+  
+  mealPreferences.unshift({
+    id: 'none',
+    name: 'Standard',
+    count: standardMealCount,
+    icon: <Utensils size={24} />,
+    color: 'blue',
+    description: 'No special requirements',
+  });
 
   // Calculate stats
-  const confirmedGuests = guests.filter(g => g.rsvpStatus === 'confirmed');
-  const withDietaryRestrictions = confirmedGuests.filter(g => g.mealPreference && g.mealPreference !== 'none').length;
+  const confirmedGuests = guests.filter(g => g.rsvp_status?.name === 'confirmed');
+  const withDietaryRestrictions = confirmedGuests.filter(g => g.meal_preferences && g.meal_preferences.length > 0).length;
   const totalAllergies = mealPreferences.filter(m => ['nut-free', 'dairy-free', 'gluten-free'].includes(m.id)).reduce((sum, m) => sum + m.count, 0);
 
   // Filter guests
   const filteredGuests = guests.filter(guest => {
-    const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         guest.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPreference = filterPreference === 'all' || guest.mealPreference === filterPreference;
-    return matchesSearch && matchesPreference && guest.rsvpStatus === 'confirmed';
+    const matchesSearch = guest.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guest.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPreference = filterPreference === 'all' || 
+      (filterPreference === 'none' ? 
+        (!guest.meal_preferences || guest.meal_preferences.length === 0) :
+        guest.meal_preferences?.some(mp => mp.id.toString() === filterPreference)
+      );
+    return matchesSearch && matchesPreference && guest.rsvp_status?.name === 'confirmed';
   });
 
-  const getPreferenceIcon = (preference?: string) => {
-    switch (preference) {
-      case 'vegetarian': return <Leaf size={18} className="text-green-500" />;
-      case 'vegan': return <Leaf size={18} className="text-emerald-500" />;
-      case 'gluten-free': return <Wheat size={18} className="text-amber-500" />;
-      case 'pescatarian': return <Fish size={18} className="text-cyan-500" />;
-      case 'halal': return <Beef size={18} className="text-teal-500" />;
-      case 'kosher': return <Check size={18} className="text-indigo-500" />;
-      case 'nut-free':
-      case 'dairy-free': return <AlertCircle size={18} className="text-red-500" />;
-      default: return <Utensils size={18} className="text-blue-500" />;
+  const getPreferenceIcon = (mealPreferences?: any[]) => {
+    if (!mealPreferences || mealPreferences.length === 0) {
+      return <Utensils size={18} className="text-blue-500" />;
     }
+    const mealName = mealPreferences[0].name?.toLowerCase() || '';
+    return getMealIcon(mealName);
   };
 
-  const getPreferenceColor = (preference?: string) => {
-    switch (preference) {
-      case 'vegetarian': return 'bg-green-500/20 text-green-500 border-green-500/30';
-      case 'vegan': return 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30';
-      case 'gluten-free': return 'bg-amber-500/20 text-amber-500 border-amber-500/30';
-      case 'pescatarian': return 'bg-cyan-500/20 text-cyan-500 border-cyan-500/30';
-      case 'halal': return 'bg-teal-500/20 text-teal-500 border-teal-500/30';
-      case 'kosher': return 'bg-indigo-500/20 text-indigo-500 border-indigo-500/30';
-      case 'nut-free': return 'bg-red-500/20 text-red-500 border-red-500/30';
-      case 'dairy-free': return 'bg-orange-500/20 text-orange-500 border-orange-500/30';
-      default: return 'bg-blue-500/20 text-blue-500 border-blue-500/30';
+  const getPreferenceColor = (mealPreferences?: any[]) => {
+    if (!mealPreferences || mealPreferences.length === 0) {
+      return 'bg-blue-500/20 text-blue-500 border-blue-500/30';
     }
+    return getMealColor(mealPreferences[0].name);
   };
 
-  const getPreferenceLabel = (preference?: string) => {
-    if (!preference || preference === 'none') return 'Standard';
-    return preference.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-');
+  const getPreferenceLabel = (mealPreferences?: any[]) => {
+    if (!mealPreferences || mealPreferences.length === 0) {
+      return 'Standard';
+    }
+    return mealPreferences[0].name;
+  };
+
+  // Helper functions for meal icons and colors
+  const getMealIcon = (mealName: string) => {
+    const name = mealName.toLowerCase();
+    if (name.includes('vegetarian')) return <Leaf size={24} className="text-green-500" />;
+    if (name.includes('vegan')) return <Leaf size={24} className="text-emerald-500" />;
+    if (name.includes('gluten')) return <Wheat size={24} className="text-amber-500" />;
+    if (name.includes('pescatarian') || name.includes('fish')) return <Fish size={24} className="text-cyan-500" />;
+    if (name.includes('halal')) return <Beef size={24} className="text-teal-500" />;
+    if (name.includes('kosher')) return <Check size={24} className="text-indigo-500" />;
+    if (name.includes('nut') || name.includes('dairy')) return <AlertCircle size={24} className="text-red-500" />;
+    return <Utensils size={24} className="text-blue-500" />;
+  };
+
+  const getMealColor = (mealName: string) => {
+    const name = mealName.toLowerCase();
+    if (name.includes('vegetarian')) return 'green';
+    if (name.includes('vegan')) return 'emerald';
+    if (name.includes('gluten')) return 'amber';
+    if (name.includes('pescatarian') || name.includes('fish')) return 'cyan';
+    if (name.includes('halal')) return 'teal';
+    if (name.includes('kosher')) return 'indigo';
+    if (name.includes('nut') || name.includes('dairy')) return 'red';
+    return 'blue';
   };
 
   if (isLoading) {
@@ -412,37 +305,35 @@ export default function MealPreferencesPage() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                            {guest.name.charAt(0)}
+                            {guest.full_name?.charAt(0) || '?'}
                           </div>
                           <div>
-                            <p className="text-text-primary font-medium">{guest.name}</p>
-                            {guest.plusOne && (
-                              <span className="text-xs text-primary">+1 Guest</span>
-                            )}
+                            <p className="text-text-primary font-medium">{guest.full_name || 'Unknown'}</p>
+                            <span className="text-xs text-primary">{guest.relationship}</span>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
                         <span className={`px-3 py-1 rounded-full text-sm ${
-                          guest.side === 'Bride' ? 'bg-pink-500/20 text-pink-500' : 'bg-blue-500/20 text-blue-500'
+                          guest.relationship?.toLowerCase().includes('bride') ? 'bg-pink-500/20 text-pink-500' : 'bg-blue-500/20 text-blue-500'
                         }`}>
-                          {guest.side}
+                          {guest.relationship || 'Unassigned'}
                         </span>
                       </td>
                       <td className="p-4">
-                        <p className="text-text-primary">{guest.email}</p>
-                        <p className="text-text-muted text-sm">{guest.phone}</p>
+                        <p className="text-text-primary">{guest.email || '--'}</p>
+                        <p className="text-text-muted text-sm">{guest.phone || '--'}</p>
                       </td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${getPreferenceColor(guest.mealPreference)}`}>
-                          {getPreferenceIcon(guest.mealPreference)}
-                          <span>{getPreferenceLabel(guest.mealPreference)}</span>
+                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${getPreferenceColor(guest.meal_preferences)}`}>
+                          {getPreferenceIcon(guest.meal_preferences)}
+                          <span>{getPreferenceLabel(guest.meal_preferences)}</span>
                         </span>
                       </td>
                       <td className="p-4">
                         <p className="text-text-muted text-sm">
-                          {guest.mealPreference && guest.mealPreference !== 'none' 
-                            ? `Requires ${getPreferenceLabel(guest.mealPreference).toLowerCase()} meal`
+                          {guest.meal_preferences && guest.meal_preferences.length > 0 
+                            ? `Requires ${getPreferenceLabel(guest.meal_preferences).toLowerCase()} meal`
                             : 'No special requirements'
                           }
                         </p>
