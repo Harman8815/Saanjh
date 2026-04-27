@@ -25,8 +25,8 @@ class ApiClient {
           config.headers.Authorization = `Token ${token}`;
         }
 
-        // Add cache-busting parameter to GET requests
-        if (config.method === 'get') {
+        // Add cache-busting parameter to GET and PATCH requests
+        if (config.method === 'get' || config.method === 'patch') {
           config.params = {
             ...config.params,
             _t: Date.now()

@@ -55,6 +55,49 @@ export default function MealPreferencesPage() {
     fetchData();
   }, []);
 
+  // Helper functions for meal icons and colors
+  const getMealIcon = (mealName: string) => {
+    const name = mealName.toLowerCase();
+    if (name.includes('vegetarian')) return <Leaf size={24} className="text-green-500" />;
+    if (name.includes('vegan')) return <Leaf size={24} className="text-emerald-500" />;
+    if (name.includes('gluten')) return <Wheat size={24} className="text-amber-500" />;
+    if (name.includes('pescatarian') || name.includes('fish')) return <Fish size={24} className="text-cyan-500" />;
+    if (name.includes('halal')) return <Beef size={24} className="text-teal-500" />;
+    if (name.includes('kosher')) return <Check size={24} className="text-indigo-500" />;
+    if (name.includes('nut') || name.includes('dairy')) return <AlertCircle size={24} className="text-red-500" />;
+    return <Utensils size={24} className="text-blue-500" />;
+  };
+
+  const getMealColor = (mealName: string) => {
+    const name = mealName.toLowerCase();
+    if (name.includes('vegetarian')) return 'green';
+    if (name.includes('vegan')) return 'emerald';
+    if (name.includes('gluten')) return 'amber';
+    if (name.includes('pescatarian') || name.includes('fish')) return 'cyan';
+    if (name.includes('halal')) return 'teal';
+    if (name.includes('kosher')) return 'indigo';
+    if (name.includes('nut') || name.includes('dairy')) return 'red';
+    return 'blue';
+  };
+
+  const getPreferenceLabel = (preferences?: any[]) => {
+    if (!preferences || preferences.length === 0) return 'Standard';
+    return preferences.map(p => p.name || 'Unknown').join(', ');
+  };
+
+  const getPreferenceIcon = (preferences?: any[]) => {
+    if (!preferences || preferences.length === 0) return <Utensils size={16} />;
+    const firstPref = preferences[0];
+    return getMealIcon(firstPref.name || '');
+  };
+
+  const getPreferenceColor = (preferences?: any[]) => {
+    if (!preferences || preferences.length === 0) return 'border-blue-500 bg-blue-500/10 text-blue-500';
+    const firstPref = preferences[0];
+    const color = getMealColor(firstPref.name || '');
+    return `border-${color}-500 bg-${color}-500/10 text-${color}-500`;
+  };
+
   // Calculate meal preferences from API data
   const mealPreferences: MealPreference[] = meals.map((meal) => ({
     id: meal.id.toString(),
@@ -99,53 +142,6 @@ export default function MealPreferencesPage() {
       );
     return matchesSearch && matchesPreference && guest.rsvp_status?.name === 'confirmed';
   });
-
-  const getPreferenceIcon = (mealPreferences?: any[]) => {
-    if (!mealPreferences || mealPreferences.length === 0) {
-      return <Utensils size={18} className="text-blue-500" />;
-    }
-    const mealName = mealPreferences[0].name?.toLowerCase() || '';
-    return getMealIcon(mealName);
-  };
-
-  const getPreferenceColor = (mealPreferences?: any[]) => {
-    if (!mealPreferences || mealPreferences.length === 0) {
-      return 'bg-blue-500/20 text-blue-500 border-blue-500/30';
-    }
-    return getMealColor(mealPreferences[0].name);
-  };
-
-  const getPreferenceLabel = (mealPreferences?: any[]) => {
-    if (!mealPreferences || mealPreferences.length === 0) {
-      return 'Standard';
-    }
-    return mealPreferences[0].name;
-  };
-
-  // Helper functions for meal icons and colors
-  const getMealIcon = (mealName: string) => {
-    const name = mealName.toLowerCase();
-    if (name.includes('vegetarian')) return <Leaf size={24} className="text-green-500" />;
-    if (name.includes('vegan')) return <Leaf size={24} className="text-emerald-500" />;
-    if (name.includes('gluten')) return <Wheat size={24} className="text-amber-500" />;
-    if (name.includes('pescatarian') || name.includes('fish')) return <Fish size={24} className="text-cyan-500" />;
-    if (name.includes('halal')) return <Beef size={24} className="text-teal-500" />;
-    if (name.includes('kosher')) return <Check size={24} className="text-indigo-500" />;
-    if (name.includes('nut') || name.includes('dairy')) return <AlertCircle size={24} className="text-red-500" />;
-    return <Utensils size={24} className="text-blue-500" />;
-  };
-
-  const getMealColor = (mealName: string) => {
-    const name = mealName.toLowerCase();
-    if (name.includes('vegetarian')) return 'green';
-    if (name.includes('vegan')) return 'emerald';
-    if (name.includes('gluten')) return 'amber';
-    if (name.includes('pescatarian') || name.includes('fish')) return 'cyan';
-    if (name.includes('halal')) return 'teal';
-    if (name.includes('kosher')) return 'indigo';
-    if (name.includes('nut') || name.includes('dairy')) return 'red';
-    return 'blue';
-  };
 
   if (isLoading) {
     return <GuestLayoutSkeleton />;
@@ -387,3 +383,4 @@ export default function MealPreferencesPage() {
     </div>
   );
 }
+
