@@ -152,19 +152,6 @@ class AlbumUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MediaAlbumSerializer(serializers.ModelSerializer):
-    """Serializer for MediaAlbum join model"""
-    
-    media = MediaSerializer(read_only=True)
-    media_id = serializers.IntegerField(write_only=True)
-    album_id = serializers.IntegerField(write_only=True)
-    
-    class Meta:
-        model = MediaAlbum
-        fields = ['id', 'media', 'media_id', 'album_id', 'added_at']
-        read_only_fields = ['id', 'added_at']
-
-
 class MediaSerializer(serializers.ModelSerializer):
     """Serializer for Media model"""
     
@@ -205,3 +192,16 @@ class MediaUpdateSerializer(serializers.ModelSerializer):
             'title', 'file_url', 'thumbnail_url', 'file_size',
             'media_type_id'
         ]
+
+
+class MediaAlbumSerializer(serializers.ModelSerializer):
+    """Serializer for MediaAlbum join model"""
+    
+    media = MediaSerializer(read_only=True)
+    media_id = serializers.IntegerField(write_only=True)
+    album_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = MediaAlbum
+        fields = ['id', 'media', 'media_id', 'album_id', 'added_at']
+        read_only_fields = ['id', 'added_at']

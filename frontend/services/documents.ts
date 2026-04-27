@@ -1,6 +1,6 @@
 import { apiClient } from './api';
 import type { 
-  Document, 
+  Document as ApiDocument, 
   DocumentTag,
   DocumentCategory,
   DocumentStatistics,
@@ -8,6 +8,16 @@ import type {
   DocumentUpdateRequest,
   PaginatedResponse 
 } from '../types/api';
+
+// Type alias to avoid conflict with browser's Document type
+type Document = ApiDocument;
+
+// Type for documents grouped by category
+type DocumentsByCategory = Record<string, {
+  name: string;
+  count: number;
+  documents: Document[];
+}>;
 
 export class DocumentService {
   // Document CRUD operations
@@ -127,16 +137,8 @@ export class DocumentService {
     return apiClient.get<PaginatedResponse<Document>>(`/documents/documents/?${params.toString()}`);
   }
 
-  static async getDocumentsByCategory(): Promise<Record<string, {
-    name: string;
-    count: number;
-    documents: Document[];
-  }>>> {
-    return apiClient.get<Record<string, {
-      name: string;
-      count: number;
-      documents: Document[];
-    }>>('/documents/documents/by_category/');
+  static async getDocumentsByCategory(): Promise<DocumentsByCategory> {
+    return apiClient.get<DocumentsByCategory>('/documents/documents/by_category/');
   }
 
   // ViewSet operations

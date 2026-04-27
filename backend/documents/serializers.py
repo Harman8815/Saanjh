@@ -162,7 +162,7 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
             instance.tags.clear()
             for tag_name in tag_names:
                 tag, created = DocumentTag.objects.get_or_create(name=tag_name.lower().strip())
-                    instance.tags.add(tag)
+                instance.tags.add(tag)
         
         return instance
 
