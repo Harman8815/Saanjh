@@ -11,27 +11,42 @@ def populate_comprehensive_data(apps, schema_editor):
     Table = apps.get_model('guests', 'Table')
     Guest = apps.get_model('guests', 'Guest')
     Wedding = apps.get_model('weddings', 'Wedding')
+    WeddingStatus = apps.get_model('weddings', 'WeddingStatus')
     GuestMeal = apps.get_model('guests', 'GuestMeal')
+    User = apps.get_model('accounts', 'User')
     
-    # Get or create a default wedding
-    wedding, created = Wedding.objects.get_or_create(
-        couple_name__contains="Sample",
+    # Get or create a default user for the wedding
+    user, created = User.objects.get_or_create(
+        username='sample_user',
         defaults={
-            'couple_name': 'Sample Wedding',
-            'wedding_date': '2024-06-15',
-            'venue': 'Sample Venue',
-            'budget': 50000.00,
-            'guest_count': 100,
-            'status_id': 1  # Assuming status 1 exists
+            'first_name': 'Sample',
+            'last_name': 'User',
+            'email': 'sample@example.com'
         }
     )
     
-    # Clear existing data to avoid duplicates
-    RsvpStatus.objects.all().delete()
-    Meal.objects.all().delete()
-    Table.objects.all().delete()
+    # Get or create a default wedding status
+    wedding_status, created = WeddingStatus.objects.get_or_create(
+        name='planning',
+        defaults={'name': 'planning'}
+    )
+    
+    # Get or create a default wedding
+    wedding, created = Wedding.objects.get_or_create(
+        user=user,
+        defaults={
+            'wedding_date': '2024-06-15',
+            'theme': 'Sample Wedding Theme',
+            'status': wedding_status
+        }
+    )
+    
+    # Clear existing data to avoid duplicates (handle protected relationships)
     GuestMeal.objects.all().delete()
     Guest.objects.all().delete()
+    Table.objects.all().delete()
+    Meal.objects.all().delete()
+    # Note: Don't delete RsvpStatus as it might be referenced by existing guests
     
     # Create comprehensive RSVP statuses
     rsvp_statuses = [

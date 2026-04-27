@@ -115,8 +115,16 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
-        wedding = self.context['request'].user.wedding
-        uploaded_by = self.context['request'].user
+        
+        # Get wedding and uploaded_by from context if not in validated_data
+        # This handles both cases: when passed via perform_create or when accessed directly
+        wedding = validated_data.pop('wedding', None)
+        uploaded_by = validated_data.pop('uploaded_by', None)
+        
+        if not wedding:
+            wedding = self.context['request'].user.wedding
+        if not uploaded_by:
+            uploaded_by = self.context['request'].user
         
         document = Document.objects.create(
             wedding=wedding,

@@ -190,7 +190,7 @@ export default function DocumentManagementModal({
       // For new uploads, include the file; for edits, just metadata
       const savedDocument = {
         ...formData,
-        id: document?.id || `temp-${Date.now()}`,
+        id: document?.id || '', // Empty string for new documents
         url: document?.url || (uploadedFiles.length > 0 ? URL.createObjectURL(uploadedFiles[0]) : '/api/placeholder/400/300'),
         file: uploadedFiles.length > 0 ? uploadedFiles[0] : undefined,
         tags: formData.tags

@@ -168,8 +168,13 @@ function DocumentsContent() {
     try {
       if (updatedDocument.id) {
         // Update existing document
+        const documentId = parseInt(updatedDocument.id);
+        if (isNaN(documentId)) {
+          throw new Error('Invalid document ID');
+        }
+        
         await updateDocument.mutateAsync({
-          documentId: parseInt(updatedDocument.id),
+          documentId: documentId,
           documentData: {
             name: updatedDocument.name,
             description: updatedDocument.description,
@@ -203,7 +208,12 @@ function DocumentsContent() {
   const handleDeleteDocumentConfirm = async () => {
     if (selectedDocument) {
       try {
-        await deleteDocument.mutateAsync(parseInt(selectedDocument.id));
+        const documentId = parseInt(selectedDocument.id);
+        if (isNaN(documentId)) {
+          throw new Error('Invalid document ID');
+        }
+        
+        await deleteDocument.mutateAsync(documentId);
         mutate();
         setDeleteModalOpen(false);
         setSelectedDocument(null);
