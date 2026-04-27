@@ -396,6 +396,49 @@ export interface MediaStatistics {
   recent_uploads: Media[];
 }
 
+// Album types
+export interface Album {
+  id: number;
+  title: string;
+  description?: string;
+  event_type: 'pre-wedding' | 'wedding-day' | 'post-wedding' | 'other';
+  event_type_display: string;
+  date?: string;
+  cover_image?: string;
+  featured: boolean;
+  tags: AlbumTag[];
+  image_count: number;
+  video_count: number;
+  media_items?: Media[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AlbumTag {
+  id: number;
+  name: string;
+}
+
+export interface AlbumCreateRequest {
+  title: string;
+  description?: string;
+  event_type: 'pre-wedding' | 'wedding-day' | 'post-wedding' | 'other';
+  date?: string;
+  cover_image?: string;
+  featured?: boolean;
+  tag_names?: string[];
+}
+
+export interface AlbumUpdateRequest {
+  title?: string;
+  description?: string;
+  event_type?: 'pre-wedding' | 'wedding-day' | 'post-wedding' | 'other';
+  date?: string;
+  cover_image?: string;
+  featured?: boolean;
+  tag_names?: string[];
+}
+
 // Bulk operation types
 export interface BulkGuestCreate {
   guests: Omit<Guest, 'id' | 'added_date' | 'updated_at'>[];
