@@ -25,6 +25,8 @@ import {
   useDuplicateTask
 } from '@/hooks/useTasks';
 import { TaskService } from '@/services';
+import { useToast, ToastContainer } from '@/components/gallery/ToastNotification';
+import { ApiErrorHelper } from '@/utils/error-handling';
 import type { Task, TaskStatus, TaskPriority, TaskCategory } from '@/types/api';
 
 export default function TasksPage() {
@@ -39,6 +41,7 @@ export default function TasksPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const { toasts, addToast, removeToast } = useToast();
 
   // Fetch tasks with filters
   const { tasks, pagination, isLoading, mutate } = useTasks(
@@ -96,8 +99,18 @@ export default function TasksPage() {
       await createTaskMutation.mutateAsync(data);
       setShowTaskModal(false);
       setEditingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Created',
+        message: 'Task has been created successfully'
+      });
     } catch (error) {
-      console.error('Failed to create task:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Create Task',
+        message: errorMessage
+      });
     }
   };
 
@@ -108,8 +121,18 @@ export default function TasksPage() {
       await updateTaskMutation.mutateAsync({ taskId: editingTask.id, taskData: data });
       setShowTaskModal(false);
       setEditingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Updated',
+        message: 'Task has been updated successfully'
+      });
     } catch (error) {
-      console.error('Failed to update task:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Update Task',
+        message: errorMessage
+      });
     }
   };
 
@@ -120,24 +143,54 @@ export default function TasksPage() {
       await deleteTaskMutation.mutateAsync(deletingTask.id);
       setShowDeleteModal(false);
       setDeletingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Deleted',
+        message: 'Task has been deleted successfully'
+      });
     } catch (error) {
-      console.error('Failed to delete task:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Delete Task',
+        message: errorMessage
+      });
     }
   };
 
   const handleToggleComplete = async (task: Task) => {
     try {
       await markCompleteMutation.mutateAsync(task.id);
+      addToast({
+        type: 'success',
+        title: 'Task Status Updated',
+        message: 'Task has been marked as complete'
+      });
     } catch (error) {
-      console.error('Failed to mark task complete:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Update Task',
+        message: errorMessage
+      });
     }
   };
 
   const handleDuplicateTask = async (task: Task) => {
     try {
       await duplicateTaskMutation.mutateAsync(task.id);
+      addToast({
+        type: 'success',
+        title: 'Task Duplicated',
+        message: 'Task has been duplicated successfully'
+      });
     } catch (error) {
-      console.error('Failed to duplicate task:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Duplicate Task',
+        message: errorMessage
+      });
     }
   };
 
@@ -163,8 +216,18 @@ export default function TasksPage() {
     try {
       await bulkDeleteMutation.mutateAsync(selectedTasks);
       setSelectedTasks([]);
+      addToast({
+        type: 'success',
+        title: 'Tasks Deleted',
+        message: `${selectedTasks.length} task(s) have been deleted successfully`
+      });
     } catch (error) {
-      console.error('Failed to bulk delete tasks:', error);
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Delete Tasks',
+        message: errorMessage
+      });
     }
   };
 
@@ -390,6 +453,9 @@ export default function TasksPage() {
         task={deletingTask}
         isLoading={deleteTaskMutation.isPending}
       />
+      
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
