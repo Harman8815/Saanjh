@@ -71,12 +71,16 @@ class TaskListSerializer(serializers.ModelSerializer):
     days_until_due = serializers.IntegerField(read_only=True)
     can_start = serializers.BooleanField(read_only=True)
     
+    # Related objects
+    tags = serializers.StringRelatedField(many=True, read_only=True)
+    
     class Meta:
         model = Task
         fields = [
             'id', 'title', 'status', 'status_name', 'priority', 'priority_name',
             'category', 'category_name', 'assigned_to', 'assigned_to_name',
-            'due_date', 'progress', 'is_overdue', 'days_until_due', 'can_start'
+            'due_date', 'progress', 'is_overdue', 'days_until_due', 'can_start',
+            'tags'
         ]
 
 
