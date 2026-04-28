@@ -1,9 +1,12 @@
 import { apiClient } from './api';
-import { 
+import type { 
   Media, 
   MediaType,
   MediaStatistics,
-  PaginatedResponse 
+  PaginatedResponse,
+  Album,
+  AlbumCreateRequest,
+  AlbumUpdateRequest
 } from '../types/api';
 
 export class MediaService {
@@ -184,32 +187,48 @@ export class MediaService {
   }
 
   // Album operations
-  static async getAlbums(): Promise<any[]> {
-    return apiClient.get<any[]>('/media/albums/');
+  static async getAlbums(): Promise<Album[]> {
+    return apiClient.get<Album[]>('/media/albums/');
   }
 
-  static async createAlbum(albumData: { title: string; description?: string; is_public?: boolean }): Promise<any> {
-    return apiClient.post<any>('/media/albums/', albumData);
+  static async createAlbum(albumData: AlbumCreateRequest): Promise<Album> {
+    return apiClient.post<Album>('/media/albums/', albumData);
   }
 
-  static async getAlbum(albumId: number): Promise<any> {
-    return apiClient.get<any>(`/media/albums/${albumId}/`);
+  static async getAlbum(albumId: number): Promise<Album> {
+    return apiClient.get<Album>(`/media/albums/${albumId}/`);
   }
 
-  static async updateAlbum(albumId: number, albumData: Partial<any>): Promise<any> {
-    return apiClient.patch<any>(`/media/albums/${albumId}/`, albumData);
+  static async updateAlbum(albumId: number, albumData: AlbumUpdateRequest): Promise<Album> {
+    return apiClient.patch<Album>(`/media/albums/${albumId}/`, albumData);
   }
 
   static async deleteAlbum(albumId: number): Promise<void> {
     return apiClient.delete(`/media/albums/${albumId}/`);
   }
 
-  static async addMediaToAlbum(albumId: number, mediaIds: number[]): Promise<void> {
-    return apiClient.post(`/media/albums/${albumId}/add-media/`, { media_ids: mediaIds });
+  static async addMediaToAlbum(albumId: number, mediaIds: number[]): Promise<{ added_count: number }> {
+    return apiClient.post<{ added_count: number }>(`/media/albums/${albumId}/add-media/`, { media_ids: mediaIds });
   }
 
-  static async removeMediaFromAlbum(albumId: number, mediaIds: number[]): Promise<void> {
-    return apiClient.post(`/media/albums/${albumId}/remove-media/`, { media_ids: mediaIds });
+  static async removeMediaFromAlbum(albumId: number, mediaIds: number[]): Promise<{ removed_count: number }> {
+    return apiClient.post<{ removed_count: number }>(`/media/albums/${albumId}/remove-media/`, { media_ids: mediaIds });
+  }
+
+  static async getAlbumsByEvent(): Promise<Record<string, {
+    name: string;
+    count: number;
+    albums: Album[];
+  }>> {
+    return apiClient.get<Record<string, {
+      name: string;
+      count: number;
+      albums: Album[];
+    }>>('/media/albums/by_event/');
+  }
+
+  static async getFeaturedAlbums(): Promise<Album[]> {
+    return apiClient.get<Album[]>('/media/albums/featured/');
   }
 
   // Processing operations
