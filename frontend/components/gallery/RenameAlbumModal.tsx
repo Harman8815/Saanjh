@@ -3,18 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Edit3, Check, AlertCircle } from 'lucide-react';
-
-interface Album {
-  id: string;
-  title: string;
-  description: string;
-}
+import type { Album } from '../../types/api';
 
 interface RenameAlbumModalProps {
   album: Album | null;
   isOpen: boolean;
   onClose: () => void;
-  onRename: (albumId: string, newTitle: string) => void;
+  onRename: (albumId: number, newTitle: string) => Promise<void>;
 }
 
 export default function RenameAlbumModal({ 
@@ -64,12 +59,14 @@ export default function RenameAlbumModal({
     setIsSubmitting(true);
     setError('');
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    onRename(album.id, newTitle.trim());
-    setIsSubmitting(false);
-    onClose();
+    try {
+      await onRename(album.id, newTitle.trim());
+      setIsSubmitting(false);
+      onClose();
+    } catch (error) {
+      setIsSubmitting(false);
+      setError('Failed to rename album. Please try again.');
+    }
   };
 
   const handleClose = () => {

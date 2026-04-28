@@ -198,6 +198,14 @@ def user_stats(request):
         return APIResponse.success(stats, "Statistics retrieved successfully")
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def users_list(request):
+    """Get list of users for task assignment"""
+    users = User.objects.all().order_by('first_name', 'last_name')
+    serializer = UserSerializer(users, many=True)
+    return APIResponse.success(serializer.data, "Users retrieved successfully")
+
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
 def user_settings_detail(request):

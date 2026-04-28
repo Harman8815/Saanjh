@@ -108,6 +108,7 @@ class AlbumCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
         fields = ['title', 'description', 'event_type', 'date', 'cover_image', 'featured', 'tag_names']
+        read_only_fields = ['wedding']
     
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])

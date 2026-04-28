@@ -10,3 +10,4 @@ export { ExpenseService } from './expenses';
 export { WeddingCardService } from './weddingCards';
 export { DocumentService } from './documents';
 export { MediaService } from './media';
+export { TaskService } from './tasks';
