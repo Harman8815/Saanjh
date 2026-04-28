@@ -12,7 +12,5 @@ app_name = 'tasks'
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('tasks/', views.TaskListCreateView.as_view(), name='task-list-create'),
-    path('tasks/<int:pk>/', views.TaskDetailView.as_view(), name='task-detail'),
     path('tasks/statistics/', views.task_statistics, name='task-statistics'),
 ]
