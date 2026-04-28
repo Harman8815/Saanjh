@@ -196,4 +196,9 @@ export class TaskService {
       `/tasks/tasks/?created_at__gte=${sevenDaysAgo}`
     );
   }
+
+  // Get users for task assignment
+  static async getUsers(): Promise<Array<{ id: number; first_name: string; last_name: string; username: string }>> {
+    return apiClient.get('/auth/users/');
+  }
 }

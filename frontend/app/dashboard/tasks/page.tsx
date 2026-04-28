@@ -73,14 +73,16 @@ export default function TasksPage() {
     // Load dropdown data
     const loadDropdownData = async () => {
       try {
-        const [statusesData, prioritiesData, categoriesData] = await Promise.all([
+        const [statusesData, prioritiesData, categoriesData, usersData] = await Promise.all([
           TaskService.getTaskStatuses(),
           TaskService.getTaskPriorities(),
           TaskService.getTaskCategories(),
+          TaskService.getUsers(),
         ]);
         setStatuses(statusesData);
         setPriorities(prioritiesData);
         setCategories(categoriesData);
+        setUsers(usersData);
       } catch (error) {
         console.error('Failed to load dropdown data:', error);
       }
