@@ -7,16 +7,16 @@ import Link from 'next/link';
 
 interface GalleryCardProps {
   album: {
-    id: string;
+    id: number;
     title: string;
-    description: string;
-    date: string;
-    coverImage: string;
-    imageCount: number;
-    videoCount: number;
-    tags: string[];
+    description?: string;
+    date?: string;
+    cover_image?: string;
+    image_count: number;
+    video_count: number;
+    tags: Array<{ id: number; name: string }>;
     featured: boolean;
-    event: string;
+    event_type: string;
   };
   viewMode?: 'grid' | 'list';
   index?: number;
@@ -52,7 +52,7 @@ export default function GalleryCard({
       <div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-48' : 'h-32'}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 z-10" />
         <img
-          src={album.coverImage}
+          src={album.cover_image || '/placeholder-image.jpg'}
           alt={album.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -73,11 +73,11 @@ export default function GalleryCard({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <ImageIcon size={16} />
-                <span className="text-sm">{album.imageCount}</span>
+                <span className="text-sm">{album.image_count}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Video size={16} />
-                <span className="text-sm">{album.videoCount}</span>
+                <span className="text-sm">{album.video_count}</span>
               </div>
             </div>
           </div>
@@ -194,14 +194,14 @@ export default function GalleryCard({
         <div className="flex items-center gap-3 text-text-muted text-sm mb-3">
           <div className="flex items-center gap-1">
             <Calendar size={14} />
-            <span>{new Date(album.date).toLocaleDateString('en-US', { 
+            <span>{album.date ? new Date(album.date).toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric', 
               year: 'numeric' 
-            })}</span>
+            }) : 'No date'}</span>
           </div>
           <span>•</span>
-          <span className="text-primary font-medium">{album.event}</span>
+          <span className="text-primary font-medium">{album.event_type}</span>
         </div>
 
         {/* Tags */}
@@ -211,7 +211,7 @@ export default function GalleryCard({
               key={tagIndex}
               className="bg-primary/10 text-primary px-2 py-1 rounded-lg text-xs font-medium"
             >
-              {tag}
+              {tag.name}
             </span>
           ))}
           {album.tags.length > (viewMode === 'list' ? 4 : 3) && (
@@ -227,11 +227,11 @@ export default function GalleryCard({
             <div className="flex items-center gap-4 text-text-muted text-sm">
               <div className="flex items-center gap-1">
                 <Camera size={16} />
-                <span>{album.imageCount} photos</span>
+                <span>{album.image_count} photos</span>
               </div>
               <div className="flex items-center gap-1">
                 <Video size={16} />
-                <span>{album.videoCount} videos</span>
+                <span>{album.video_count} videos</span>
               </div>
             </div>
             <button className="text-primary hover:text-primary/80 font-medium text-sm">

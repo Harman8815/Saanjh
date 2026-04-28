@@ -9,82 +9,11 @@ import GalleryCard from '../../../components/gallery/GalleryCard';
 import EditAlbumModal from '../../../components/gallery/EditAlbumModal';
 import RenameAlbumModal from '../../../components/gallery/RenameAlbumModal';
 import DeleteConfirmationModal from '../../../components/gallery/DeleteConfirmationModal';
-
-// Mock data for wedding albums
-const mockAlbums = [
-  {
-    id: 'haldi-ceremony',
-    title: 'Haldi Ceremony',
-    description: 'Colorful traditions and joyful moments',
-    date: '2024-03-15',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 124,
-    videoCount: 8,
-    tags: ['Ceremony', 'Traditional', 'Family'],
-    featured: true,
-    event: 'Pre-Wedding'
-  },
-  {
-    id: 'mehendi-night',
-    title: 'Mehendi Night',
-    description: 'Intricate designs and celebration',
-    date: '2024-03-16',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 98,
-    videoCount: 5,
-    tags: ['Ceremony', 'Traditional', 'Friends'],
-    featured: true,
-    event: 'Pre-Wedding'
-  },
-  {
-    id: 'sangeet',
-    title: 'Sangeet Night',
-    description: 'Music, dance, and entertainment',
-    date: '2024-03-17',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 156,
-    videoCount: 12,
-    tags: ['Entertainment', 'Dance', 'Music'],
-    featured: false,
-    event: 'Pre-Wedding'
-  },
-  {
-    id: 'wedding-ceremony',
-    title: 'Wedding Ceremony',
-    description: 'The sacred union of hearts',
-    date: '2024-03-18',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 203,
-    videoCount: 15,
-    tags: ['Ceremony', 'Sacred', 'Couple'],
-    featured: true,
-    event: 'Wedding Day'
-  },
-  {
-    id: 'reception',
-    title: 'Grand Reception',
-    description: 'Celebration with family and friends',
-    date: '2024-03-19',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 187,
-    videoCount: 10,
-    tags: ['Celebration', 'Party', 'Guests'],
-    featured: true,
-    event: 'Post-Wedding'
-  },
-  {
-    id: 'couple-portraits',
-    title: 'Couple Portraits',
-    description: 'Intimate moments and romantic poses',
-    date: '2024-03-14',
-    coverImage: '/api/placeholder/400/300',
-    imageCount: 76,
-    videoCount: 3,
-    tags: ['Couple', 'Romantic', 'Portrait'],
-    featured: false,
-    event: 'Pre-Wedding'
-  }
-];
+import MediaManagementModal from '../../../components/gallery/MediaManagementModal';
+import { MediaService } from '../../../services';
+import { useToast, ToastContainer } from '../../../components/gallery/ToastNotification';
+import { ApiErrorHelper } from '../../../utils/error-handling';
+import type { Album, AlbumCreateRequest, AlbumUpdateRequest } from '../../../types/api';
 
 const filterOptions = [
   { label: 'All Albums', value: 'all' },
@@ -104,18 +33,59 @@ const sortOptions = [
 
 function GalleryContent() {
   const searchParams = useSearchParams();
-  const [albums, setAlbums] = useState(mockAlbums);
-  const [filteredAlbums, setFilteredAlbums] = useState(mockAlbums);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [filteredAlbums, setFilteredAlbums] = useState<Album[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedSort, setSelectedSort] = useState('date-desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isLoading, setIsLoading] = useState(true);
+  const { toasts, addToast, removeToast } = useToast();
 
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedAlbum, setSelectedAlbum] = useState<typeof mockAlbums[0] | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+
+  // Fetch albums from backend
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      try {
+        setIsLoading(true);
+        let albumsData: Album[] = [];
+        
+        // Fetch albums based on filter
+        if (selectedFilter === 'featured') {
+          const featuredResponse = await MediaService.getFeaturedAlbums();
+          albumsData = Array.isArray(featuredResponse) ? featuredResponse : [];
+        } else if (selectedFilter === 'pre-wedding' || selectedFilter === 'wedding-day' || selectedFilter === 'post-wedding') {
+          const albumsByEvent = await MediaService.getAlbumsByEvent();
+          albumsData = albumsByEvent[selectedFilter]?.albums || [];
+        } else {
+          const albumsResponse = await MediaService.getAlbums();
+          albumsData = Array.isArray(albumsResponse) ? albumsResponse : [];
+        }
+        
+        console.log('Fetched albums:', albumsData);
+        setAlbums(albumsData);
+      } catch (error) {
+        console.error('Error fetching albums:', error);
+        const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+        addToast({
+          type: 'error',
+          title: 'Failed to Load Albums',
+          message: errorMessage
+        });
+        setAlbums([]); // Set empty array on error to prevent iteration issues
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAlbums();
+  }, [selectedFilter]);
 
   // Handle query parameters from sidebar navigation
   useEffect(() => {
@@ -138,39 +108,24 @@ function GalleryContent() {
 
   // Filter and sort albums
   useEffect(() => {
-    let filtered = [...albums];
+    let filtered = Array.isArray(albums) ? [...albums] : [];
 
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(album =>
         album.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        album.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        album.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        (album.description && album.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (album.tags && album.tags.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase())))
       );
-    }
-
-    // Apply category filter
-    if (selectedFilter !== 'all') {
-      if (selectedFilter === 'featured') {
-        filtered = filtered.filter(album => album.featured);
-      } else {
-        filtered = filtered.filter(album => 
-          album.event.toLowerCase().replace(' ', '-') === selectedFilter
-        );
-      }
     }
 
     // Apply sorting
     filtered.sort((a, b) => {
       switch (selectedSort) {
         case 'date-desc':
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+          return new Date(b.created_at || b.date || '').getTime() - new Date(a.created_at || a.date || '').getTime();
         case 'date-asc':
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'photos-desc':
-          return b.imageCount - a.imageCount;
-        case 'videos-desc':
-          return b.videoCount - a.videoCount;
+          return new Date(a.created_at || a.date || '').getTime() - new Date(b.created_at || b.date || '').getTime();
         case 'title-asc':
           return a.title.localeCompare(b.title);
         default:
@@ -179,41 +134,111 @@ function GalleryContent() {
     });
 
     setFilteredAlbums(filtered);
-  }, [albums, searchQuery, selectedFilter, selectedSort]);
+  }, [albums, searchQuery, selectedSort]);
 
   // Album management handlers
-  const handleEditAlbum = (album: typeof mockAlbums[0]) => {
+  const handleEditAlbum = (album: Album) => {
     setSelectedAlbum(album);
     setEditModalOpen(true);
   };
 
-  const handleRenameAlbum = (album: typeof mockAlbums[0]) => {
+  const handleRenameAlbum = (album: Album) => {
     setSelectedAlbum(album);
     setRenameModalOpen(true);
   };
 
-  const handleDeleteAlbum = (album: typeof mockAlbums[0]) => {
+  const handleDeleteAlbum = (album: Album) => {
     setSelectedAlbum(album);
     setDeleteModalOpen(true);
   };
 
-  const handleSaveAlbum = (updatedAlbum: typeof mockAlbums[0]) => {
-    setAlbums(prev => prev.map(album => 
-      album.id === updatedAlbum.id ? updatedAlbum : album
-    ));
+  const handleSaveAlbum = async (updatedAlbum: AlbumUpdateRequest) => {
+    if (!selectedAlbum) return;
+    
+    try {
+      await MediaService.updateAlbum(selectedAlbum.id, updatedAlbum);
+      setAlbums(prev => prev.map(album => 
+        album.id === selectedAlbum.id ? { ...album, ...updatedAlbum } : album
+      ));
+      setEditModalOpen(false);
+      setSelectedAlbum(null);
+      addToast({
+        type: 'success',
+        title: 'Album Updated',
+        message: 'Album has been updated successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Update Album',
+        message: errorMessage
+      });
+    }
   };
 
-  const handleRenameAlbumConfirm = (albumId: string, newTitle: string) => {
-    setAlbums(prev => prev.map(album => 
-      album.id === albumId ? { ...album, title: newTitle } : album
-    ));
+  const handleRenameAlbumConfirm = async (albumId: number, newTitle: string) => {
+    try {
+      await MediaService.updateAlbum(albumId, { title: newTitle });
+      setAlbums(prev => prev.map(album => 
+        album.id === albumId ? { ...album, title: newTitle } : album
+      ));
+      setRenameModalOpen(false);
+      setSelectedAlbum(null);
+      addToast({
+        type: 'success',
+        title: 'Album Renamed',
+        message: 'Album has been renamed successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Rename Album',
+        message: errorMessage
+      });
+    }
   };
 
-  const handleDeleteAlbumConfirm = () => {
-    if (selectedAlbum) {
+  const handleDeleteAlbumConfirm = async () => {
+    if (!selectedAlbum) return;
+    
+    try {
+      await MediaService.deleteAlbum(selectedAlbum.id);
       setAlbums(prev => prev.filter(album => album.id !== selectedAlbum.id));
       setDeleteModalOpen(false);
       setSelectedAlbum(null);
+      addToast({
+        type: 'success',
+        title: 'Album Deleted',
+        message: 'Album has been deleted successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Delete Album',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleCreateAlbum = async (albumData: AlbumCreateRequest) => {
+    try {
+      const newAlbum = await MediaService.createAlbum(albumData);
+      setAlbums(prev => [newAlbum, ...prev]);
+      addToast({
+        type: 'success',
+        title: 'Album Created',
+        message: 'Album has been created successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Create Album',
+        message: errorMessage
+      });
     }
   };
 
@@ -315,7 +340,10 @@ function GalleryContent() {
               </div>
 
               {/* Add Album Button */}
-              <button className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
+              <button 
+                onClick={() => setMediaModalOpen(true)}
+                className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
                 <Plus size={18} />
                 <span className="hidden sm:inline">Add Album</span>
               </button>
@@ -329,9 +357,9 @@ function GalleryContent() {
             </p>
             <div className="flex items-center gap-2 text-text-muted text-sm">
               <Camera size={16} />
-              <span>{filteredAlbums.reduce((sum, album) => sum + album.imageCount, 0)} photos</span>
+              <span>{filteredAlbums.reduce((sum, album) => sum + album.image_count, 0)} photos</span>
               <Video size={16} className="ml-2" />
-              <span>{filteredAlbums.reduce((sum, album) => sum + album.videoCount, 0)} videos</span>
+              <span>{filteredAlbums.reduce((sum, album) => sum + album.video_count, 0)} videos</span>
             </div>
           </div>
         </motion.div>
@@ -381,7 +409,10 @@ function GalleryContent() {
             }
           </p>
           {!searchQuery && selectedFilter === 'all' && (
-            <button className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <button 
+              onClick={() => setMediaModalOpen(true)}
+              className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300"
+            >
               Create First Album
             </button>
           )}
@@ -408,11 +439,51 @@ function GalleryContent() {
       <DeleteConfirmationModal
         itemType="album"
         itemName={selectedAlbum?.title || ''}
-        itemCount={(selectedAlbum?.imageCount || 0) + (selectedAlbum?.videoCount || 0)}
+        itemCount={(selectedAlbum?.image_count || 0) + (selectedAlbum?.video_count || 0)}
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteAlbumConfirm}
       />
+      
+      {/* Media Upload Modal */}
+      <MediaManagementModal
+        albumId="new"
+        albumName="New Album"
+        isOpen={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        media={[]}
+        availableAlbums={albums}
+        onMediaUpdate={(updatedMedia) => {
+          // Handle uploaded media - in real app, this would create album and add media
+          console.log('Uploaded media:', updatedMedia);
+        }}
+        onAlbumCreate={async (albumData) => {
+          try {
+            // Create the album via API
+            const newAlbum = await MediaService.createAlbum({
+              title: albumData.title,
+              description: albumData.description,
+              event_type: 'other'
+            });
+            
+            // Refresh albums list to include the newly created album
+            const updatedAlbums = await MediaService.getAlbums();
+            setAlbums(Array.isArray(updatedAlbums) ? updatedAlbums : []);
+            
+            console.log('Album created successfully:', newAlbum);
+          } catch (error) {
+            console.error('Error creating album:', error);
+            addToast({
+              type: 'error',
+              title: 'Failed to Create Album',
+              message: 'Could not create the album. Please try again.'
+            });
+          }
+        }}
+      />
+      
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

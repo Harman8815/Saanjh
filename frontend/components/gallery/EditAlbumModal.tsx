@@ -3,19 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Calendar, Tag, FileText, Image as ImageIcon, Video } from 'lucide-react';
-
-interface Album {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  coverImage: string;
-  imageCount: number;
-  videoCount: number;
-  tags: string[];
-  featured: boolean;
-  event: string;
-}
+import type { Album, AlbumTag } from '../../types/api';
 
 interface EditAlbumModalProps {
   album: Album | null;
@@ -25,11 +13,10 @@ interface EditAlbumModalProps {
 }
 
 const eventOptions = [
-  'Pre-Wedding',
-  'Wedding Day', 
-  'Post-Wedding',
-  'Engagement',
-  'Reception'
+  'pre-wedding',
+  'wedding-day', 
+  'post-wedding',
+  'other'
 ];
 
 const commonTags = [
@@ -40,16 +27,20 @@ const commonTags = [
 
 export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditAlbumModalProps) {
   const [formData, setFormData] = useState<Album>({
-    id: '',
+    id: 0,
     title: '',
     description: '',
     date: '',
-    coverImage: '',
-    imageCount: 0,
-    videoCount: 0,
+    cover_image: '',
+    image_count: 0,
+    video_count: 0,
     tags: [],
     featured: false,
-    event: ''
+    event_type: 'other',
+    event_type_display: '',
+    media_items: [],
+    created_at: '',
+    updated_at: ''
   });
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,19 +57,23 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
   };
 
   const addTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+    if (newTag.trim() && !formData.tags?.some(tag => tag.name === newTag.trim())) {
+      const newAlbumTag: AlbumTag = {
+        id: Date.now(), // Temporary ID for new tags
+        name: newTag.trim()
+      };
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...(prev.tags || []), newAlbumTag]
       }));
       setNewTag('');
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
+  const removeTag = (tagToRemove: AlbumTag) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags?.filter(tag => tag.id !== tagToRemove.id) || []
     }));
   };
 
@@ -187,8 +182,8 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
                   Event Type
                 </label>
                 <select
-                  value={formData.event}
-                  onChange={(e) => handleInputChange('event', e.target.value)}
+                  value={formData.event_type}
+                  onChange={(e) => handleInputChange('event_type', e.target.value)}
                   className="w-full px-4 py-3 bg-background/50 border border-white/10 rounded-xl text-text-primary focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                 >
                   {eventOptions.map(event => (
@@ -204,7 +199,7 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
                 <div className="flex items-center gap-3">
                   <ImageIcon size={20} className="text-primary" />
                   <div>
-                    <p className="text-text-primary font-medium">{formData.imageCount}</p>
+                    <p className="text-text-primary font-medium">{formData.image_count}</p>
                     <p className="text-text-muted text-sm">Photos</p>
                   </div>
                 </div>
@@ -213,7 +208,7 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
                 <div className="flex items-center gap-3">
                   <Video size={20} className="text-primary" />
                   <div>
-                    <p className="text-text-primary font-medium">{formData.videoCount}</p>
+                    <p className="text-text-primary font-medium">{formData.video_count}</p>
                     <p className="text-text-muted text-sm">Videos</p>
                   </div>
                 </div>
@@ -269,12 +264,12 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
 
               {/* Current Tags */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {formData.tags.map((tag, index) => (
+                {formData.tags?.map((tag, index) => (
                   <span
-                    key={index}
+                    key={tag.id}
                     className="bg-primary/10 text-primary px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-2"
                   >
-                    {tag}
+                    {tag.name}
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
@@ -295,12 +290,16 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
                       key={tag}
                       type="button"
                       onClick={() => {
-                        if (!formData.tags.includes(tag)) {
-                          handleInputChange('tags', [...formData.tags, tag]);
+                        if (!formData.tags?.some(existingTag => existingTag.name === tag)) {
+                          const newAlbumTag: AlbumTag = {
+                            id: Date.now(), // Temporary ID for new tags
+                            name: tag
+                          };
+                          handleInputChange('tags', [...(formData.tags || []), newAlbumTag]);
                         }
                       }}
                       className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                        formData.tags.includes(tag)
+                        formData.tags?.some(existingTag => existingTag.name === tag)
                           ? 'bg-primary text-white'
                           : 'bg-background/50 text-text-muted hover:text-text-primary hover:bg-background/70'
                       }`}

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'timeline',
     'media',
     'documents',
+    'tasks',
     'internal_admin',
 ]
 
