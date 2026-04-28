@@ -572,6 +572,105 @@ export interface DocumentUpdateRequest {
   tag_names?: string[];
 }
 
+// Task Management Types
+export interface Task {
+  id: number;
+  wedding: number;
+  wedding_name?: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  status_name: string;
+  priority: TaskPriority;
+  priority_name: string;
+  category?: TaskCategory;
+  category_name?: string;
+  assigned_to?: User;
+  assigned_to_name?: string;
+  due_date?: string;
+  completed_at?: string;
+  progress: number;
+  created_by?: User;
+  created_by_name?: string;
+  created_at: string;
+  updated_at: string;
+  is_overdue: boolean;
+  days_until_due?: number;
+  can_start: boolean;
+  tags: string[];
+  depends_on: Task[];
+  dependent_tasks: Task[];
+}
+
+export interface TaskStatus {
+  id: number;
+  name: string;
+  color: string;
+  order: number;
+}
+
+export interface TaskPriority {
+  id: number;
+  name: string;
+  color: string;
+  order: number;
+}
+
+export interface TaskCategory {
+  id: number;
+  name: string;
+  description?: string;
+  color: string;
+}
+
+export interface TaskCreateRequest {
+  title: string;
+  description?: string;
+  status?: number;
+  priority?: number;
+  category?: number;
+  assigned_to?: number;
+  due_date?: string;
+  progress?: number;
+  depends_on?: number[];
+  tags?: string[];
+}
+
+export interface TaskUpdateRequest {
+  title?: string;
+  description?: string;
+  status?: number;
+  priority?: number;
+  category?: number;
+  assigned_to?: number;
+  due_date?: string;
+  progress?: number;
+  depends_on?: number[];
+  tags?: string[];
+}
+
+export interface TaskStatistics {
+  total_count: number;
+  overdue_count: number;
+  due_soon_count: number;
+  recent_count: number;
+  by_status: Record<number, {
+    name: string;
+    color: string;
+    count: number;
+  }>;
+  by_priority: Record<number, {
+    name: string;
+    color: string;
+    count: number;
+  }>;
+}
+
+export interface TaskBulkUpdateRequest {
+  task_ids: number[];
+  updates: Partial<TaskUpdateRequest>;
+}
+
 // Error types
 export interface ApiError {
   message: string;
