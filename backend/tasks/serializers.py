@@ -83,6 +83,8 @@ class TaskListSerializer(serializers.ModelSerializer):
 class TaskCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating tasks"""
     
+    tags = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True)
+    
     class Meta:
         model = Task
         fields = [
@@ -96,13 +98,28 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         return value
     
     def validate_due_date(self, value):
-        if value and value < timezone.now():
-            raise serializers.ValidationError("Due date cannot be in the past")
+        # Allow past dates but warn about them in the frontend
         return value
+    
+    def create(self, validated_data):
+        tags_data = validated_data.pop('tags', [])
+        
+        # Create the task
+        task = Task.objects.create(**validated_data)
+        
+        # Handle tags - create or get existing tags by name
+        from documents.models import DocumentTag
+        for tag_name in tags_data:
+            tag, created = DocumentTag.objects.get_or_create(name=tag_name.strip())
+            task.tags.add(tag)
+        
+        return task
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating tasks"""
+    
+    tags = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True)
     
     class Meta:
         model = Task
@@ -115,6 +132,24 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         if value < 0 or value > 100:
             raise serializers.ValidationError("Progress must be between 0 and 100")
         return value
+    
+    def update(self, instance, validated_data):
+        tags_data = validated_data.pop('tags', None)
+        
+        # Update the task fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Handle tags if provided
+        if tags_data is not None:
+            instance.tags.clear()
+            from documents.models import DocumentTag
+            for tag_name in tags_data:
+                tag, created = DocumentTag.objects.get_or_create(name=tag_name.strip())
+                instance.tags.add(tag)
+        
+        return instance
 
 
 class TaskBulkUpdateSerializer(serializers.Serializer):
