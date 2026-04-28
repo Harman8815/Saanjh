@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.http import JsonResponse
 from . import views
@@ -39,6 +41,7 @@ urlpatterns = [
     path('api/wedding-cards/', include('wedding_cards.urls')),
     path('api/timeline/', include('timeline.urls')),
     path('api/media/', include('media.urls')),
+    path('api/documents/', include('documents.urls')),
     path('api/public/cards/<str:shareable_link>/', include('wedding_cards.public_urls')),
     # Fake data generation endpoints (admin only)
     path('api/admin/generate-fake-data/', views.generate_fake_data, name='generate-fake-data'),
@@ -47,3 +50,7 @@ urlpatterns = [
     path('api/admin/clear-fake-data/', views.clear_fake_data, name='clear-fake-data'),
     path('api/admin/data-statistics/', views.data_statistics, name='data-statistics'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

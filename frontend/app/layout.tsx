@@ -9,6 +9,7 @@ import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { metadata } from "./metadata";
 import { LocalizationProvider } from "../components/providers/LocalizationProvider";
 import AuthProvider from "../components/providers/AuthProvider";
+import { QueryProvider } from "../providers/query-client";
 import { Toaster } from "react-hot-toast";
 // import CustomCursor from '../components/common/CustomCursor'; // Commented out - using default cursor
 
@@ -46,16 +47,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {/* <CustomCursor /> */} {/* Commented out - using default cursor */}
-        <LocalizationProvider>
-          <ThemeProvider>
-            <AuthProvider>
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-              <Toaster position="top-right" />
-            </AuthProvider>
-          </ThemeProvider>
-        </LocalizationProvider>
+        <QueryProvider>
+          <LocalizationProvider>
+            <ThemeProvider>
+              <AuthProvider>
+                <LayoutWrapper>
+                  {children}
+                </LayoutWrapper>
+                <Toaster position="top-right" />
+              </AuthProvider>
+            </ThemeProvider>
+          </LocalizationProvider>
+        </QueryProvider>
       </body>
     </html>
   );
