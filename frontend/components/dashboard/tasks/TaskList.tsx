@@ -190,7 +190,7 @@ export function TaskList({
                     </div>
                   )}
 
-                  {task.tags.length > 0 && (
+                  {task.tags && task.tags.length > 0 && (
                     <div className="flex items-center gap-1">
                       {task.tags.slice(0, 3).map((tag, index) => (
                         <span key={index} className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
