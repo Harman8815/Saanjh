@@ -1,166 +1,239 @@
-# Wedding Proposal Generator
+Here’s a cleaner, more professional, and structured rewrite of your README:
+
+---
+
+# Wedding Planning System
 
 ## Overview
 
-The Wedding Planning System is a full-stack application that provides couples with everything they need to plan and manage their wedding efficiently. From finding the perfect venue to managing guest lists and tracking expenses, our platform streamlines the entire wedding planning process.
+The Wedding Planning System is a full-stack application designed to simplify and streamline the entire wedding planning process. It provides couples with a centralized platform to manage venues, vendors, guests, budgets, and digital experiences—ensuring efficient planning from start to finish.
 
-## Key Features
+---
 
-### Core Planning Tools
-- **Dashboard Overview**: Comprehensive wedding dashboard with real-time metrics, timeline tracking, and quick actions
-- **Venue Management**: Search, compare, and book wedding venues with detailed amenities and availability
-- **Vendor Marketplace**: Connect with and manage wedding vendors (photographers, caterers, florists, etc.)
-- **Guest Management**: Complete guest list with RSVP tracking, meal preferences, and seating arrangements
-- **Budget Tracking**: Monitor expenses, set budget categories, and track spending against allocated amounts
-- **Timeline Planning**: Create and manage wedding planning timeline with milestones and deadlines
-- **Task Management**: Organize wedding-related tasks with priorities, due dates, and completion tracking
+## Features
+
+### Planning & Management
+
+* **Dashboard**
+  Centralized overview with real-time insights, key metrics, and quick actions.
+
+* **Venue Management**
+  Search, compare, and manage venue bookings with detailed availability and amenities.
+
+* **Vendor Marketplace**
+  Discover and manage vendors such as photographers, caterers, and decorators.
+
+* **Guest Management**
+  Maintain guest lists with RSVP tracking, meal preferences, and seating arrangements.
+
+* **Budget Tracking**
+  Monitor expenses, define budget categories, and track spending against allocations.
+
+* **Timeline Planning**
+  Plan events with milestones, deadlines, and structured scheduling.
+
+* **Task Management**
+  Organize tasks with priorities, due dates, and completion tracking.
+
+---
 
 ### Digital Experience
-- **Wedding Cards**: Create and customize digital wedding invitation cards with multiple templates
-- **Wedding Website Builder**: Build personalized wedding websites with couple stories, photo galleries, and event information
-- **Photo Gallery**: Upload and organize wedding photos with sharing capabilities
-- **Invitation Builder**: Design custom invitations with advanced editing tools
 
-### Advanced Features
-- **Subscription Plans**: Multiple pricing tiers (Starter, Professional, Premium) with different feature sets
-- **Settings & Preferences**: User customization options for themes, language, currency, and timezone
-- **Real-time Updates**: Live dashboard updates and activity tracking
-- **Mobile Responsive**: Fully responsive design for optimal mobile experience
+* **Wedding Invitations**
+  Create and customize digital invitation cards using predefined templates.
+
+* **Wedding Website Builder**
+  Build personalized websites with stories, galleries, and event details.
+
+* **Photo Gallery**
+  Upload, organize, and share wedding photos.
+
+* **Invitation Builder**
+  Advanced tools for designing custom invitations.
+
+---
+
+### Advanced Capabilities
+
+* **Subscription Plans**
+  Tiered pricing (Starter, Professional, Premium) with feature-based access.
+
+* **User Preferences**
+  Customize themes, language, currency, and timezone.
+
+* **Real-time Updates**
+  Live data updates across the dashboard.
+
+* **Responsive Design**
+  Optimized experience across desktop and mobile devices.
+
+---
 
 ## Architecture
 
-### Frontend (Next.js)
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with custom glass-morphism design
-- **State Management**: Zustand store
-- **Animations**: Framer Motion
-- **Data Fetching**: SWR for GET requests, React Query for mutations
-- **HTTP Client**: Axios with interceptors
-- **Validation**: Zod schema validation
+### Frontend
 
-### Backend (Django)
-- **Framework**: Django REST Framework
-- **Database**: PostgreSQL with comprehensive relational schema
-- **Authentication**: JWT-based authentication
-- **API Design**: RESTful APIs with proper error handling
-- **File Storage**: Media management for photos and documents
+* **Framework**: Next.js 14 (App Router)
+* **Language**: TypeScript
+* **Styling**: Tailwind CSS (custom glassmorphism UI)
+* **State Management**: Zustand
+* **Animations**: Framer Motion
+* **Data Fetching**: SWR (GET), React Query (mutations)
+* **HTTP Client**: Axios (with interceptors)
+* **Validation**: Zod
 
-### Database Schema
-The system uses a comprehensive database structure with entities for:
-- **Users & Roles**: Multi-role system (bride, groom, guardian, admin)
-- **Weddings**: Core wedding information and status tracking
-- **Venues**: Venue catalog with amenities and booking management
-- **Vendors**: Vendor marketplace with categories and ratings
-- **Guests**: Guest lists with RSVP status and meal preferences
-- **Budget**: Expense tracking with categories and payment status
-- **Timeline**: Event planning with milestones and deadlines
-- **Tasks**: Task management with priorities and completion tracking
+---
 
-## Frontend Structure
+### Backend
 
-### Dashboard Pages
-- `/dashboard` - Main dashboard with overview metrics and quick actions
-- `/dashboard/venues` - Venue search, filtering, and booking
-- `/dashboard/vendors` - Vendor marketplace and management
-- `/dashboard/guests` - Guest list management (list, RSVP, meals, seating)
-- `/dashboard/budget` - Expense tracking and budget management
-- `/dashboard/timeline` - Wedding planning timeline and milestones
-- `/dashboard/tasks` - Task management and to-do lists
-- `/dashboard/packages` - Subscription plans and pricing
-- `/dashboard/settings` - User preferences and configuration
+* **Framework**: Django REST Framework
+* **Database**: PostgreSQL
+* **Authentication**: JWT-based authentication
+* **API Design**: RESTful architecture with structured error handling
+* **Media Handling**: File storage for images and documents
 
-### Creative Tools
-- `/dashboard/wedding-cards` - Digital wedding card creation
-- `/dashboard/invitation-builder` - Advanced invitation design tools
-- `/dashboard/gallery` - Photo management and sharing
-- `/dashboard/preview` - Wedding website preview
+---
+
+### Database Design
+
+The system is built on a relational schema covering:
+
+* User roles (Bride, Groom, Guardian, Admin)
+* Wedding entities and lifecycle tracking
+* Venue and vendor management
+* Guest lists with RSVP and preferences
+* Budget and expense tracking
+* Timeline and scheduling
+* Task management
+* User settings and preferences
+
+---
+
+## Application Structure
+
+### Dashboard Routes
+
+* `/dashboard` – Overview and analytics
+* `/dashboard/venues` – Venue management
+* `/dashboard/vendors` – Vendor marketplace
+* `/dashboard/guests` – Guest management
+* `/dashboard/budget` – Budget tracking
+* `/dashboard/timeline` – Event planning
+* `/dashboard/tasks` – Task management
+* `/dashboard/packages` – Subscription plans
+* `/dashboard/settings` – User configuration
+
+---
+
+### Creative Modules
+
+* `/dashboard/wedding-cards` – Invitation templates
+* `/dashboard/invitation-builder` – Custom invitation editor
+* `/dashboard/gallery` – Photo management
+* `/dashboard/preview` – Website preview
+
+---
 
 ## Current Status
 
-### Version Information
-- **Frontend**: v0.6.0
-- **Backend**: v1.3.0
-- **Production Tag**: v0.6.0-prod
+### Versions
 
-### Development Status
-- Core dashboard functionality implemented
-- Venue and vendor management systems active
-- Guest management with RSVP tracking
-- Budget and expense tracking
-- Timeline and task management
-- Digital wedding cards and invitation builder
-- Wedding website builder
-- Photo gallery system
-- Subscription management
-- Mobile responsive design
+* **Frontend**: v0.6.0
+* **Backend**: v1.3.0
+* **Production Tag**: v0.6.0-prod
 
-### Database Features
-- Comprehensive user management with role-based access
-- Wedding entity management with status tracking
-- Venue catalog with amenities and booking system
-- Vendor marketplace with categories and ratings
-- Guest management with RSVP and meal preferences
-- Budget tracking with expense categorization
-- Timeline management with event scheduling
-- Task management with priorities and deadlines
-- Settings and preferences management
+---
+
+### Implemented Modules
+
+* Dashboard and analytics
+* Venue and vendor systems
+* Guest management with RSVP tracking
+* Budget and expense tracking
+* Timeline and task management
+* Digital invitations and website builder
+* Photo gallery system
+* Subscription management
+* Fully responsive UI
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.9+
-- PostgreSQL
-- Redis (for caching)
+
+* Node.js (v18 or above)
+* Python (v3.9 or above)
+* PostgreSQL
+* Redis (optional, for caching)
+
+---
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Harman8815/wedding-project.git
-   cd wedding-project
-   ```
+#### 1. Clone Repository
 
-2. **Frontend Setup**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+```bash
+git clone https://github.com/Harman8815/wedding-project.git
+cd wedding-project
+```
 
-3. **Backend Setup**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py runserver
-   ```
+#### 2. Frontend Setup
 
-4. **Environment Variables**
-   - `NEXT_PUBLIC_API_URL` - Backend API URL
-   - Database connection settings
-   - JWT secret keys
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+#### 3. Backend Setup
+
+```bash
+cd backend
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+---
+
+### Environment Variables
+
+Configure the following:
+
+* `NEXT_PUBLIC_API_URL` – Backend API endpoint
+* Database credentials
+* JWT secret keys
+
+---
 
 ## Documentation
 
-- **ER Diagram**: `backend/docs/ER-Diagram.md`
-- **API Documentation**: Available in backend docs
-- **Frontend Components**: Documented in component files
+* ER Diagram: `backend/docs/ER-Diagram.md`
+* API Documentation: Available in backend docs
+* Component Documentation: Inline within frontend code
 
-## License
-
-MIT License - See LICENSE file for details
+---
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
+3. Commit changes
 4. Submit a pull request
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+---
 
 ## Support
 
-For support and questions, please open an issue in the repository.
+For issues, feature requests, or questions, please open an issue in the repository.
 
 ---
+
+If you want, I can also make a **GitHub-optimized version (with badges, visuals, and better first-impression layout)** or a **minimal recruiter-friendly README**.
