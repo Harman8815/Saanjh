@@ -13,13 +13,14 @@ from .serializers import (
     TaskBulkUpdateSerializer
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 
 class TaskStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for TaskStatus model"""
     queryset = TaskStatus.objects.all()
     serializer_class = TaskStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     ordering = ['order', 'name']
     
     def list(self, request, *args, **kwargs):
@@ -56,7 +57,7 @@ class TaskPriorityViewSet(viewsets.ModelViewSet):
     """ViewSet for TaskPriority model"""
     queryset = TaskPriority.objects.all()
     serializer_class = TaskPrioritySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     ordering = ['order', 'name']
     
     def list(self, request, *args, **kwargs):
@@ -93,7 +94,7 @@ class TaskCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for TaskCategory model"""
     queryset = TaskCategory.objects.all()
     serializer_class = TaskCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['name', 'description']
     ordering = ['name']

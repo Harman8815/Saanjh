@@ -1,3 +1,4 @@
+from accounts.permissions import IsAdminOrReadOnly
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ class TimelineStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for TimelineStatus model"""
     queryset = TimelineStatus.objects.all()
     serializer_class = TimelineStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class TimelineEventViewSet(viewsets.ModelViewSet):

@@ -12,12 +12,13 @@ from .serializers import (
     MealSerializer
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 class RsvpStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for RsvpStatus model"""
     queryset = RsvpStatus.objects.all()
     serializer_class = RsvpStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -53,7 +54,7 @@ class MealViewSet(viewsets.ModelViewSet):
     """ViewSet for Meal model"""
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

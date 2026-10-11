@@ -10,13 +10,14 @@ from .serializers import (
     AlbumUpdateSerializer, MediaAlbumSerializer, AlbumTagSerializer
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 
 class MediaTypeViewSet(viewsets.ModelViewSet):
     """ViewSet for MediaType model"""
     queryset = MediaType.objects.all()
     serializer_class = MediaTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

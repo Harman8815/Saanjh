@@ -10,13 +10,14 @@ from .serializers import (
     DocumentListSerializer, DocumentCategorySerializer, DocumentTagSerializer
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 
 class DocumentCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for DocumentCategory model"""
     queryset = DocumentCategory.objects.all()
     serializer_class = DocumentCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -52,7 +53,7 @@ class DocumentTagViewSet(viewsets.ModelViewSet):
     """ViewSet for DocumentTag model"""
     queryset = DocumentTag.objects.all()
     serializer_class = DocumentTagSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name']

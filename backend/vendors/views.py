@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
 from .serializers import (
     VendorSerializer, VendorCreateSerializer, VendorUpdateSerializer,
@@ -16,20 +17,20 @@ class VendorCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorCategory model"""
     queryset = VendorCategory.objects.all()
     serializer_class = VendorCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VendorStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorStatus model"""
     queryset = VendorStatus.objects.all()
     serializer_class = VendorStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VendorCatalogViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorCatalog model"""
     queryset = VendorCatalog.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def get_serializer_class(self):
         if self.action == 'create':

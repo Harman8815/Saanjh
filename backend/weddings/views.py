@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from .models import (
     Wedding, WeddingStatus, Venue, VenueCatalog, 
     VenueAmenity, VenueAmenityMap
@@ -11,6 +12,7 @@ from .serializers import (
     WeddingStatusSerializer, VenueSerializer, VenueCatalogSerializer,
     VenueCatalogCreateSerializer, VenueAmenitySerializer
 )
+from accounts.permissions import IsAdminOrReadOnly
 from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError
 from utils.api_exceptions import handle_api_exceptions, log_api_calls, APIErrorHandler
 
@@ -18,20 +20,20 @@ class WeddingStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for WeddingStatus model"""
     queryset = WeddingStatus.objects.all()
     serializer_class = WeddingStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VenueAmenityViewSet(viewsets.ModelViewSet):
     """ViewSet for VenueAmenity model"""
     queryset = VenueAmenity.objects.all()
     serializer_class = VenueAmenitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VenueCatalogViewSet(viewsets.ModelViewSet):
     """ViewSet for VenueCatalog model"""
     queryset = VenueCatalog.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -43,7 +45,7 @@ class VenueViewSet(viewsets.ModelViewSet):
     """ViewSet for Venue model"""
     queryset = Venue.objects.all()
     serializer_class = VenueSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class WeddingViewSet(viewsets.ModelViewSet):
@@ -92,7 +94,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
                 data=serializer.data,
                 message="Wedding retrieved successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -142,7 +144,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
                 data=serializer.data,
                 message="Wedding updated successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -162,7 +164,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
             return APIResponse.no_content(
                 message="Wedding deleted successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -223,7 +225,7 @@ def wedding_dashboard(request):
         # Get user's wedding or raise NotFoundError
         try:
             wedding = request.user.wedding
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(
                 resource="Wedding",
                 message="No wedding found for this user. Please create a wedding first."

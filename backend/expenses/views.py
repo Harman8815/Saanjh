@@ -12,12 +12,13 @@ from .serializers import (
     ExpenseStatusSerializer
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 class ExpenseStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for ExpenseStatus model"""
     queryset = ExpenseStatus.objects.all()
     serializer_class = ExpenseStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
