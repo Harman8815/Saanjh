@@ -6,6 +6,8 @@ from datetime import date, timedelta
 from django.urls import reverse
 from rest_framework import status
 from .test_utils import APITestCase, TestDataFactory
+from utils.api_exceptions import custom_exception_handler
+from utils.api_response import APIException
 
 
 class APIResponseFormatTestCase(APITestCase):
@@ -42,6 +44,22 @@ class APIResponseFormatTestCase(APITestCase):
             # Details should be a dictionary if present
             if 'details' in error:
                 self.assertIsInstance(error['details'], dict)
+
+    def test_custom_api_exception_preserves_error_contract(self):
+        """Project-defined API exceptions keep their status and structured details."""
+        exception = APIException(
+            message='Wedding not found',
+            status_code=status.HTTP_404_NOT_FOUND,
+            error_code='NOT_FOUND',
+            details={'resource': 'Wedding'},
+        )
+
+        response = custom_exception_handler(exception, {})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(response.data['success'])
+        self.assertEqual(response.data['error']['code'], 'NOT_FOUND')
+        self.assertEqual(response.data['error']['details'], {'resource': 'Wedding'})
 
     # WEDDING API RESPONSE FORMAT TESTS
     def test_wedding_list_response_format(self):
