@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from utils.api_response import APIResponse
 from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
 from .serializers import (
     VendorSerializer, VendorCreateSerializer, VendorUpdateSerializer,
@@ -114,6 +115,18 @@ class VendorListCreateView(generics.ListCreateAPIView):
             return VendorCreateSerializer
         return VendorSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, 'Vendors retrieved successfully')
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return APIResponse.validation_error(serializer.errors)
+        serializer.save(wedding=request.user.wedding)
+        return APIResponse.created(serializer.data, 'Vendor created successfully')
+
 class VendorDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Vendor detail, update, and delete endpoint"""
     permission_classes = [permissions.IsAuthenticated]
@@ -125,6 +138,23 @@ class VendorDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return VendorUpdateSerializer
         return VendorSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object())
+        return APIResponse.success(serializer.data, 'Vendor retrieved successfully')
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if not serializer.is_valid():
+            return APIResponse.validation_error(serializer.errors)
+        serializer.save()
+        return APIResponse.success(serializer.data, 'Vendor updated successfully')
+
+    def destroy(self, request, *args, **kwargs):
+        self.perform_destroy(self.get_object())
+        return APIResponse.no_content()
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
