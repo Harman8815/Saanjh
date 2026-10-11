@@ -163,3 +163,9 @@ class Task(models.Model):
     class Meta:
         db_table = 'tasks_task'
         ordering = ['-created_at']
+        indexes = [
+            # Tasks are always scoped by wedding, then filtered by status.
+            models.Index(fields=['wedding', 'status']),
+            # Overdue and "due soon" queries sort by due date within a wedding.
+            models.Index(fields=['wedding', 'due_date']),
+        ]

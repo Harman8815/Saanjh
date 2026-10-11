@@ -99,3 +99,8 @@ class TimelineEvent(models.Model):
     class Meta:
         db_table = 'timeline_timeline_event'
         ordering = ['date', 'time']
+        indexes = [
+            # Timeline events are scoped by timeline and ordered or filtered
+            # by date.
+            models.Index(fields=['timeline', 'date']),
+        ]

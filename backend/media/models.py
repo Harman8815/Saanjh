@@ -61,6 +61,10 @@ class Album(models.Model):
     class Meta:
         db_table = 'media_album'
         ordering = ['-date', '-created_at']
+        indexes = [
+            # Albums are scoped by wedding and sorted by date.
+            models.Index(fields=['wedding', 'date']),
+        ]
 
 
 class MediaAlbum(models.Model):
@@ -128,3 +132,7 @@ class Media(models.Model):
     class Meta:
         db_table = 'media_media'
         ordering = ['-uploaded_at']
+        indexes = [
+            # Media is scoped by wedding and listed newest first.
+            models.Index(fields=['wedding', 'uploaded_at']),
+        ]

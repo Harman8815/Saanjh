@@ -107,3 +107,8 @@ class Expense(models.Model):
     class Meta:
         db_table = 'expenses_expense'
         ordering = ['-expense_date', 'budget_category', 'title']
+        indexes = [
+            # Expenses are scoped by wedding and sorted by date by default.
+            models.Index(fields=['wedding', 'expense_date']),
+            models.Index(fields=['wedding', 'status']),
+        ]

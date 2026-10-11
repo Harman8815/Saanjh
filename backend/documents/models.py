@@ -101,3 +101,7 @@ class Document(models.Model):
     class Meta:
         db_table = 'documents_document'
         ordering = ['-uploaded_at']
+        indexes = [
+            # Documents are scoped by wedding and listed newest first.
+            models.Index(fields=['wedding', 'uploaded_at']),
+        ]

@@ -74,3 +74,7 @@ class Vendor(models.Model):
     class Meta:
         db_table = 'vendors_vendor'
         ordering = ['vendor_catalog__category', 'vendor_catalog__name']
+        indexes = [
+            # Vendors are scoped by wedding and filtered by status.
+            models.Index(fields=['wedding', 'status']),
+        ]

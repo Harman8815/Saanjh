@@ -129,3 +129,8 @@ class Guest(models.Model):
     class Meta:
         db_table = 'guests_guest'
         ordering = ['last_name', 'first_name']
+        indexes = [
+            # Guest lists are always fetched by wedding, then filtered or
+            # sorted by RSVP status.
+            models.Index(fields=['wedding', 'rsvp_status']),
+        ]
