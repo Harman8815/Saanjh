@@ -3,8 +3,13 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 // API base configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+const ACCESS_TOKEN_KEY = 'auth_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+
 class ApiClient {
   private client: AxiosInstance;
+  private isRefreshing = false;
+  private refreshQueue: Array<(token: string | null) => void> = [];
 
   constructor() {
     this.client = axios.create({
@@ -17,12 +22,12 @@ class ApiClient {
 
     console.log('API Client initialized with baseURL:', API_BASE_URL);
 
-    // Request interceptor for adding auth token and cache busting
+    // Request interceptor: attach the JWT access token as a Bearer credential.
     this.client.interceptors.request.use(
       (config) => {
         const token = this.getAuthToken();
         if (token) {
-          config.headers.Authorization = `Token ${token}`;
+          config.headers.Authorization = `Bearer ${token}`;
         }
 
         // Add cache-busting parameter to GET and PATCH requests
@@ -38,37 +43,135 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor for handling errors
+    // Response interceptor: refresh expired access tokens transparently.
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
+      async (error) => {
+        const originalRequest = error.config;
+        const isAuthEndpoint = originalRequest?.url?.includes('auth/refresh');
+
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+          const refreshed = await this.handleUnauthorized(originalRequest);
+          if (refreshed) {
+            return refreshed;
+          }
+        }
+
         if (error.response?.status === 401) {
-          // Handle unauthorized access
           this.clearAuthToken();
-          window.location.href = '/login';
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
     );
   }
 
+  /**
+   * Rotate the access token using the stored refresh token.
+   *
+   * Concurrent 401s are queued so only one refresh request is in flight; the
+   * resulting token (or null on failure) is handed back to every waiter.
+   */
+  private async handleUnauthorized(originalRequest: AxiosRequestConfig): Promise<any> {
+    if (this.isRefreshing) {
+      return new Promise((resolve, reject) => {
+        this.refreshQueue.push((token) => {
+          if (!token) {
+            reject(new Error('Session expired'));
+            return;
+          }
+          originalRequest.headers = originalRequest.headers ?? {};
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          this.client(originalRequest).then(resolve).catch(reject);
+        });
+      });
+    }
+
+    this.isRefreshing = true;
+    try {
+      const newToken = await this.refreshAccessToken();
+      this.refreshQueue.forEach((resolve) => resolve(newToken));
+      this.refreshQueue = [];
+
+      if (!newToken) {
+        this.clearAuthToken();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(new Error('Session expired'));
+      }
+
+      originalRequest.headers = originalRequest.headers ?? {};
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      return this.client(originalRequest);
+    } catch (refreshError) {
+      this.refreshQueue.forEach((resolve) => resolve(null));
+      this.refreshQueue = [];
+      this.clearAuthToken();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return Promise.reject(refreshError);
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
+  /** Call the refresh endpoint and return the new access token, or null. */
+  private async refreshAccessToken(): Promise<string | null> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      // Bypass interceptors so a failed refresh cannot recurse into itself.
+      const response = await this.client.post(
+        'auth/refresh/',
+        { refresh: refreshToken },
+        { _retry: true } as AxiosRequestConfig
+      );
+      const data = response.data?.data ?? response.data;
+      if (data?.access) {
+        this.setAuthToken(data.access);
+      }
+      return data?.access ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   private getAuthToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
+      return localStorage.getItem(ACCESS_TOKEN_KEY);
     }
     return null;
   }
 
-  private clearAuthToken(): void {
+  private getRefreshToken(): string | null {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      return localStorage.getItem(REFRESH_TOKEN_KEY);
+    }
+    return null;
+  }
+
+  /** Store an access token along with its optional refresh token. */
+  public setAuthToken(token: string, refreshToken?: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ACCESS_TOKEN_KEY, token);
+      if (refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      }
+      console.log('Auth token stored');
     }
   }
 
-  public setAuthToken(token: string): void {
+  private clearAuthToken(): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
-      console.log('Auth token stored:', token);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
     }
   }
 

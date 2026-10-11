@@ -7,23 +7,17 @@ import {
   ApiResponse 
 } from '../types/api';
 
+const ACCESS_TOKEN_KEY = 'auth_token';
+const REFRESH_TOKEN_KEY = 'auth_refresh_token';
+
 export class AuthService {
   // Login user
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('Attempting login with:', credentials.username);
       const response = await apiClient.post<AuthResponse>('auth/login/', credentials);
-      console.log('Login response after unwrapping:', response);
-      console.log('Has token?', !!response.token);
-      console.log('Has user?', !!response.user);
       
-      // Store token and user data
-      if (response.token) {
-        apiClient.setAuthToken(response.token);
-        this.storeUser(response.user);
-      } else {
-        console.error('No token in response!', response);
-      }
+      // Store access + refresh tokens and user data
+      this.storeAuth(response);
       
       return response;
     } catch (error) {
@@ -37,11 +31,8 @@ export class AuthService {
     try {
       const response = await apiClient.post<AuthResponse>('auth/register/', userData);
       
-      // Store token and user data
-      if (response.token) {
-        apiClient.setAuthToken(response.token);
-        this.storeUser(response.user);
-      }
+      // Store access + refresh tokens and user data
+      this.storeAuth(response);
       
       return response;
     } catch (error) {
@@ -53,7 +44,9 @@ export class AuthService {
   // Logout user
   static async logout(): Promise<void> {
     try {
-      await apiClient.post('auth/logout/');
+      const refreshToken = this.getRefreshToken();
+      // Pass the refresh token so the server can blacklist it.
+      await apiClient.post('auth/logout/', refreshToken ? { refresh: refreshToken } : {});
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -99,7 +92,7 @@ export class AuthService {
   // Get user settings
   static async getUserSettings(): Promise<any> {
     try {
-      return await apiClient.get('auth/settings-detail/');
+      return await apiClient.get('auth/settings/');
     } catch (error) {
       console.error('Get user settings error:', error);
       throw error;
@@ -109,9 +102,50 @@ export class AuthService {
   // Update user settings
   static async updateUserSettings(settings: any): Promise<any> {
     try {
-      return await apiClient.post('auth/settings-detail/', settings);
+      return await apiClient.patch('auth/settings/', settings);
     } catch (error) {
       console.error('Update user settings error:', error);
+      throw error;
+    }
+  }
+
+  // Manually refresh the access token using the stored refresh token
+  static async refreshToken(): Promise<string | null> {
+    try {
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) {
+        return null;
+      }
+      const response = await apiClient.post<{ access: string; refresh?: string; expires_in?: number }>(
+        'auth/refresh/',
+        { refresh: refreshToken }
+      );
+      if (response.access) {
+        apiClient.setAuthToken(response.access);
+      }
+      return response.access ?? null;
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      return null;
+    }
+  }
+
+  // Active sessions (devices) for the current user
+  static async getSessions(): Promise<any[]> {
+    try {
+      return await apiClient.get<any[]>('auth/sessions/');
+    } catch (error) {
+      console.error('Get sessions error:', error);
+      throw error;
+    }
+  }
+
+  // Revoke one session by id
+  static async revokeSession(sessionId: string): Promise<void> {
+    try {
+      await apiClient.post(`auth/sessions/${sessionId}/revoke/`, {});
+    } catch (error) {
+      console.error('Revoke session error:', error);
       throw error;
     }
   }
@@ -119,7 +153,7 @@ export class AuthService {
   // Check if user is authenticated
   static isAuthenticated(): boolean {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
       const user = localStorage.getItem('user_data');
       return !!(token && user);
     }
@@ -139,7 +173,19 @@ export class AuthService {
   static storeUser(userData: User): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user_data', JSON.stringify(userData));
-      console.log('User data stored:', userData);
+    }
+  }
+
+  // Persist the token pair and user from an auth response
+  private static storeAuth(response: AuthResponse): void {
+    if (typeof window !== 'undefined') {
+      if (response.access) {
+        apiClient.setAuthToken(response.access, response.refresh);
+      } else if (response.token) {
+        // Fallback for servers that only return a single token.
+        apiClient.setAuthToken(response.token);
+      }
+      this.storeUser(response.user);
     }
   }
 
@@ -147,18 +193,27 @@ export class AuthService {
   static clearStoredUser(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('user_data');
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
     }
+  }
+
+  // Get the stored refresh token
+  static getRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(REFRESH_TOKEN_KEY);
+    }
+    return null;
   }
 
   // Initialize auth state from localStorage
   static initializeAuth(): User | null {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
       const user = this.getStoredUser();
       
       if (token && user) {
-        apiClient.setAuthToken(token);
+        apiClient.setAuthToken(token, this.getRefreshToken() ?? undefined);
         return user;
       }
     }

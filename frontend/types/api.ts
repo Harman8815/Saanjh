@@ -60,6 +60,14 @@ export interface RegisterRequest {
 export interface AuthResponse {
   user: User;
   token: string;
+  /** Short-lived JWT access token (sent as a Bearer credential). */
+  access?: string;
+  /** Long-lived refresh token used to rotate the access token. */
+  refresh?: string;
+  /** Access token lifetime in seconds. */
+  expires_in?: number;
+  /** Id of the session (device) the tokens were issued for. */
+  session_id?: string;
 }
 
 // Wedding types

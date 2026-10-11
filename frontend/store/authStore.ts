@@ -7,6 +7,7 @@ interface AuthState {
   // Auth state
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -29,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
         // Initial state
         user: null,
         token: null,
+        refreshToken: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
@@ -40,7 +42,8 @@ export const useAuthStore = create<AuthState>()(
             const response = await AuthService.login({ username, password });
             set({
               user: response.user,
-              token: response.token,
+              token: response.access ?? response.token,
+              refreshToken: response.refresh ?? null,
               isAuthenticated: true,
               isLoading: false,
               error: null,
@@ -52,6 +55,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: null,
               token: null,
+              refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
               error: errorMessage,
@@ -67,7 +71,8 @@ export const useAuthStore = create<AuthState>()(
             const response = await AuthService.register(userData);
             set({
               user: response.user,
-              token: response.token,
+              token: response.access ?? response.token,
+              refreshToken: response.refresh ?? null,
               isAuthenticated: true,
               isLoading: false,
               error: null,
@@ -79,6 +84,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: null,
               token: null,
+              refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
               error: errorMessage,
@@ -98,6 +104,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: null,
               token: null,
+              refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
               error: null,
@@ -111,21 +118,15 @@ export const useAuthStore = create<AuthState>()(
         // Set loading state
         setLoading: (loading: boolean) => set({ isLoading: loading }),
 
-        // Refresh token (placeholder for future implementation)
+        // Refresh the access token, logging out if the refresh token is invalid
         refreshToken: async () => {
-          // For now, just check if we're still authenticated
-          const { user, token } = get();
-          if (user && token) {
-            try {
-              // Could implement token refresh logic here
-              // For now, just validate current session
-              const currentUser = await AuthService.getProfile();
-              set({ user: currentUser });
-            } catch (error) {
-              // Token invalid, logout
-              get().logout();
-            }
+          const token = await AuthService.refreshToken();
+          if (!token) {
+            // Refresh token invalid or revoked: end the session.
+            get().logout();
+            return;
           }
+          set({ token });
         },
 
         // Initialize auth from localStorage
@@ -135,6 +136,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: storedUser,
               token: localStorage.getItem('auth_token'),
+              refreshToken: AuthService.getRefreshToken(),
               isAuthenticated: true,
               error: null,
             });
@@ -149,6 +151,7 @@ export const useAuthStore = create<AuthState>()(
         partialize: (state) => ({
           user: state.user,
           token: state.token,
+          refreshToken: state.refreshToken,
           isAuthenticated: state.isAuthenticated,
         }),
       }
