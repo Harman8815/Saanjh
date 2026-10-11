@@ -3,8 +3,10 @@ from rest_framework import generics, permissions, serializers, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.settings import api_settings
 
 from . import services
+from .cookies import clear_auth_cookies, set_auth_cookies, set_csrf_cookie
 from .models import Role, Settings, User, UserSession
 from .permissions import IsAdminOrReadOnly
 from .serializers import (
@@ -29,6 +31,29 @@ def _validation_message(detail, fallback):
     elif isinstance(detail, (list, tuple)) and detail:
         return str(detail[0])
     return fallback
+
+
+def _finish_auth_response(response, payload, request=None):
+    """
+    Move tokens out of the JSON body and into HttpOnly cookies.
+
+    The response payload is rewritten in place, then the Set-Cookie headers
+    are added. Clients that explicitly ask for JSON transport keep the tokens
+    in the body (useful for non-browser API consumers).
+    """
+    if request is not None and request.query_params.get('transport') == 'json':
+        return response
+
+    set_auth_cookies(
+        response,
+        access_token=payload.pop('access'),
+        refresh_token=payload.pop('refresh'),
+        access_lifetime=api_settings.ACCESS_TOKEN_LIFETIME,
+        refresh_lifetime=api_settings.REFRESH_TOKEN_LIFETIME,
+    )
+    if request is not None:
+        set_csrf_cookie(request, response)
+    return response
 
 
 def _auth_payload(user, request):
@@ -71,7 +96,9 @@ class UserRegistrationView(generics.CreateAPIView):
         except serializers.ValidationError as exc:
             return APIResponse.validation_error(exc.detail, _validation_message(exc.detail, 'Registration validation failed'))
         user = serializer.save()
-        return APIResponse.created(_auth_payload(user, request), 'Registration successful')
+        payload = _auth_payload(user, request)
+        response = APIResponse.created(payload, 'Registration successful')
+        return _finish_auth_response(response, payload, request)
 
 
 class UserLoginView(generics.GenericAPIView):
@@ -102,7 +129,9 @@ class UserLoginView(generics.GenericAPIView):
             return APIResponse.validation_error(detail if isinstance(detail, dict) else {'non_field_errors': messages}, 'Login validation failed')
 
         user = serializer.validated_data['user']
-        return APIResponse.success(_auth_payload(user, request), 'Login successful')
+        payload = _auth_payload(user, request)
+        response = APIResponse.success(payload, 'Login successful')
+        return _finish_auth_response(response, payload, request)
 
 
 class UserLogoutView(generics.GenericAPIView):
@@ -112,6 +141,10 @@ class UserLogoutView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.data.get('refresh') if hasattr(request, 'data') else None
+        # Cookie transport: the refresh token never reaches script, so it is
+        # read from the HttpOnly cookie when not supplied in the body.
+        if not refresh_token:
+            refresh_token = request.COOKIES.get('refresh_token')
         all_devices = bool(request.data.get('all_devices')) if hasattr(request, 'data') else False
 
         # Server-side invalidation: blacklist the presented refresh token so it
@@ -133,7 +166,9 @@ class UserLogoutView(generics.GenericAPIView):
         except Exception:
             pass
         logout(request)
-        return APIResponse.success({}, 'Logout successful')
+        response = APIResponse.success({}, 'Logout successful')
+        clear_auth_cookies(response)
+        return response
 
 
 class RoleViewSet(viewsets.ModelViewSet):
@@ -311,12 +346,11 @@ def refresh_token(request):
     """
     Rotate the caller's credentials.
 
-    With a ``refresh`` token in the body, returns a new JWT access/refresh
-    pair and blacklists the presented refresh token. The refresh token is the
-    credential here, so no access token is required. Without one, falls back
-    to rotating the legacy DRF token for older clients.
+    With a ``refresh`` token in the body (or the refresh cookie for browsers),
+    returns a new JWT access/refresh pair and blacklists the presented refresh
+    token. Without one, falls back to rotating the legacy DRF token.
     """
-    refresh_token_value = request.data.get('refresh')
+    refresh_token_value = request.data.get('refresh') or request.COOKIES.get('refresh_token')
 
     if refresh_token_value:
         session = services.find_session(refresh_token_value)
@@ -326,12 +360,14 @@ def refresh_token(request):
             rotated = services.rotate_session(refresh_token_value)
         except TokenError as exc:
             return APIResponse.unauthorized(str(exc))
-        return APIResponse.success({
+        payload = {
             'token': rotated['access'],
             'access': rotated['access'],
             'refresh': rotated['refresh'],
             'expires_in': rotated['access_expires_in'],
-        }, 'Token refreshed successfully')
+        }
+        response = APIResponse.success(payload, 'Token refreshed successfully')
+        return _finish_auth_response(response, payload, request)
 
     # Legacy path: no refresh token supplied, rotate the DRF token instead.
     if not request.user or not request.user.is_authenticated:
