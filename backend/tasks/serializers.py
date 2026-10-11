@@ -3,6 +3,29 @@ from django.utils import timezone
 from .models import Task, TaskStatus, TaskPriority, TaskCategory
 
 
+def validate_task_assignee(user, request=None):
+    """
+    Ensure a task is only ever assigned within the caller's wedding.
+
+    A wedding has a single owner (``Wedding.user`` is a OneToOne), so the only
+    permitted assignee is the requesting user. Without this check any user id
+    could be assigned, which leaks their full name through ``assigned_to_name``.
+    """
+    if user is None:
+        return None
+
+    if request is None or not getattr(request, 'user', None):
+        # Called outside a request context (e.g. a management command): keep
+        # the historical behaviour rather than failing the whole operation.
+        return user
+
+    if user.pk != request.user.pk:
+        raise serializers.ValidationError(
+            'Tasks can only be assigned to users who belong to this wedding.'
+        )
+    return user
+
+
 class TaskStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskStatus
@@ -100,23 +123,27 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         if value < 0 or value > 100:
             raise serializers.ValidationError("Progress must be between 0 and 100")
         return value
-    
+
     def validate_due_date(self, value):
         # Allow past dates but warn about them in the frontend
         return value
-    
+
+    def validate_assigned_to(self, value):
+        """Restrict assignees to users who share the caller's wedding."""
+        return validate_task_assignee(value, self.context.get('request'))
+
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
-        
+
         # Create the task
         task = Task.objects.create(**validated_data)
-        
+
         # Handle tags - create or get existing tags by name
         from documents.models import DocumentTag
         for tag_name in tags_data:
             tag, created = DocumentTag.objects.get_or_create(name=tag_name.strip())
             task.tags.add(tag)
-        
+
         return task
 
 
@@ -136,7 +163,11 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         if value < 0 or value > 100:
             raise serializers.ValidationError("Progress must be between 0 and 100")
         return value
-    
+
+    def validate_assigned_to(self, value):
+        """Restrict assignees to users who share the caller's wedding."""
+        return validate_task_assignee(value, self.context.get('request'))
+
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
         
