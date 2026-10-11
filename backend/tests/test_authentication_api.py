@@ -255,11 +255,8 @@ class AuthenticationAPITestCase(APITestCase):
         response = self.client.post(self.logout_url)
         self.assert_error_response(response, 401, "UNAUTHORIZED")
 
-    def test_logout_multiple_tokens(self):
-        """Test logout with multiple tokens (if supported)."""
-        # Create additional token
-        Token.objects.create(user=self.user)
-        
+    def test_logout_existing_token(self):
+        """Test logout invalidates the user's existing token."""
         self.authenticate()
         response = self.client.post(self.logout_url)
         self.assert_success_response(response)
@@ -297,10 +294,26 @@ class AuthenticationAPITestCase(APITestCase):
         self.assert_success_response(response, message="Profile updated successfully")
         
         # Verify changes
-        self.user.refresh()
+        self.user.refresh_from_db()
         self.assertEqual(self.user.first_name, 'Updated')
         self.assertEqual(self.user.last_name, 'Name')
         self.assertEqual(self.user.email, 'updated@example.com')
+
+    def test_update_profile_cannot_change_role_or_active_status(self):
+        """Self-service profile updates cannot change authorization state."""
+        from accounts.models import Role
+
+        admin_role, _ = Role.objects.get_or_create(name='admin')
+        self.authenticate()
+        response = self.client.patch(self.profile_url, {
+            'role_id': admin_role.id,
+            'is_active': False,
+        })
+
+        self.assert_success_response(response, message='Profile updated successfully')
+        self.user.refresh_from_db()
+        self.assertIsNone(self.user.role_id)
+        self.assertTrue(self.user.is_active)
 
     def test_update_profile_unauthenticated(self):
         """Test updating profile without authentication."""
@@ -346,7 +359,7 @@ class AuthenticationAPITestCase(APITestCase):
         self.assert_success_response(response, message="Password changed successfully")
         
         # Verify password was changed
-        self.user.refresh()
+        self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('newpass123'))
 
     def test_change_password_wrong_old_password(self):
@@ -475,6 +488,15 @@ class AuthenticationAPITestCase(APITestCase):
         self.assertIn('privacy', settings)
         self.assertIn('preferences', settings)
 
+    def test_users_list_does_not_expose_other_accounts(self):
+        """The users endpoint must not expose accounts outside the caller's scope."""
+        self.authenticate()
+        response = self.client.get('/api/auth/users/')
+
+        self.assert_success_response(response, message='Users retrieved successfully')
+        users = response.json()['data']
+        self.assertEqual([user['id'] for user in users], [self.user.id])
+
     def test_update_user_settings(self):
         """Test updating user settings."""
         settings_data = {
@@ -489,7 +511,7 @@ class AuthenticationAPITestCase(APITestCase):
         }
         
         self.authenticate()
-        response = self.client.patch('/api/auth/settings/', settings_data)
+        response = self.client.patch('/api/auth/settings/', settings_data, format='json')
         self.assert_success_response(response, message="Settings updated successfully")
 
     # EDGE CASES AND VALIDATION TESTS
