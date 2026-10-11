@@ -59,10 +59,11 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
   user: User;
+  /** Legacy DRF token, still issued for older API clients. */
   token: string;
-  /** Short-lived JWT access token (sent as a Bearer credential). */
+  /** Short-lived JWT access token, delivered as an HttpOnly cookie. */
   access?: string;
-  /** Long-lived refresh token used to rotate the access token. */
+  /** Long-lived refresh token, delivered as an HttpOnly cookie. */
   refresh?: string;
   /** Access token lifetime in seconds. */
   expires_in?: number;
