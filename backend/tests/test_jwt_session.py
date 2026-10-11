@@ -25,8 +25,12 @@ class JWTAuthenticationTestCase(APITestCase):
         self.sessions_url = '/api/auth/sessions/'
 
     def _login(self, username='testuser', password='testpass123'):
+        # JSON transport keeps the tokens in the body so they can be asserted;
+        # the default browser path stores them in HttpOnly cookies.
         response = self.client.post(
-            self.login_url, {'username': username, 'password': password}, format='json'
+            f'{self.login_url}?transport=json',
+            {'username': username, 'password': password},
+            format='json',
         )
         self.assert_success_response(response, message='Login successful')
         return response.json()['data']
@@ -55,7 +59,7 @@ class JWTAuthenticationTestCase(APITestCase):
 
     def test_register_returns_jwt_pair(self):
         """Registration also issues a JWT access/refresh pair."""
-        response = self.client.post(self.register_url, {
+        response = self.client.post(f'{self.register_url}?transport=json', {
             'username': 'jwtnewuser',
             'email': 'jwtnew@example.com',
             'first_name': 'Jwt',
@@ -103,7 +107,7 @@ class JWTAuthenticationTestCase(APITestCase):
         """Refreshing returns a new access token and a rotated refresh token."""
         data = self._login()
         response = self.client.post(
-            self.refresh_url, {'refresh': data['refresh']}, format='json'
+            f'{self.refresh_url}?transport=json', {'refresh': data['refresh']}, format='json'
         )
         self.assert_success_response(response, message='Token refreshed successfully')
         new_data = response.json()['data']
@@ -114,7 +118,7 @@ class JWTAuthenticationTestCase(APITestCase):
         """A refresh token is single-use: reuse after rotation is rejected."""
         data = self._login()
         response = self.client.post(
-            self.refresh_url, {'refresh': data['refresh']}, format='json'
+            f'{self.refresh_url}?transport=json', {'refresh': data['refresh']}, format='json'
         )
         self.assert_success_response(response)
         replay = self.client.post(
@@ -135,7 +139,7 @@ class JWTAuthenticationTestCase(APITestCase):
         """The rotated access token authenticates requests."""
         data = self._login()
         response = self.client.post(
-            self.refresh_url, {'refresh': data['refresh']}, format='json'
+            f'{self.refresh_url}?transport=json', {'refresh': data['refresh']}, format='json'
         )
         new_access = response.json()['data']['access']
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {new_access}")
@@ -323,7 +327,7 @@ class JWTAuthenticationTestCase(APITestCase):
         """Rotation preserves the session claim on the new access token."""
         data = self._login()
         response = self.client.post(
-            self.refresh_url, {'refresh': data['refresh']}, format='json'
+            f'{self.refresh_url}?transport=json', {'refresh': data['refresh']}, format='json'
         )
         new_token = AccessToken(response.json()['data']['access'])
         self.assertEqual(str(new_token['session_id']), data['session_id'])
