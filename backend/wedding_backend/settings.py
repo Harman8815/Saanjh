@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
     'accounts',
@@ -146,9 +147,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.SessionAwareJWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -165,51 +166,31 @@ REST_FRAMEWORK = {
 
 # SimpleJWT Configuration
 from datetime import timedelta
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    # Short-lived access tokens: a stolen access token expires quickly.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    # Refresh tokens live longer and are rotated on every use.
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'REFRESH_TOKEN_LIFETIME_AFTER_FIRST_REFRESH': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    # Server-side invalidation: rotated/used refresh tokens are blacklisted
+    # so they can never be replayed after logout or refresh.
     'BLACKLIST_AFTER_ROTATION': True,
     'BLACKLIST_AFTER_REFRESH': True,
-    'UPDATE_ON_LOGIN': True,
+    'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
-    'USER_ID_ENCODING': 'django.core.signing.TimestampSigner',
-    'USER_ID_VALIDATOR': None,
-    'DEVICE_ID_FIELD': None,
-    'DEVICE_ID_VALIDATOR': None,
-    'DEVICE_ID_CLAIM': None,
-    'REFRESH_TOKEN_CLASS': 'rest_framework_simplejwt.tokens.RefreshToken',
-    'ACCESS_TOKEN_CLASS': 'rest_framework_simplejwt.tokens.AccessToken',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-    'AUTHENTICATION_ERROR': 'Authentication credentials were not provided.',
-    'INVALID_CREDENTIAL_ERROR': 'No active account found with the given credentials.',
-    'INVALID_TOKEN_ERROR': 'Given token not valid for any token type',
-    'EXPIRED_TOKEN_ERROR': 'Token has expired',
-    'REFRESH_TOKEN_ERROR': 'Refresh token error',
-    'CREDENTIAL_TEST': 'rest_framework_simplejwt.authentication.test_user_credentials',
-    'EXPIRY_WRITING': 'rest_framework_simplejwt.authentication.default_expiry_date',
-    'EXPIRY_READING': 'rest_framework_simplejwt.authentication.default_expiry_date',
-    'REFRESH_EXPIRY_WRITING': 'rest_framework_simplejwt.authentication.default_refresh_expiry_date',
-    'REFRESH_EXPIRY_READING': 'rest_framework_simplejwt.authentication.default_refresh_expiry_date',
 }
 
-# JWT Blacklist
-REST_FRAMEWORK_BLACKLIST = {
-    'BLACKLIST_AFTER_ROTATION': True,
-    'BLACKLIST_AFTER_REFRESH': True,
-}
+# Authentication policy
+# Maximum number of concurrent JWT sessions (devices) a user may keep open.
+# Signing in on a new device revokes the oldest session once the limit is hit.
+MAX_CONCURRENT_SESSIONS = 3
 
 # Jazzmin Configuration
 JAZZMIN_SETTINGS = {
