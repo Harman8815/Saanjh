@@ -7,6 +7,8 @@ from functools import wraps
 from typing import Any, Callable
 
 from django.http import HttpRequest, HttpResponse
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404 as DjangoHttp404
 from rest_framework import exceptions as drf_exceptions
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def custom_exception_handler(exc, context):
-    """Convert DRF exceptions into the project’s standardized API format."""
+    """Convert DRF exceptions into the project's standardized API format."""
     if isinstance(exc, APIException):
         return APIResponse.error(
             message=exc.message,
@@ -25,6 +27,13 @@ def custom_exception_handler(exc, context):
             error_code=exc.error_code,
             details=exc.details,
         )
+
+    # Normalise Django exceptions to their DRF counterparts so the branches
+    # below classify them correctly (get_object_or_404 raises django Http404).
+    if isinstance(exc, DjangoHttp404):
+        exc = drf_exceptions.NotFound()
+    elif isinstance(exc, DjangoPermissionDenied):
+        exc = drf_exceptions.PermissionDenied()
 
     response = drf_exception_handler(exc, context)
     if response is not None:
@@ -39,7 +48,10 @@ def custom_exception_handler(exc, context):
             code = 'FORBIDDEN'
             details = data
         elif isinstance(exc, drf_exceptions.NotFound):
-            message = str(data.get('detail', 'Resource not found'))
+            # DRF's generic detail is "Not found."; keep the project's wording.
+            message = 'Resource not found'
+            if isinstance(data.get('detail'), str) and data['detail'] not in ('Not found.', ''):
+                message = data['detail']
             code = 'NOT_FOUND'
             details = data
         elif isinstance(exc, drf_exceptions.ValidationError):

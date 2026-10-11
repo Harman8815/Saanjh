@@ -9,8 +9,9 @@ from .models import WeddingCard, WeddingCardGuest, WeddingCardAnalytics
 from .serializers import (
     WeddingCardSerializer, WeddingCardCreateSerializer, WeddingCardUpdateSerializer,
     WeddingCardGuestSerializer, WeddingCardGuestCreateSerializer,
-    WeddingCardAnalyticsSerializer
+    WeddingCardAnalyticsSerializer, PublicRsvpSerializer
 )
+from utils.api_response import APIResponse
 
 class WeddingCardListCreateView(generics.ListCreateAPIView):
     """Wedding card list and create endpoint"""
@@ -40,21 +41,16 @@ class WeddingCardDetailView(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([permissions.AllowAny])  # Public endpoint for viewing cards
 def wedding_card_public(request, shareable_link):
     """Public endpoint for viewing wedding cards"""
-    try:
-        card = WeddingCard.objects.get(shareable_link=shareable_link)
-        
-        # Increment view count
-        analytics, created = WeddingCardAnalytics.objects.get_or_create(wedding_card=card)
-        analytics.total_views += 1
-        analytics.save()
-        
-        serializer = WeddingCardSerializer(card)
-        return Response(serializer.data)
-    except WeddingCard.DoesNotExist:
-        return Response(
-            {'error': 'Wedding card not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    card = get_object_or_404(WeddingCard, shareable_link=shareable_link)
+
+    # Increment view count
+    analytics, created = WeddingCardAnalytics.objects.get_or_create(wedding_card=card)
+    analytics.total_views += 1
+    analytics.save()
+
+    return APIResponse.success(
+        WeddingCardSerializer(card).data, 'Wedding card retrieved successfully'
+    )
 
 class WeddingCardGuestListCreateView(generics.ListCreateAPIView):
     """Wedding card guest list and create endpoint"""
@@ -67,7 +63,12 @@ class WeddingCardGuestListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         card_id = self.kwargs['card_id']
-        return WeddingCardGuest.objects.filter(wedding_card_id=card_id)
+        # Scope through the card's wedding so a card id belonging to another
+        # user cannot be used to read their guest list.
+        return WeddingCardGuest.objects.filter(
+            wedding_card_id=card_id,
+            wedding_card__wedding=self.request.user.wedding
+        )
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -86,7 +87,11 @@ class WeddingCardGuestDetailView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         card_id = self.kwargs['card_id']
-        return WeddingCardGuest.objects.filter(wedding_card_id=card_id)
+        # Same wedding scoping as the list view: no cross-user access.
+        return WeddingCardGuest.objects.filter(
+            wedding_card_id=card_id,
+            wedding_card__wedding=self.request.user.wedding
+        )
     
     def get_serializer_class(self):
         return WeddingCardGuestSerializer
@@ -95,41 +100,54 @@ class WeddingCardGuestDetailView(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([permissions.AllowAny])  # Public RSVP endpoint
 def wedding_card_public_rsvp(request, shareable_link):
     """Public endpoint for RSVP to wedding cards"""
-    try:
-        card = WeddingCard.objects.get(shareable_link=shareable_link)
-        
-        # Create or update guest RSVP
-        data = request.data
-        guest, created = WeddingCardGuest.objects.update_or_create(
-            wedding_card=card,
-            email=data.get('email'),
-            defaults={
-                'name': data.get('name'),
-                'rsvp_status': data.get('rsvp_status', 'pending'),
-                'plus_one': data.get('plus_one', False),
-                'plus_one_name': data.get('plus_one_name', ''),
-                'dietary_restrictions': data.get('dietary_restrictions', ''),
-                'notes': data.get('notes', '')
-            }
-        )
-        
-        # Update analytics
-        analytics, _ = WeddingCardAnalytics.objects.get_or_create(wedding_card=card)
+    card = get_object_or_404(WeddingCard, shareable_link=shareable_link)
+
+    # Validate all caller-supplied data: this endpoint is public, so status
+    # values and free text must not be trusted.
+    serializer = PublicRsvpSerializer(data=request.data)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors, 'RSVP validation failed')
+    data = serializer.validated_data
+
+    # Capture the previous answer so counters stay consistent when a guest
+    # changes their RSVP status.
+    existing = WeddingCardGuest.objects.filter(
+        wedding_card=card, email=data['email']
+    ).first()
+    guest, created = WeddingCardGuest.objects.update_or_create(
+        wedding_card=card,
+        email=data['email'],
+        defaults={
+            'name': data['name'],
+            'rsvp_status': data['rsvp_status'],
+            'plus_one': data.get('plus_one', False),
+            'plus_one_name': data.get('plus_one_name', ''),
+            'dietary_restrictions': data.get('dietary_restrictions', ''),
+            'notes': data.get('notes', ''),
+        }
+    )
+
+    # Update analytics: only count new submissions, keeping the per-status
+    # counters consistent with each guest's latest answer.
+    analytics, _ = WeddingCardAnalytics.objects.get_or_create(wedding_card=card)
+    if created:
         analytics.total_rsvps += 1
-        if guest.rsvp_status == 'confirmed':
-            analytics.confirmed_rsvps += 1
-        elif guest.rsvp_status == 'declined':
-            analytics.declined_rsvps += 1
-        analytics.save()
-        
-        serializer = WeddingCardGuestSerializer(guest)
-        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-        
-    except WeddingCard.DoesNotExist:
-        return Response(
-            {'error': 'Wedding card not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    elif existing is not None:
+        if existing.rsvp_status == 'confirmed':
+            analytics.confirmed_rsvps = max(0, analytics.confirmed_rsvps - 1)
+        elif existing.rsvp_status == 'declined':
+            analytics.declined_rsvps = max(0, analytics.declined_rsvps - 1)
+    if guest.rsvp_status == 'confirmed':
+        analytics.confirmed_rsvps += 1
+    elif guest.rsvp_status == 'declined':
+        analytics.declined_rsvps += 1
+    analytics.save()
+
+    return APIResponse.success(
+        WeddingCardGuestSerializer(guest).data,
+        'RSVP submitted successfully',
+        status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+    )
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])

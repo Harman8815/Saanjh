@@ -72,6 +72,34 @@ class WeddingCardGuestCreateSerializer(serializers.ModelSerializer):
         guest = WeddingCardGuest.objects.create(wedding_card=wedding_card, **validated_data)
         return guest
 
+class PublicRsvpSerializer(serializers.Serializer):
+    """
+    Validated input for the public RSVP endpoint.
+
+    The public endpoint is reachable by anyone holding the shareable link, so
+    every field is explicitly validated: status values are constrained to the
+    model's choices, and free-text fields are length-capped.
+    """
+
+    name = serializers.CharField(max_length=100, trim_whitespace=True)
+    # Email identifies the RSVP row and prevents unauthenticated callers from
+    # colliding on a null email (which would overwrite another guest's entry).
+    email = serializers.EmailField()
+    rsvp_status = serializers.ChoiceField(
+        choices=[status for status, _ in WeddingCardGuest.RSVP_STATUS_CHOICES]
+    )
+    plus_one = serializers.BooleanField(required=False, default=False)
+    plus_one_name = serializers.CharField(
+        max_length=100, required=False, allow_blank=True, trim_whitespace=True
+    )
+    dietary_restrictions = serializers.CharField(
+        max_length=1000, required=False, allow_blank=True, trim_whitespace=True
+    )
+    notes = serializers.CharField(
+        max_length=1000, required=False, allow_blank=True, trim_whitespace=True
+    )
+
+
 class WeddingCardAnalyticsSerializer(serializers.ModelSerializer):
     """Serializer for WeddingCardAnalytics model"""
     rsvp_rate = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
