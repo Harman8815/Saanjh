@@ -301,5 +301,26 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Cross-Site Request Forgery
+# Credentials are carried in HttpOnly cookies, so unsafe requests must prove
+# they came from our own frontend via the X-CSRFToken header.
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+]
+
+# Auth cookie transport (HttpOnly, so scripts cannot read the tokens)
+AUTH_COOKIE_ACCESS = 'access_token'
+AUTH_COOKIE_REFRESH = 'refresh_token'
+AUTH_COOKIE_CSRF = 'csrftoken'
+# Secure cookies require HTTPS; relaxed only when running with DEBUG on.
+AUTH_COOKIE_SECURE = not DEBUG
+# Lax blocks cookie attachment on cross-site POSTs (the classic CSRF vector)
+# while still allowing top-level navigation back from a third-party login.
+AUTH_COOKIE_SAMESITE = 'Lax'
+AUTH_COOKIE_DOMAIN = None
+
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
