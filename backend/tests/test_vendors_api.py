@@ -3,8 +3,13 @@ Comprehensive test cases for Vendor API endpoints.
 """
 
 from decimal import Decimal
+from datetime import date, timedelta
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from vendors.models import Vendor, VendorCatalog as VendorCatalogModel
+from expenses.models import Expense
+from timeline.models import Timeline
 from .test_utils import APITestCase, TestDataFactory, APIEndpointTester
 
 

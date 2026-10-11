@@ -5,6 +5,8 @@ Comprehensive test cases for Guest API endpoints.
 from datetime import date, datetime, timedelta
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from guests.models import Guest
 from .test_utils import APITestCase, TestDataFactory, APIEndpointTester
 
 
@@ -243,7 +245,7 @@ class GuestAPITestCase(APITestCase):
         self.assert_success_response(response)
         
         # Verify the update
-        self.guest.refresh()
+        self.guest.refresh_from_db()
         self.assertEqual(self.guest.rsvp_status.id, self.confirmed_rsvp.id)
 
     def test_guest_update_other_wedding_guest_forbidden(self):
@@ -347,8 +349,8 @@ class GuestAPITestCase(APITestCase):
         self.assert_success_response(response, message="RSVP statuses updated successfully")
         
         # Verify updates
-        self.guest.refresh()
-        guest2.refresh()
+        self.guest.refresh_from_db()
+        guest2.refresh_from_db()
         self.assertEqual(self.guest.rsvp_status.id, self.confirmed_rsvp.id)
         self.assertEqual(guest2.rsvp_status.id, self.declined_rsvp.id)
 
@@ -518,7 +520,7 @@ class GuestAPITestCase(APITestCase):
         self.assert_success_response(response2)
         
         # Verify final state
-        self.guest.refresh()
+        self.guest.refresh_from_db()
         self.assertEqual(self.guest.notes, 'Second update')
 
     def test_guest_api_response_format(self):

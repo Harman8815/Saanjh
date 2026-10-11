@@ -5,6 +5,10 @@ Comprehensive test cases for Timeline API endpoints.
 from datetime import date, timedelta, datetime
 from django.urls import reverse
 from rest_framework import status
+from guests.models import Guest
+from expenses.models import BudgetCategory, Expense
+from vendors.models import Vendor
+from timeline.models import Timeline
 from .test_utils import APITestCase, TestDataFactory
 
 

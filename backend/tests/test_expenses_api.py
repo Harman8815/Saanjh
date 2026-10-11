@@ -6,6 +6,8 @@ from decimal import Decimal
 from datetime import date, timedelta
 from django.urls import reverse
 from rest_framework import status
+from expenses.models import BudgetCategory, Expense
+from vendors.models import Vendor
 from .test_utils import APITestCase, TestDataFactory, APIEndpointTester
 
 
