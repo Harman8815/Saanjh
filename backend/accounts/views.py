@@ -2,8 +2,10 @@ from django.contrib.auth import logout
 from rest_framework import generics, permissions, serializers, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import Role, Settings, User
+from . import services
+from .models import Role, Settings, User, UserSession
 from .serializers import (
     RoleSerializer,
     SettingsSerializer,
@@ -28,6 +30,32 @@ def _validation_message(detail, fallback):
     return fallback
 
 
+def _auth_payload(user, request):
+    """
+    Build the authentication payload for a user.
+
+    Issues a JWT access/refresh pair (with expiry metadata) backed by a
+    tracked session, enforces the concurrent session limit, and keeps the
+    legacy DRF token in the ``token`` field for older clients.
+    """
+    session_data = services.create_session(user, request)
+    # Evict the oldest session if this sign-in exceeded the device limit.
+    services.enforce_session_limit(user)
+
+    token, _ = Token.objects.get_or_create(user=user)
+
+    return {
+        'user': UserSerializer(user).data,
+        # Legacy field: older clients authenticate with this value.
+        'token': token.key,
+        # JWT credentials: short-lived access token + rotating refresh token.
+        'access': session_data['access'],
+        'refresh': session_data['refresh'],
+        'expires_in': session_data['access_expires_in'],
+        'session_id': str(session_data['session'].id),
+    }
+
+
 class UserRegistrationView(generics.CreateAPIView):
     """User registration endpoint"""
 
@@ -42,11 +70,7 @@ class UserRegistrationView(generics.CreateAPIView):
         except serializers.ValidationError as exc:
             return APIResponse.validation_error(exc.detail, _validation_message(exc.detail, 'Registration validation failed'))
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
-        return APIResponse.created({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-        }, 'Registration successful')
+        return APIResponse.created(_auth_payload(user, request), 'Registration successful')
 
 
 class UserLoginView(generics.GenericAPIView):
@@ -77,11 +101,7 @@ class UserLoginView(generics.GenericAPIView):
             return APIResponse.validation_error(detail if isinstance(detail, dict) else {'non_field_errors': messages}, 'Login validation failed')
 
         user = serializer.validated_data['user']
-        token, _ = Token.objects.get_or_create(user=user)
-        return APIResponse.success({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-        }, 'Login successful')
+        return APIResponse.success(_auth_payload(user, request), 'Login successful')
 
 
 class UserLogoutView(generics.GenericAPIView):
@@ -90,6 +110,22 @@ class UserLogoutView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get('refresh') if hasattr(request, 'data') else None
+        all_devices = bool(request.data.get('all_devices')) if hasattr(request, 'data') else False
+
+        # Server-side invalidation: blacklist the presented refresh token so it
+        # can never be rotated again, even though JWTs are stateless.
+        if refresh_token:
+            session = services.find_session(refresh_token)
+            if session is None:
+                return APIResponse.unauthorized('Invalid or already revoked session')
+            if all_devices:
+                services.revoke_all_sessions(request.user)
+            else:
+                services.revoke_session(session)
+        elif all_devices:
+            services.revoke_all_sessions(request.user)
+
         try:
             if hasattr(request.user, 'auth_token'):
                 request.user.auth_token.delete()
@@ -267,15 +303,74 @@ def user_settings_detail(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def refresh_token(request):
-    """Refresh the user's auth token."""
+    """
+    Rotate the caller's credentials.
+
+    With a ``refresh`` token in the body, returns a new JWT access/refresh
+    pair and blacklists the presented refresh token. The refresh token is the
+    credential here, so no access token is required. Without one, falls back
+    to rotating the legacy DRF token for older clients.
+    """
+    refresh_token_value = request.data.get('refresh')
+
+    if refresh_token_value:
+        session = services.find_session(refresh_token_value)
+        if session is None:
+            return APIResponse.unauthorized('Invalid or already revoked session')
+        try:
+            rotated = services.rotate_session(refresh_token_value)
+        except TokenError as exc:
+            return APIResponse.unauthorized(str(exc))
+        return APIResponse.success({
+            'token': rotated['access'],
+            'access': rotated['access'],
+            'refresh': rotated['refresh'],
+            'expires_in': rotated['access_expires_in'],
+        }, 'Token refreshed successfully')
+
+    # Legacy path: no refresh token supplied, rotate the DRF token instead.
+    if not request.user or not request.user.is_authenticated:
+        return APIResponse.unauthorized('Authentication required')
+
     try:
         request.user.auth_token.delete()
     except Exception:
         pass
     new_token = Token.objects.create(user=request.user)
     return APIResponse.success({'token': new_token.key}, 'Token refreshed successfully')
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def session_list(request):
+    """List the caller's active sessions (devices)."""
+    sessions = UserSession.objects.filter(user=request.user, is_active=True)
+    current_session_id = str(getattr(request, 'auth_session_id', None) or '')
+    data = [
+        {
+            'id': str(session.id),
+            'device_name': session.device_name,
+            'ip_address': session.ip_address,
+            'created_at': session.created_at.isoformat(),
+            'last_used_at': session.last_used_at.isoformat(),
+            'current': str(session.id) == current_session_id,
+        }
+        for session in sessions
+    ]
+    return APIResponse.success(data, 'Sessions retrieved successfully')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def session_revoke(request, session_id):
+    """Revoke a single session by id, blacklisting its refresh token."""
+    session = UserSession.objects.filter(id=session_id, user=request.user).first()
+    if session is None:
+        return APIResponse.not_found('Session')
+    services.revoke_session(session)
+    return APIResponse.success({}, 'Session revoked successfully')
 
 
 @api_view(['POST'])
