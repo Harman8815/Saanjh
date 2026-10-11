@@ -6,6 +6,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 from . import services
 from .models import Role, Settings, User, UserSession
+from .permissions import IsAdminOrReadOnly
 from .serializers import (
     RoleSerializer,
     SettingsSerializer,
@@ -140,7 +141,9 @@ class RoleViewSet(viewsets.ModelViewSet):
 
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # Roles are shared reference data: only admins may modify them, otherwise
+    # any user could create or rename roles and escalate their privileges.
+    permission_classes = [IsAdminOrReadOnly]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
