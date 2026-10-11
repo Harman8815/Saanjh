@@ -1,5 +1,8 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class Role(models.Model):
@@ -73,3 +76,86 @@ class Settings(models.Model):
     
     class Meta:
         db_table = 'accounts_settings'
+
+
+class UserSession(models.Model):
+    """
+    Tracks active JWT sessions (devices) per user.
+
+    Each row corresponds to one issued refresh token, identified by its ``jti``
+    claim. Sessions enable server-side logout and a cap on concurrent devices.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sessions'
+    )
+
+    # jti claim of the refresh token backing this session.
+    refresh_jti = models.CharField(max_length=255, unique=True)
+
+    # Device / client descriptors captured at login.
+    device_name = models.CharField(max_length=255, blank=True, default='')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default='')
+
+    # Lifecycle
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(auto_now=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'accounts_user_session'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Session for {self.user.username} ({self.device_name or 'unknown device'})"
+
+    def revoke(self, blacklist_token=True):
+        """Mark this session inactive and blacklist its refresh token."""
+        if blacklist_token and self.refresh_jti:
+            self._blacklist_refresh_token()
+        self.is_active = False
+        self.revoked_at = timezone.now()
+        self.save(update_fields=['is_active', 'revoked_at', 'last_used_at'])
+
+    def _blacklist_refresh_token(self):
+        """
+        Blacklist the refresh token identified by this session's jti.
+
+        SimpleJWT creates OutstandingToken rows lazily, so for a token that has
+        never been rotated we synthesize one carrying the same jti, user and
+        expiry claims before registering it in the blacklist.
+        """
+        from rest_framework_simplejwt.settings import api_settings
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        if BlacklistedToken.objects.filter(token__jti=self.refresh_jti).exists():
+            return False
+
+        # A token that was already rotated has an OutstandingToken record.
+        outstanding = OutstandingToken.objects.filter(jti=self.refresh_jti).first()
+        if outstanding is not None:
+            _, created = BlacklistedToken.objects.get_or_create(token=outstanding)
+            return created
+
+        # Otherwise build an equivalent token so SimpleJWT can register it.
+        token = RefreshToken()
+        token['jti'] = self.refresh_jti
+        token[api_settings.USER_ID_CLAIM] = self.user_id
+        token['exp'] = int(timezone.now().timestamp()) + int(
+            api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()
+        )
+        try:
+            token.blacklist()
+            return True
+        except Exception:
+            return False
