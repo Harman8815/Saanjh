@@ -16,6 +16,48 @@ from utils.api_response import APIResponse
 from accounts.permissions import IsAdminOrReadOnly
 
 
+# Fields a bulk update may touch, and how to interpret the incoming value.
+# Anything outside this list is ignored so a stray key cannot wedge the ORM.
+BULK_UPDATE_FIELDS = {
+    'status': 'fk',
+    'priority': 'fk',
+    'category': 'fk',
+    'assigned_to': 'fk',
+    'title': 'str',
+    'description': 'str',
+    'due_date': 'plain',
+    'progress': 'plain',
+}
+
+
+def _resolve_bulk_updates(model, updates):
+    """
+    Normalise a bulk update payload into values safe to assign on instances.
+
+    Foreign keys arrive as ids and must be converted to model instances before
+    ``setattr``; unknown fields are dropped.
+    """
+    resolved = {}
+    for field, kind in BULK_UPDATE_FIELDS.items():
+        if field not in updates:
+            continue
+
+        value = updates[field]
+        if kind == 'fk':
+            if value is None:
+                resolved[field] = None
+                continue
+            model_field = model._meta.get_field(field)
+            related = model_field.related_model.objects.filter(pk=value).first()
+            if related is None:
+                # Silently skip invalid ids rather than failing the batch.
+                continue
+            resolved[field] = related
+        else:
+            resolved[field] = value
+    return resolved
+
+
 class TaskStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for TaskStatus model"""
     queryset = TaskStatus.objects.all()
@@ -260,14 +302,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         task_ids = serializer.validated_data['task_ids']
         updates = serializer.validated_data['updates']
-        
+
         tasks = Task.objects.filter(
             id__in=task_ids,
             wedding=request.user.wedding
         )
-        
-        updated_count = tasks.update(**updates)
-        
+
+        # Iterate rather than queryset.update() so Task.save() runs: that is
+        # what keeps completed_at and progress consistent with the status
+        # (a bulk update would otherwise skip both the setting and clearing).
+        updated_count = 0
+        for task in tasks:
+            for field, value in _resolve_bulk_updates(Task, updates).items():
+                setattr(task, field, value)
+            task.save()
+            updated_count += 1
+
         return APIResponse.success({
             'updated_count': updated_count
         }, f"Updated {updated_count} tasks successfully")

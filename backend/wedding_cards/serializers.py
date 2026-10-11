@@ -51,11 +51,11 @@ class WeddingCardGuestSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeddingCardGuest
         fields = [
-            'id', 'guest', 'name', 'email', 'rsvp_status', 'rsvp_date',
+            'id', 'guest', 'source', 'name', 'email', 'rsvp_status', 'rsvp_date',
             'plus_one', 'plus_one_name', 'dietary_restrictions', 'notes',
             'uploaded_photos'
         ]
-        read_only_fields = ['id', 'rsvp_date']
+        read_only_fields = ['id', 'source', 'rsvp_date']
 
 class WeddingCardGuestCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating wedding card guests"""
