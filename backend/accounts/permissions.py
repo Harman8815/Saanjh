@@ -4,13 +4,36 @@ Role-Based Access Control (RBAC) permission classes for the wedding platform.
 from rest_framework import permissions
 
 
+def _is_admin(user):
+    """Return True when the user holds the admin role."""
+    if not user or not user.is_authenticated:
+        return False
+    return bool(user.role) and user.role.name == 'admin'
+
+
 class IsAdmin(permissions.BasePermission):
     """Permission class that allows only admin users."""
     
     def has_permission(self, request, view):
+        return _is_admin(request.user)
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Allow any authenticated user to read shared catalog/lookup data, but
+    restrict create, update and delete to admins.
+
+    Used for global, unowned reference tables (roles, statuses, categories)
+    where a write by an ordinary user would let them tamper with shared
+    state — e.g. creating roles or renaming statuses.
+    """
+
+    def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        return request.user.role and request.user.role.name == 'admin'
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return _is_admin(request.user)
 
 
 class IsBride(permissions.BasePermission):
@@ -64,25 +87,16 @@ class IsCoupleOrAdmin(permissions.BasePermission):
 
 class IsWeddingOwnerOrAdmin(permissions.BasePermission):
     """Permission class that allows wedding owners or admins."""
-    
+
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        if not request.user.role:
-            return False
-        # Admin can access everything
-        if request.user.role.name == 'admin':
-            return True
-        # Others need to be the wedding owner
-        return True  # Will be checked at object level
-    
+        # Read access is decided at object level, where ownership is known.
+        return bool(request.user and request.user.is_authenticated)
+
     def has_object_permission(self, request, view, obj):
         if not request.user or not request.user.is_authenticated:
             return False
-        if not request.user.role:
-            return False
         # Admin can access everything
-        if request.user.role.name == 'admin':
+        if _is_admin(request.user):
             return True
         # Check if user owns the wedding
         if hasattr(obj, 'wedding'):
