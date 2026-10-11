@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from accounts.models import Role
 from guests.models import RsvpStatus
+from tasks.models import Task
 from vendors.models import VendorStatus
 from weddings.models import WeddingStatus, VenueCatalog
 from wedding_cards.models import WeddingCard, WeddingCardGuest, WeddingCardAnalytics
@@ -198,6 +199,139 @@ class ObjectLevelPermissionTestCase(APITestCase):
         self.authenticate_other_user()
         response = self.client.get(f'/api/vendors/{self.vendor.id}/')
         self.assert_not_found_response(response)
+
+
+class CrossUserLeakTestCase(APITestCase):
+    """Verify endpoints cannot be used to reach another user's data."""
+
+    # USER LISTING
+    def test_users_list_returns_only_requester(self):
+        """The user list used for assignment must not enumerate accounts."""
+        self.authenticate()
+        response = self.client.get('/api/auth/users/')
+        self.assert_success_response(response, message='Users retrieved successfully')
+        users = response.json()['data']
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]['id'], self.user.id)
+
+    def test_users_list_excludes_other_weddings(self):
+        """A third party's account never appears in the requester's list."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        User.objects.filter(username='unlisted').delete()
+        third = User.objects.create_user(
+            username='unlisted', email='unlisted@example.com', password='unlisted123456'
+        )
+        self.authenticate()
+        response = self.client.get('/api/auth/users/')
+        ids = [u['id'] for u in response.json()['data']]
+        self.assertNotIn(third.id, ids)
+        third.delete()
+
+    def test_users_list_requires_authentication(self):
+        """The user list is not public."""
+        self.unauthenticate()
+        self.assert_unauthorized_response(self.client.get('/api/auth/users/'))
+
+    # TASK ASSIGNMENT
+    def _task_payload(self, **overrides):
+        from tasks.models import TaskPriority, TaskStatus
+        status = TaskStatus.objects.get_or_create(name='pending')[0]
+        priority = TaskPriority.objects.get_or_create(name='medium')[0]
+        payload = {
+            'title': 'Book the venue',
+            'wedding': self.wedding.id,
+            'status': status.id,
+            'priority': priority.id,
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_task_cannot_be_assigned_to_user_of_another_wedding(self):
+        """Assigning a task to a foreign user is rejected."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        User.objects.filter(username='stranger').delete()
+        stranger = User.objects.create_user(
+            username='stranger', email='stranger@example.com',
+            first_name='Grace', last_name='Hopper', password='stranger123456',
+        )
+        self.authenticate()
+        response = self.client.post(
+            '/api/tasks/tasks/', self._task_payload(assigned_to=stranger.id), format='json'
+        )
+        self.assert_error_response(response, 400, 'VALIDATION_ERROR')
+        # No task is created and the foreign user's name is never echoed.
+        self.assertEqual(
+            Task.objects.filter(assigned_to=stranger).count(), 0
+        )
+        stranger.delete()
+
+    def test_task_can_be_assigned_to_self(self):
+        """A task may be assigned to the requesting user."""
+        self.authenticate()
+        response = self.client.post(
+            '/api/tasks/tasks/', self._task_payload(assigned_to=self.user.id), format='json'
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['data']['assigned_to'], self.user.id)
+
+    def test_existing_task_cannot_be_reassigned_to_foreign_user(self):
+        """Reassigning an existing task across weddings is rejected."""
+        from django.contrib.auth import get_user_model
+        from tasks.models import Task, TaskPriority, TaskStatus
+        User = get_user_model()
+        stranger = User.objects.create_user(
+            username='reassign_stranger', email='reassign@example.com',
+            first_name='Alan', last_name='Turing', password='reassign123456',
+        )
+        status = TaskStatus.objects.get_or_create(name='pending')[0]
+        priority = TaskPriority.objects.get_or_create(name='medium')[0]
+        task = Task.objects.create(
+            wedding=self.wedding, title='Send invitations',
+            status=status, priority=priority,
+        )
+        self.authenticate()
+        response = self.client.patch(
+            f'/api/tasks/tasks/{task.id}/', {'assigned_to': stranger.id}, format='json'
+        )
+        self.assert_error_response(response, 400, 'VALIDATION_ERROR')
+        # The field name is reported so the client knows what was invalid.
+        self.assertIn('assigned_to', str(response.json()['error']['details']))
+        task.refresh_from_db()
+        self.assertNotEqual(task.assigned_to_id, stranger.id)
+        stranger.delete()
+
+    def test_task_list_leaks_no_foreign_user_names(self):
+        """A task assigned to the requester shows only the requester's name."""
+        from tasks.models import Task, TaskPriority, TaskStatus
+        status = TaskStatus.objects.get_or_create(name='pending')[0]
+        priority = TaskPriority.objects.get_or_create(name='medium')[0]
+        Task.objects.create(
+            wedding=self.wedding, title='Order invitations',
+            status=status, priority=priority, assigned_to=self.user,
+        )
+        self.authenticate()
+        response = self.client.get('/api/tasks/tasks/')
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        # The task list uses DRF's paginated envelope.
+        results = body['results'] if isinstance(body, dict) and 'results' in body else body
+        for task in results:
+            if task.get('assigned_to') == self.user.id:
+                self.assertEqual(
+                    task['assigned_to_name'],
+                    f'{self.user.first_name} {self.user.last_name}'.strip(),
+                )
+
+    def test_task_assignment_is_optional(self):
+        """Omitting the assignee leaves the task unassigned."""
+        self.authenticate()
+        response = self.client.post(
+            '/api/tasks/tasks/', self._task_payload(), format='json'
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNone(response.json()['data']['assigned_to'])
 
 
 class PublicEndpointSecurityTestCase(APITestCase):
