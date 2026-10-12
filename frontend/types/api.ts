@@ -348,17 +348,7 @@ export interface ExpenseStatistics {
 }
 
 // Venue catalog types (shared reference data, readable by any authenticated user)
-export interface VenueCatalog {
-  id: number;
-  name: string;
-  type: string;
-  address: string;
-  capacity_min: number;
-  capacity_max: number;
-  price: string;
-  rating: number;
-  amenities: Array<{ id: number; name: string }>;
-}
+// Using the VenueCatalog defined above (line 96)
 
 // Wedding Card types
 export interface WeddingCard {  id: number;

@@ -103,7 +103,7 @@ export default function ContactPage() {
             Get in Touch
           </h1>
           <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-            We're here to help make your dream wedding a reality. Reach out anytime!
+            We&rsquo;re here to help make your dream wedding a reality. Reach out anytime!
           </p>
         </motion.div>
 
@@ -133,7 +133,7 @@ export default function ContactPage() {
                     Thank you for reaching out!
                   </h3>
                   <p className="text-text-secondary">
-                    We'll get back to you within 24 hours.
+                    We&rsquo;ll get back to you within 24 hours.
                   </p>
                 </motion.div>
               ) : (

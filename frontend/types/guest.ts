@@ -14,4 +14,4 @@ export interface Guest {
   gender?: 'male' | 'female';
 }
 
-export interface NewGuest extends Omit<Guest, 'id'> {}
+export type NewGuest = Omit<Guest, 'id'>;

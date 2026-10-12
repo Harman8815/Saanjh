@@ -61,11 +61,8 @@ export default function VenuesPage() {
     return matchesCategory && matchesSearch;
   });
 
-  const formatPrice = (value: string) => {
-    const parsed = Number(value);
-    return Number.isNaN(parsed)
-      ? value
-      : `$${parsed.toLocaleString()}`;
+  const formatPrice = (value: number) => {
+    return `$${value.toLocaleString()}`;
   };
 
   return (
@@ -206,7 +203,7 @@ export default function VenuesPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          {venue.amenities.slice(0, 3).map((amenity, amenityIndex) => (
+                          {venue.amenities?.slice(0, 3).map((amenity, amenityIndex) => (
                             <span
                               key={amenity.id ?? amenityIndex}
                               className="px-2 py-1 bg-surface border border-white/20 rounded-full text-xs text-text-muted"

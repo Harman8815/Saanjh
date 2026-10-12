@@ -49,6 +49,12 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
       setFormData(initialFormData);
     }
     setErrors({});
+    return () => {
+      if (!isOpen) {
+        setFormData(initialFormData);
+        setErrors({});
+      }
+    };
   }, [event, mode, isOpen]);
 
   const validate = (): boolean => {
@@ -189,7 +195,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
             </label>
             <select
               value={formData.type}
-              onChange={(e) => handleChange('type', e.target.value as any)}
+              onChange={(e) => handleChange('type', e.target.value as 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder')}
               className={inputClasses('type')}
             >
               <option value="event">Event</option>
@@ -207,7 +213,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
             </label>
             <select
               value={formData.priority}
-              onChange={(e) => handleChange('priority', e.target.value as any)}
+              onChange={(e) => handleChange('priority', e.target.value as 'low' | 'medium' | 'high')}
               className={inputClasses('priority')}
             >
               <option value="low">Low</option>

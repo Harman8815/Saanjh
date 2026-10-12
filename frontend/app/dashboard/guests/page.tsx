@@ -134,7 +134,7 @@ export default function GuestManagementDashboard() {
                   {card.description}
                 </p>
                 <div className="mt-4 flex items-center text-text-muted">
-                  <span className="text-xs">Click to manage →</span>
+                  <span className="text-xs">Click to manage ?</span>
                 </div>
               </motion.div>
             </Link>
@@ -142,13 +142,13 @@ export default function GuestManagementDashboard() {
         </div>
 
         {/* Quick Stats */}
-        {stats.total === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="glass-card p-6"
-          >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="glass-card p-6"
+        >
+          {stats.total === 0 ? (
             <EmptyState
               title="No guests yet"
               description="Add your first guests to start tracking RSVPs, meals and seating."
@@ -159,36 +159,31 @@ export default function GuestManagementDashboard() {
                 </Link>
               }
             />
-          </motion.div>
-        ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="glass-card p-6"
-        >
-          <h2 className="heading-data text-data-2xl text-text-primary mb-6">Quick Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Invited', value: stats.total, icon: <UserPlus size={20} />, color: 'primary' },
-              { label: 'Confirmed', value: stats.confirmed, icon: <Check size={20} />, color: 'green' },
-              { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, color: 'yellow' },
-              { label: 'Declined', value: stats.declined, icon: <X size={20} />, color: 'red' }
-            ].map((stat, index) => (
-              <div key={stat.label} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
-                <div className="text-primary">{stat.icon}</div>
-                <div>
-                  <div className={`text-data-lg font-bold text-${stat.color}`}>{stat.value}</div>
-                  <div className="label-ui text-ui-xs text-text-muted">{stat.label}</div>
-                </div>
+          ) : (
+            <>
+              <h2 className="heading-data text-data-2xl text-text-primary mb-6">Quick Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Invited', value: stats.total, icon: <UserPlus size={20} />, color: 'primary' },
+                  { label: 'Confirmed', value: stats.confirmed, icon: <Check size={20} />, color: 'green' },
+                  { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, color: 'yellow' },
+                  { label: 'Declined', value: stats.declined, icon: <X size={20} />, color: 'red' }
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
+                    <div className="text-primary">{stat.icon}</div>
+                    <div>
+                      <div className={`text-data-lg font-bold text-${stat.color}`}>{stat.value}</div>
+                      <div className="label-ui text-ui-xs text-text-muted">{stat.label}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </motion.div>
-        )}
-        )}
       </div>
-      </div>
+        </div>
+      )}
     </>
   );
 }

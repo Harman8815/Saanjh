@@ -8,13 +8,20 @@ import { VenueCatalog } from '../types/api';
  * user, while writes are restricted to admins server-side.
  */
 export class VenueService {
+  /**
+   * Read the venue catalog.
+   *
+   * The endpoint is paginated, so the results are unwrapped from the envelope.
+   */
   static async getVenueCatalog(): Promise<VenueCatalog[]> {
-    const data = await apiClient.get<any>('/weddings/venue-catalog/');
-    // The endpoint returns a DRF paginated envelope.
-    if (Array.isArray(data)) {
-      return data as VenueCatalog[];
+    const response = await apiClient.get<
+      VenueCatalog[] | { results: VenueCatalog[] }
+    >('/weddings/venue-catalog/');
+
+    if (Array.isArray(response)) {
+      return response;
     }
-    return (data?.results ?? []) as VenueCatalog[];
+    return response.results ?? [];
   }
 
   static async searchVenueCatalog(query: string): Promise<VenueCatalog[]> {

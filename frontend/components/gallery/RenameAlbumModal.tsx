@@ -28,7 +28,13 @@ export default function RenameAlbumModal({
       setNewTitle(album.title);
       setError('');
     }
-  }, [album]);
+    return () => {
+      if (!isOpen) {
+        setNewTitle('');
+        setError('');
+      }
+    };
+  }, [album, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

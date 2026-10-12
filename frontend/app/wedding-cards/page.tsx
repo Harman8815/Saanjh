@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAppStore } from '../../store/useAppStore';
-import { Plus, Heart, Camera, Share2, BarChart3, Edit, Eye, Users, Check, Star } from 'lucide-react';
+import { Plus, Heart, Camera, Share2, BarChart3, Edit, Eye, Users, Star } from 'lucide-react';
 import Link from 'next/link';
 import { DataLoadingState, EmptyState } from '../../components/ui/loading-states';
 import WeddingCardService from '../../services/weddingCards';
@@ -19,7 +18,6 @@ interface CardTemplate {
 }
 
 export default function WeddingCardsPage() {
-  const { setCurrentPage } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
 

@@ -104,7 +104,7 @@ function DocumentsContent() {
 
   // Get filtered and sorted documents
   const filteredDocuments = useMemo(() => {
-    let docs = searchQuery ? searchResults : documents;
+    const docs = searchQuery ? searchResults : documents;
     
     if (!docs) return [];
     

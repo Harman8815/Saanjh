@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { WeddingCardService } from '../services';
-import { WeddingCard, WeddingCardGuest, WeddingCardAnalytics, PaginatedResponse } from '../types/api';
+import { WeddingCard, WeddingCardGuest, WeddingCardAnalytics, WeddingCardCreateRequest, PaginatedResponse } from '../types/api';
 
 // Fetch wedding cards with pagination
 export function useWeddingCards(page = 1, pageSize = 20) {
@@ -118,7 +118,7 @@ export function usePublicWeddingCardGuests(shareableLink: string) {
 export function useCreateWeddingCard() {
   const queryClient = useQueryClient();
 
-  return useMutation<WeddingCard, Error, Omit<WeddingCard, 'id' | 'created_at' | 'updated_at'>>({
+  return useMutation<WeddingCard, Error, WeddingCardCreateRequest>({
     mutationFn: (cardData) => WeddingCardService.createWeddingCard(cardData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wedding-cards'] });

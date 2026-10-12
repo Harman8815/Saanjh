@@ -116,6 +116,9 @@ export default function AlbumPage() {
       setFilteredMedia(mockMedia);
       setIsLoading(false);
     }
+    return () => {
+      setIsLoading(false);
+    };
   }, [albumId, album]);
 
   // Filter media
@@ -143,6 +146,9 @@ export default function AlbumPage() {
     }
 
     setFilteredMedia(filtered);
+    return () => {
+      // Cleanup if needed
+    };
   }, [media, searchQuery, selectedFilter]);
 
   const openLightbox = (mediaItem: MediaItem, index: number) => {
@@ -185,7 +191,7 @@ export default function AlbumPage() {
             Album Not Found
           </h2>
           <p className="text-text-muted mb-6">
-            The album you're looking for doesn't exist or has been removed.
+            The album you&rsquo;re looking for doesn&rsquo;t exist or has been removed.
           </p>
           <Link 
             href="/dashboard/gallery"
