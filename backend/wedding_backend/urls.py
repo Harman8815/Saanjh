@@ -24,6 +24,8 @@ from . import views
 from internal_admin.views import home, api_docs, table_schemas_data
 
 urlpatterns = [
+    # Health check for load balancers: unauthenticated, no database writes.
+    path('health/', views.health_check, name='health-check'),
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     # API documentation

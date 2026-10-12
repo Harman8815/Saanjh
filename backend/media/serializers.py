@@ -1,3 +1,4 @@
+from utils.uploads import validate_media_url
 from rest_framework import serializers
 from .models import Media, MediaType, Album, MediaAlbum, AlbumTag
 
@@ -172,14 +173,21 @@ class MediaSerializer(serializers.ModelSerializer):
 
 class MediaCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating media files"""
-    
+
     class Meta:
         model = Media
         fields = [
             'title', 'file_url', 'thumbnail_url', 'file_size',
             'media_type_id'
         ]
-    
+
+    def validate_file_url(self, value):
+        """Only http(s) URLs: prevents javascript: and data: injection."""
+        return validate_media_url(value, 'file_url')
+
+    def validate_thumbnail_url(self, value):
+        return validate_media_url(value, 'thumbnail_url')
+
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
         validated_data.pop('wedding', None)
@@ -189,13 +197,20 @@ class MediaCreateSerializer(serializers.ModelSerializer):
 
 class MediaUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating media files"""
-    
+
     class Meta:
         model = Media
         fields = [
             'title', 'file_url', 'thumbnail_url', 'file_size',
             'media_type_id'
         ]
+
+    def validate_file_url(self, value):
+        """Only http(s) URLs: prevents javascript: and data: injection."""
+        return validate_media_url(value, 'file_url')
+
+    def validate_thumbnail_url(self, value):
+        return validate_media_url(value, 'thumbnail_url')
 
 
 class MediaAlbumSerializer(serializers.ModelSerializer):

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from utils.uploads import validate_uploaded_file
 from .models import Document, DocumentCategory, DocumentTag
 
 
@@ -98,7 +99,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class DocumentCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating documents with file upload"""
-    
+
     tag_names = serializers.ListField(
         child=serializers.CharField(max_length=50),
         required=False,
@@ -106,6 +107,10 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         write_only=True
     )
     file = serializers.FileField(required=True)
+
+    def validate_file(self, value):
+        """Reject unsupported types and oversized uploads before storage."""
+        return validate_uploaded_file(value, group='documents')
     
     class Meta:
         model = Document

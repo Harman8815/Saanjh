@@ -11,6 +11,33 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _env(name, default=None):
+    """Read an environment variable, treating an empty string as unset."""
+    value = os.environ.get(name)
+    return default if value in (None, '') else value
+
+
+def _env_bool(name, default):
+    """Read a boolean environment variable."""
+    value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_list(name, default):
+    """Read a comma-separated list from the environment."""
+    value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +47,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qi@2=5zts-k4-3h04$&uwys#34immhb*v3@-bxwf#x0uk=a=tr'
+# The default is the development key; production must set DJANGO_SECRET_KEY.
+SECRET_KEY = _env('DJANGO_SECRET_KEY', 'django-insecure-qi@2=5zts-k4-3h04$&uwys#34immhb*v3@-bxwf#x0uk=a=tr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_bool('DJANGO_DEBUG', True)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'testserver'])
 
 
 # Application definition
@@ -89,13 +117,33 @@ WSGI_APPLICATION = 'wedding_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Set DJANGO_DB_ENGINE=postgresql (with the matching DJANGO_DB_* variables) to
+# move off SQLite. Anything else keeps the local SQLite file, which is the
+# development default.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_DB_ENGINE = _env('DJANGO_DB_ENGINE', 'sqlite3')
+
+if _DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _env('DJANGO_DB_NAME', 'wedding_db'),
+            'USER': _env('DJANGO_DB_USER', 'wedding'),
+            'PASSWORD': _env('DJANGO_DB_PASSWORD', ''),
+            'HOST': _env('DJANGO_DB_HOST', 'localhost'),
+            'PORT': _env('DJANGO_DB_PORT', '5432'),
+            # Persistent connections avoid a handshake per request.
+            'CONN_MAX_AGE': int(_env('DJANGO_DB_CONN_MAX_AGE', '60')),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -138,6 +186,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Upload ceilings. Applied at both the request level (Django rejects the whole
+# body before parsing) and the field level (utils.uploads), because a large
+# body should never be buffered just to be refused.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024   # covers the largest allowed file plus form fields
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024
+MAX_DOCUMENTS_UPLOAD_BYTES = 25 * 1024 * 1024
+MAX_IMAGES_UPLOAD_BYTES = 10 * 1024 * 1024
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -292,24 +348,24 @@ SPECTACULAR_SETTINGS = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = _env_list('DJANGO_CORS_ORIGINS', [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-]
+])
 
 CORS_ALLOW_CREDENTIALS = True
 
 # Cross-Site Request Forgery
 # Credentials are carried in HttpOnly cookies, so unsafe requests must prove
 # they came from our own frontend via the X-CSRFToken header.
-CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS', [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-]
+])
 
 # Auth cookie transport (HttpOnly, so scripts cannot read the tokens)
 AUTH_COOKIE_ACCESS = 'access_token'
