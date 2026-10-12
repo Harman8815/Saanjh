@@ -6,9 +6,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
+from accounts.models import Role
 from django.test import TestCase
 from django.urls import reverse
-from factory_boy import Faker
+from factory import Faker
 from factory.django import DjangoModelFactory
 
 User = get_user_model()
@@ -65,6 +66,22 @@ class BaseTestCase(TestCase):
         self.user = UserFactory()
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
+
+        # Shared reference data (roles, statuses, categories) is admin-write-only,
+        # so tests that write to it need an admin-role client.
+        admin_role, _ = Role.objects.get_or_create(name='admin')
+        self.admin_user = UserFactory()
+        self.admin_user.role = admin_role
+        self.admin_user.save(update_fields=['role'])
+        self.admin_token = Token.objects.create(user=self.admin_user)
+        self.admin_client = APIClient()
+        self.admin_client.credentials(HTTP_AUTHORIZATION=f'Token {self.admin_token.key}')
+
+        # is_superuser also grants admin, mirroring Django's own semantics.
+        self.superuser = UserFactory(is_superuser=True)
+        self.superuser_token = Token.objects.create(user=self.superuser)
+        self.superuser_client = APIClient()
+        self.superuser_client.credentials(HTTP_AUTHORIZATION=f'Token {self.superuser_token.key}')
     
     def authenticate(self, user):
         """Authenticate the client with the given user."""
