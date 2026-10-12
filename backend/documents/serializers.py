@@ -123,6 +123,7 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         
         if not wedding:
             wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         if not uploaded_by:
             uploaded_by = self.context['request'].user
         

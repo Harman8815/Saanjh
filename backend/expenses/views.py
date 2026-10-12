@@ -12,6 +12,7 @@ from .serializers import (
     ExpenseStatusSerializer
 )
 from utils.api_response import APIResponse
+from utils.api_response import get_request_wedding
 from accounts.permissions import IsAdminOrReadOnly
 
 class ExpenseStatusViewSet(viewsets.ModelViewSet):
@@ -271,7 +272,7 @@ def expense_bulk_payment_update(request):
 def expense_statistics(request):
     """Get expense statistics"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         expenses = wedding.expenses.all()
         
         # Basic statistics
@@ -382,7 +383,7 @@ def expense_upcoming(request):
 def expense_summary(request):
     """Get expense summary for dashboard"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         expenses = wedding.expenses.all()
         
         # Recent expenses

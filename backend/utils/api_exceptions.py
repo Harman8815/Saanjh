@@ -3,9 +3,12 @@ API exception handling decorators and utilities.
 """
 
 import logging
+import re
 from functools import wraps
 from typing import Any, Callable
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from django.http import HttpRequest, HttpResponse
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.http import Http404 as DjangoHttp404
@@ -15,6 +18,32 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from .api_response import APIException, APIResponse
 
 logger = logging.getLogger(__name__)
+
+# "UNIQUE constraint failed: guests_table.wedding_id, guests_table.table_number"
+_UNIQUE_CONSTRAINT = re.compile(r'UNIQUE constraint failed:\s*(?P<fields>.+)', re.IGNORECASE)
+
+
+def _integrity_error_fields(exc):
+    """
+    Map a database integrity error onto serializer-style field errors.
+
+    Column names are normalised (table prefix dropped, ``_id`` suffix kept only
+    where it identifies a relation) so the client can highlight the field.
+    """
+    match = _UNIQUE_CONSTRAINT.search(str(exc))
+    if not match:
+        return {'non_field_errors': ['The submitted data conflicts with existing records']}
+
+    columns = [column.strip() for column in match.group('fields').split(',')]
+    fields = {}
+    for column in columns:
+        parts = column.split('.')
+        name = parts[-1] if parts else column
+        name = re.sub(r'^(?:[a-z0-9]+_)+', '', name)
+        if name.endswith('_id'):
+            name = name[:-3]
+        fields[name] = ['This value must be unique for the given combination.']
+    return fields
 
 
 def custom_exception_handler(exc, context):
@@ -34,6 +63,15 @@ def custom_exception_handler(exc, context):
         exc = drf_exceptions.NotFound()
     elif isinstance(exc, DjangoPermissionDenied):
         exc = drf_exceptions.PermissionDenied()
+
+    # Database integrity violations (duplicate unique keys, missing FK targets)
+    # are client-caused: report them as validation errors rather than a 500.
+    if isinstance(exc, IntegrityError):
+        logger.info("IntegrityError on %s: %s", context.get('view'), exc)
+        return APIResponse.validation_error(
+            _integrity_error_fields(exc),
+            'The submitted data conflicts with existing records',
+        )
 
     response = drf_exception_handler(exc, context)
     if response is not None:
@@ -88,7 +126,7 @@ def handle_api_exceptions(view_func: Callable) -> Callable:
                 f"API Exception in {view_func.__name__}: {e.error_code} - {e.message}",
                 extra={
                     'error_code': e.error_code,
-                    'message': e.message,
+                    'detail': e.message,
                     'status_code': e.status_code,
                     'details': e.details,
                     'path': request.path,

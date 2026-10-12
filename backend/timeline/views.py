@@ -1,3 +1,4 @@
+from utils.api_response import get_request_wedding
 from accounts.permissions import IsAdminOrReadOnly
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
@@ -33,7 +34,7 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Get events for the current user's wedding timeline
         try:
-            wedding = self.request.user.wedding
+            wedding = get_request_wedding(self.request)
             timeline = wedding.timeline
             queryset = TimelineEvent.objects.filter(timeline=timeline)
 
@@ -169,7 +170,7 @@ class TimelineViewSet(viewsets.ModelViewSet):
 def my_timeline(request):
     """Get current user's wedding timeline"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         timeline, created = Timeline.objects.get_or_create(
             wedding=wedding,
             defaults={'name': f"{wedding.get_couple_name() or 'Wedding'} Timeline"}

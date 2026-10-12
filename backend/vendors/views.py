@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from utils.api_response import APIResponse
+from utils.api_response import get_request_wedding
 from accounts.permissions import IsAdminOrReadOnly
 from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
 from .serializers import (
@@ -185,7 +186,7 @@ def vendor_bulk_status_update(request):
 def vendor_statistics(request):
     """Get vendor statistics"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         vendors = wedding.vendors.all()
         
         stats = {

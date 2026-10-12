@@ -59,6 +59,7 @@ class VendorCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         vendor = Vendor.objects.create(wedding=wedding, **validated_data)
         return vendor
 

@@ -47,6 +47,13 @@ class TaskCategory(models.Model):
         verbose_name_plural = 'Task Categories'
 
 
+
+def _default_taskstatus():
+    """Resolve the canonical 'todo' TaskStatus, creating it if absent."""
+    obj, _ = TaskStatus.objects.get_or_create(name='todo')
+    return obj.pk
+
+
 class Task(models.Model):
     """Task model for wedding planning tasks"""
     
@@ -60,7 +67,7 @@ class Task(models.Model):
     status = models.ForeignKey(
         TaskStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'todo'
+        default=_default_taskstatus
     )
     priority = models.ForeignKey(
         TaskPriority,

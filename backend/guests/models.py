@@ -65,6 +65,12 @@ class GuestMeal(models.Model):
         unique_together = ['guest', 'meal']
 
 
+def _default_rsvp_status():
+    """Resolve the canonical 'pending' RSVP status, creating it if absent."""
+    obj, _ = RsvpStatus.objects.get_or_create(name='pending')
+    return obj.pk
+
+
 class Guest(models.Model):
     """Guest model for wedding invitation management"""
     
@@ -90,7 +96,7 @@ class Guest(models.Model):
     rsvp_status = models.ForeignKey(
         RsvpStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'pending'
+        default=_default_rsvp_status
     )
     rsvp_date = models.DateField(blank=True, null=True)
     

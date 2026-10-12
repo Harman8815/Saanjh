@@ -12,6 +12,8 @@ from .serializers import (
     MealSerializer
 )
 from utils.api_response import APIResponse
+from utils.api_response import get_request_wedding
+from utils.api_exceptions import handle_api_exceptions
 from accounts.permissions import IsAdminOrReadOnly
 
 class RsvpStatusViewSet(viewsets.ModelViewSet):
@@ -378,7 +380,7 @@ def guest_send_invitations(request):
 def guest_statistics(request):
     """Get guest statistics"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         guests = wedding.guests.all()
         
         stats = {
@@ -415,9 +417,14 @@ def guest_statistics(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@handle_api_exceptions
 def guest_export(request):
     """Export guest data"""
-    guests = Guest.objects.filter(wedding=request.user.wedding)
+    # get_request_wedding converts a missing wedding into a clean 404 instead
+    # of the RelatedObjectDoesNotExist that would surface as a 500.
+    wedding = get_request_wedding(request)
+
+    guests = Guest.objects.filter(wedding=wedding)
     
     export_data = []
     for guest in guests:
@@ -439,7 +446,7 @@ def guest_export(request):
 def seating_chart(request):
     """Get seating chart data"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         tables = wedding.tables.all().prefetch_related('assigned_guests')
         
         seating_data = []

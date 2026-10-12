@@ -88,6 +88,7 @@ class GuestCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         meal_ids = validated_data.pop('meal_ids', [])
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         guest = Guest.objects.create(wedding=wedding, **validated_data)
         
         # Create meal preferences
@@ -137,6 +138,7 @@ class GuestBulkCreateSerializer(serializers.Serializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         guests_data = validated_data['guests']
         guests = []
         guest_meal_mappings = []
@@ -176,4 +178,5 @@ class TableCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         return Table.objects.create(wedding=wedding, **validated_data)

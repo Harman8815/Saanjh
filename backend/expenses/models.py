@@ -42,6 +42,13 @@ class BudgetCategory(models.Model):
         unique_together = ['wedding', 'name']
 
 
+
+def _default_expensestatus():
+    """Resolve the canonical 'pending' ExpenseStatus, creating it if absent."""
+    obj, _ = ExpenseStatus.objects.get_or_create(name='pending')
+    return obj.pk
+
+
 class Expense(models.Model):
     """Expense model for wedding budget tracking"""
     
@@ -67,7 +74,7 @@ class Expense(models.Model):
     status = models.ForeignKey(
         ExpenseStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'pending'
+        default=_default_expensestatus
     )
     
     # Basic information

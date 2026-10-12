@@ -47,6 +47,7 @@ class TimelineCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         timeline = Timeline.objects.create(wedding=wedding, **validated_data)
         return timeline
 
@@ -64,6 +65,7 @@ class TimelineEventCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Get the timeline for the current user's wedding
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         timeline, created = Timeline.objects.get_or_create(
             wedding=wedding,
             defaults={'name': f"{wedding.get_couple_name() or 'Wedding'} Timeline"}

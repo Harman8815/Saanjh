@@ -5,8 +5,34 @@ Standardized API response utilities for consistent API responses across the appl
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from django.http import Http404 as DjangoHttp404
 from rest_framework import status
 from rest_framework.response import Response
+
+
+def get_request_wedding(request, required=True):
+    """
+    Resolve the wedding owned by the requesting user.
+
+    ``request.user.wedding`` raises ``User.wedding.RelatedObjectDoesNotExist``
+    when no wedding exists, which would otherwise surface as a 500. This helper
+    raises ``NotFoundError`` instead, giving a clean 404.
+
+    ``required=False`` returns None so callers that tolerate a missing wedding
+    (e.g. statistics returning zeroes) can proceed.
+    """
+    from django.core.exceptions import ObjectDoesNotExist
+
+    try:
+        return request.user.wedding
+    except (ObjectDoesNotExist, DjangoHttp404, AttributeError):
+        if required:
+            # NotFoundError is defined later in this module.
+            raise NotFoundError(
+                resource="Wedding",
+                message="No wedding found for this user. Please create a wedding first."
+            )
+        return None
 
 
 class APIResponse:

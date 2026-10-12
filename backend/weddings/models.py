@@ -90,6 +90,13 @@ class Venue(models.Model):
         db_table = 'weddings_venue'
 
 
+
+def _default_weddingstatus():
+    """Resolve the canonical 'planning' WeddingStatus, creating it if absent."""
+    obj, _ = WeddingStatus.objects.get_or_create(name='planning')
+    return obj.pk
+
+
 class Wedding(models.Model):
     """Wedding model containing all wedding-related information"""
     
@@ -109,7 +116,7 @@ class Wedding(models.Model):
     status = models.ForeignKey(
         WeddingStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'planning'
+        default=_default_weddingstatus
     )
     wedding_date = models.DateField(blank=True, null=True)
     theme = models.CharField(max_length=100, blank=True, null=True)

@@ -45,6 +45,13 @@ class VendorCatalog(models.Model):
         db_table = 'vendors_vendor_catalog'
 
 
+
+def _default_vendorstatus():
+    """Resolve the canonical 'pending' VendorStatus, creating it if absent."""
+    obj, _ = VendorStatus.objects.get_or_create(name='pending')
+    return obj.pk
+
+
 class Vendor(models.Model):
     """Vendor model for wedding service providers"""
     
@@ -63,7 +70,7 @@ class Vendor(models.Model):
     status = models.ForeignKey(
         VendorStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'pending'
+        default=_default_vendorstatus
     )
     cost_estimate = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     actual_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)

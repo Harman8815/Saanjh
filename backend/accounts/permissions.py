@@ -5,9 +5,16 @@ from rest_framework import permissions
 
 
 def _is_admin(user):
-    """Return True when the user holds the admin role."""
+    """
+    Return True when the user may administer shared reference data.
+
+    Either the admin role or Django's is_superuser flag grants access, so a
+    superuser created via the admin is not locked out by role configuration.
+    """
     if not user or not user.is_authenticated:
         return False
+    if getattr(user, 'is_superuser', False):
+        return True
     return bool(user.role) and user.role.name == 'admin'
 
 

@@ -55,7 +55,20 @@ class User(AbstractUser):
 
 class Settings(models.Model):
     """User settings and preferences"""
-    
+
+    THEME_CHOICES = [
+        ('light', 'Light'),
+        ('dark', 'Dark'),
+        ('auto', 'System'),
+    ]
+
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('es', 'Spanish'),
+        ('fr', 'French'),
+        ('de', 'German'),
+    ]
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -63,8 +76,8 @@ class Settings(models.Model):
     )
     
     # Display preferences
-    theme = models.CharField(max_length=20, default='light')
-    language = models.CharField(max_length=10, default='en')
+    theme = models.CharField(max_length=20, choices=THEME_CHOICES, default='light')
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
     currency = models.CharField(max_length=3, default='USD')
     timezone = models.CharField(max_length=50, default='UTC')
     notifications = models.JSONField(default=dict, blank=True)

@@ -29,6 +29,7 @@ class WeddingCardCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         card = WeddingCard.objects.create(wedding=wedding, **validated_data)
         # Create analytics record
         WeddingCardAnalytics.objects.create(wedding_card=card)

@@ -30,6 +30,13 @@ class Timeline(models.Model):
         db_table = 'timeline_timeline'
 
 
+
+def _default_timelinestatus():
+    """Resolve the canonical 'pending' TimelineStatus, creating it if absent."""
+    obj, _ = TimelineStatus.objects.get_or_create(name='pending')
+    return obj.pk
+
+
 class TimelineEvent(models.Model):
     """Timeline event model"""
 
@@ -64,7 +71,7 @@ class TimelineEvent(models.Model):
     status = models.ForeignKey(
         TimelineStatus,
         on_delete=models.PROTECT,
-        default=1  # Will be set to 'pending'
+        default=_default_timelinestatus
     )
     priority = models.CharField(
         max_length=10,

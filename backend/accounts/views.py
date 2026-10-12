@@ -225,18 +225,30 @@ class SettingsViewSet(viewsets.ModelViewSet):
         return SettingsSerializer
 
     def perform_create(self, serializer):
+        # Settings is a OneToOne per user, so a second create must not silently
+        # overwrite: surface it as a validation conflict instead of a 500.
+        if Settings.objects.filter(user=self.request.user).exists():
+            raise serializers.ValidationError(
+                {'user': ['Settings already exist for this user. Use PATCH to update.']}
+            )
         serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        if Settings.objects.filter(user=request.user).exists():
+            return APIResponse.validation_error(
+                {'user': ['Settings already exist for this user. Use PATCH to update.']},
+                'Settings already exist',
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, 'Settings created successfully')
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return APIResponse.success(serializer.data, 'Settings retrieved successfully')
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return APIResponse.created(serializer.data, 'Settings created successfully')
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

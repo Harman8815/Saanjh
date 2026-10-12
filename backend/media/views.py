@@ -10,6 +10,7 @@ from .serializers import (
     AlbumUpdateSerializer, MediaAlbumSerializer, AlbumTagSerializer
 )
 from utils.api_response import APIResponse
+from utils.api_response import get_request_wedding
 from accounts.permissions import IsAdminOrReadOnly
 
 
@@ -236,7 +237,7 @@ class MediaViewSet(viewsets.ModelViewSet):
 def media_statistics(request):
     """Get media statistics for the wedding"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         media_files = wedding.media_files.all()
         
         # Group by media type

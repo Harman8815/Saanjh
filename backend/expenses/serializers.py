@@ -59,6 +59,7 @@ class BudgetCategoryCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         return BudgetCategory.objects.create(wedding=wedding, **validated_data)
 
 
@@ -74,6 +75,7 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         expense = Expense.objects.create(wedding=wedding, **validated_data)
         return expense
 

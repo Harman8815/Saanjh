@@ -152,3 +152,15 @@ class SettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Settings
         fields = ['theme', 'language', 'currency', 'timezone', 'notifications', 'privacy', 'preferences']
+
+    def validate(self, attrs):
+        """Reject unknown keys so client typos are not silently dropped."""
+        allowed = set(self.Meta.fields)
+        supplied = set(self.initial_data or {})
+        unknown = supplied - allowed
+        if unknown:
+            raise serializers.ValidationError({
+                field: ['Unrecognised setting: this key does not exist.']
+                for field in sorted(unknown)
+            })
+        return attrs

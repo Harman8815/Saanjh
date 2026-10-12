@@ -70,6 +70,7 @@ class AlbumSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         
         album = Album.objects.create(wedding=wedding, **validated_data)
         
@@ -113,6 +114,7 @@ class AlbumCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         
         album = Album.objects.create(wedding=wedding, **validated_data)
         
@@ -180,6 +182,7 @@ class MediaCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         wedding = self.context['request'].user.wedding
+        validated_data.pop('wedding', None)
         media = Media.objects.create(wedding=wedding, **validated_data)
         return media
 
