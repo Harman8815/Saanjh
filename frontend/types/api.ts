@@ -347,15 +347,31 @@ export interface ExpenseStatistics {
   upcoming_count: number;
 }
 
-// Wedding Card types
-export interface WeddingCard {
+// Venue catalog types (shared reference data, readable by any authenticated user)
+export interface VenueCatalog {
   id: number;
-  title: string;
+  name: string;
+  type: string;
+  address: string;
+  capacity_min: number;
+  capacity_max: number;
+  price: string;
+  rating: number;
+  amenities: Array<{ id: number; name: string }>;
+}
+
+// Wedding Card types
+export interface WeddingCard {  id: number;
+  template: number;
+  couple_names: string;
+  wedding_details: string;
+  primary_color: string;
+  font_style: string;
+  photos: string[];
+  allow_guest_photos: boolean;
+  require_rsvp: boolean;
+  send_reminders: boolean;
   shareable_link: string;
-  wedding: number;
-  is_public: boolean;
-  allow_photo_upload: boolean;
-  message: string;
   created_at: string;
   updated_at: string;
 }

@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
-import { Plus, Heart, Camera, Share2, BarChart3, Download, Edit, Eye, Users, Clock, Check, X, Star } from 'lucide-react';
+import { Plus, Heart, Camera, Share2, BarChart3, Edit, Eye, Users, Check, Star } from 'lucide-react';
 import Link from 'next/link';
+import { DataLoadingState, EmptyState } from '../../components/ui/loading-states';
+import WeddingCardService from '../../services/weddingCards';
+import { WeddingCard } from '../../types/api';
 
 interface CardTemplate {
   id: number;
@@ -15,24 +18,43 @@ interface CardTemplate {
   popularity: number;
 }
 
-interface SavedCard {
-  id: string;
-  name: string;
-  template: number;
-  coupleNames: string;
-  weddingDate: string;
-  status: 'draft' | 'sent' | 'completed';
-  views: number;
-  rsvps: number;
-  confirmed: number;
-  createdDate: string;
-  shareableLink: string;
-}
-
 export default function WeddingCardsPage() {
   const { setCurrentPage } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Real card data from the API: the template gallery below is static product
+  // content, but "Your Wedding Cards" is user data.
+  const [cards, setCards] = useState<WeddingCard[]>([]);
+  const [cardsLoading, setCardsLoading] = useState(true);
+  const [cardsError, setCardsError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCards() {
+      setCardsLoading(true);
+      setCardsError(null);
+      try {
+        const response = await WeddingCardService.getWeddingCards();
+        if (cancelled) return;
+        // The list endpoint returns a paginated envelope.
+        setCards(Array.isArray(response) ? response : response.results ?? []);
+      } catch (err) {
+        if (cancelled) return;
+        setCardsError(
+          err instanceof Error ? err : new Error('Could not load your wedding cards')
+        );
+      } finally {
+        if (!cancelled) setCardsLoading(false);
+      }
+    }
+
+    loadCards();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Mock card templates data - ready for API integration
   const cardTemplates: CardTemplate[] = [
@@ -86,71 +108,15 @@ export default function WeddingCardsPage() {
     },
   ];
 
-  // Mock saved cards data - ready for API integration
-  const savedCards: SavedCard[] = [
-    {
-      id: 'card-1',
-      name: 'Main Wedding Invitation',
-      template: 1,
-      coupleNames: 'Sarah & Michael',
-      weddingDate: '2024-06-15',
-      status: 'sent',
-      views: 156,
-      rsvps: 89,
-      confirmed: 67,
-      createdDate: '2024-01-15',
-      shareableLink: 'https://wedding-app.com/card/sarah-michael'
-    },
-    {
-      id: 'card-2',
-      name: 'Rehearsal Dinner',
-      template: 3,
-      coupleNames: 'Sarah & Michael',
-      weddingDate: '2024-06-14',
-      status: 'draft',
-      views: 0,
-      rsvps: 0,
-      confirmed: 0,
-      createdDate: '2024-01-20',
-      shareableLink: 'https://wedding-app.com/card/rehearsal-dinner'
-    },
-    {
-      id: 'card-3',
-      name: 'Save the Date',
-      template: 2,
-      coupleNames: 'Sarah & Michael',
-      weddingDate: '2024-06-15',
-      status: 'completed',
-      views: 234,
-      rsvps: 156,
-      confirmed: 134,
-      createdDate: '2024-01-10',
-      shareableLink: 'https://wedding-app.com/card/save-the-date'
-    }
-  ];
-
   const categories = ['all', 'Traditional', 'Contemporary', 'Outdoor', 'Destination', 'Vintage', 'Romantic'];
   
   const filteredTemplates = selectedCategory === 'all' 
     ? cardTemplates 
     : cardTemplates.filter(t => t.category === selectedCategory);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return 'bg-yellow-500/20 text-yellow-500';
-      case 'sent': return 'bg-blue-500/20 text-blue-500';
-      case 'completed': return 'bg-green-500/20 text-green-500';
-      default: return 'bg-gray-500/20 text-gray-500';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'draft': return <Edit size={16} />;
-      case 'sent': return <Share2 size={16} />;
-      case 'completed': return <Check size={16} />;
-      default: return null;
-    }
+  const formatCardDate = (value: string) => {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
   };
 
   
@@ -289,59 +255,96 @@ export default function WeddingCardsPage() {
         {/* User's Saved Cards */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-text-primary mb-6">
-            Your Wedding Cards ({savedCards.length})
+            Your Wedding Cards ({cards.length})
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {savedCards.map((card) => (
-              <div key={card.id} className="glass-card p-6">
-                <div className="h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
-                  <div className="relative z-10 text-center p-4">
-                    <Heart size={32} className="text-purple-500 mx-auto mb-2" />
-                    <h4 className="text-lg font-semibold text-gray-800">{card.coupleNames}</h4>
-                    <p className="text-sm text-gray-600">{card.weddingDate}</p>
+          <DataLoadingState
+            loading={cardsLoading}
+            error={cardsError}
+            skeleton={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="glass-card p-6 animate-pulse">
+                    <div className="h-64 bg-white/10 rounded-lg mb-4" />
+                    <div className="h-5 bg-white/10 rounded w-2/3 mb-3" />
+                    <div className="space-y-2">
+                      <div className="h-3 bg-white/10 rounded" />
+                      <div className="h-3 bg-white/10 rounded w-4/5" />
+                      <div className="h-3 bg-white/10 rounded w-3/5" />
+                    </div>
                   </div>
-                  <div className="absolute top-2 right-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getStatusColor(card.status)}`}>
-                      {getStatusIcon(card.status)}
-                      {card.status}
-                    </span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">
-                  {card.name}
-                </h3>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Views</span>
-                    <span className="text-text-primary font-medium">{card.views}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">RSVPs</span>
-                    <span className="text-text-primary font-medium">{card.rsvps}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Confirmed</span>
-                    <span className="text-green-500 font-medium">{card.confirmed}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Link href={`/wedding-cards/${card.id}`} className="flex-1">
-                    <button className="btn-secondary w-full flex items-center justify-center gap-1">
-                      <Eye size={16} />
-                      View
-                    </button>
-                  </Link>
-                  <Link href={`/wedding-cards/${card.id}`} className="flex-1">
-                    <button className="btn-primary w-full flex items-center justify-center gap-1">
-                      <Edit size={16} />
-                      Edit
-                    </button>
-                  </Link>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            }
+          >
+            {cards.length === 0 ? (
+              <EmptyState
+                title="No wedding cards yet"
+                description="Choose a template above to create your first digital invitation."
+                icon={<Heart className="text-primary" size={24} />}
+                action={
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn-primary inline-flex items-center gap-2"
+                  >
+                    <Plus size={18} />
+                    Create New Card
+                  </button>
+                }
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {cards.map((card) => (
+                  <div key={card.id} className="glass-card p-6">
+                    <div className="h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+                      <div className="relative z-10 text-center p-4">
+                        <Heart size={32} className="text-purple-500 mx-auto mb-2" />
+                        <h4 className="text-lg font-semibold text-gray-800">{card.couple_names}</h4>
+                        <p className="text-sm text-gray-600">{card.wedding_details}</p>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-text-primary mb-2">
+                      Template {card.template}
+                    </h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Guest photos</span>
+                        <span className="text-text-primary font-medium">
+                          {card.allow_guest_photos ? 'Allowed' : 'Off'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">RSVP required</span>
+                        <span className="text-text-primary font-medium">
+                          {card.require_rsvp ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Created</span>
+                        <span className="text-text-primary font-medium">
+                          {formatCardDate(card.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link href={`/wedding-cards/${card.id}`} className="flex-1">
+                        <button className="btn-secondary w-full flex items-center justify-center gap-1">
+                          <Eye size={16} />
+                          View
+                        </button>
+                      </Link>
+                      <Link href={`/wedding-cards/${card.id}`} className="flex-1">
+                        <button className="btn-primary w-full flex items-center justify-center gap-1">
+                          <Edit size={16} />
+                          Edit
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DataLoadingState>
         </div>
 
         {/* Card Features and Benefits */}

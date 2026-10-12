@@ -9,6 +9,7 @@ import { Users, Check, Clock, X, List, MapPin, Utensils, UserPlus } from 'lucide
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../components/dashboard/GuestLayoutSkeleton';
 import { GuestService } from '../../../services/guests';
+import { EmptyState } from '../../../components/ui/loading-states';
 
 export default function GuestManagementDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -141,6 +142,25 @@ export default function GuestManagementDashboard() {
         </div>
 
         {/* Quick Stats */}
+        {stats.total === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="glass-card p-6"
+          >
+            <EmptyState
+              title="No guests yet"
+              description="Add your first guests to start tracking RSVPs, meals and seating."
+              icon={<Users size={24} />}
+              action={
+                <Link href="/dashboard/guests/list">
+                  <button className="btn-primary">Go to Guest List</button>
+                </Link>
+              }
+            />
+          </motion.div>
+        ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,9 +185,10 @@ export default function GuestManagementDashboard() {
             ))}
           </div>
         </motion.div>
+        )}
+        )}
       </div>
-        </div>
-      )}
+      </div>
     </>
   );
 }
