@@ -113,6 +113,16 @@ class Wedding(models.Model):
         blank=True,
         related_name='weddings'
     )
+    # Direct link to the catalog entry. Venue adds no data of its own beyond
+    # this FK, so keeping both means three hops for no information. This is the
+    # canonical field; `venue` is still kept in sync for existing consumers.
+    venue_catalog = models.ForeignKey(
+        VenueCatalog,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='weddings_direct'
+    )
     status = models.ForeignKey(
         WeddingStatus,
         on_delete=models.PROTECT,
@@ -127,7 +137,20 @@ class Wedding(models.Model):
     
     def __str__(self):
         return f"Wedding for {self.user.username}"
-    
+
+    def save(self, *args, **kwargs):
+        # Keep the legacy three-level chain in step with the direct catalog
+        # link, so existing consumers of `venue` keep working.
+        if self.venue_catalog_id:
+            if not self.venue_id or self.venue.venue_catalog_id != self.venue_catalog_id:
+                self.venue, _ = Venue.objects.get_or_create(
+                    venue_catalog_id=self.venue_catalog_id
+                )
+        elif self.venue_id and not self.venue_catalog_id:
+            # Falls back to reading the chain the old way around.
+            self.venue_catalog_id = self.venue.venue_catalog_id
+        super().save(*args, **kwargs)
+
     def get_couple_name(self):
         """Get formatted couple name from user info"""
         if self.user.first_name and self.user.last_name:

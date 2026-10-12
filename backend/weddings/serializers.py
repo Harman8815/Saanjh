@@ -56,13 +56,18 @@ class WeddingSerializer(serializers.ModelSerializer):
     status = WeddingStatusSerializer(read_only=True)
     venue = VenueSerializer(read_only=True)
     venue_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    # Direct catalog link: the shorter path, kept alongside the legacy chain.
+    venue_catalog = VenueCatalogSerializer(read_only=True)
+    venue_catalog_id = serializers.IntegerField(
+        write_only=True, required=False, allow_null=True
+    )
     
     class Meta:
         model = Wedding
         fields = [
             'id', 'user', 'couple_names', 'wedding_date', 'theme',
-            'status', 'venue', 'venue_id', 'days_until_wedding',
-            'created_at', 'updated_at'
+            'status', 'venue', 'venue_id', 'venue_catalog', 'venue_catalog_id',
+            'days_until_wedding', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
     
@@ -74,7 +79,7 @@ class WeddingCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Wedding
-        fields = ['wedding_date', 'theme', 'venue_id']
+        fields = ['wedding_date', 'theme', 'venue_id', 'venue_catalog_id']
     
     def create(self, validated_data):
         user = self.context['request'].user
@@ -86,7 +91,7 @@ class WeddingUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Wedding
-        fields = ['wedding_date', 'theme', 'venue_id', 'status']
+        fields = ['wedding_date', 'theme', 'venue_id', 'venue_catalog_id', 'status']
 
 
 class VenueCatalogCreateSerializer(serializers.ModelSerializer):

@@ -87,6 +87,17 @@ class TimelineEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
+    # Link to the task this event came from, when it was generated from one.
+    # Tasks and timeline events overlap heavily (title, description, date,
+    # status), so the association avoids duplicating the same work item.
+    task = models.ForeignKey(
+        'tasks.Task',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='timeline_events'
+    )
+
     # Legacy fields for backward compatibility
     event_date = models.DateField(editable=False, null=True, blank=True)
     start_time = models.TimeField(editable=False, null=True, blank=True)

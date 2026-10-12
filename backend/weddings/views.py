@@ -13,7 +13,7 @@ from .serializers import (
     VenueCatalogCreateSerializer, VenueAmenitySerializer
 )
 from accounts.permissions import IsAdminOrReadOnly
-from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError
+from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError, get_request_wedding
 from utils.api_exceptions import handle_api_exceptions, log_api_calls, APIErrorHandler
 
 class WeddingStatusViewSet(viewsets.ModelViewSet):
@@ -320,47 +320,56 @@ def wedding_dashboard(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@handle_api_exceptions
 def wedding_timeline(request):
-    """Get wedding timeline events"""
-    try:
-        wedding = request.user.wedding
-        
-        # Combine all events into a timeline
-        events = []
-        
-        # Add guest events
-        for guest in wedding.guests.all():
-            events.append({
-                'event': f'Guest {guest.name} added',
-                'description': f'{guest.name} was added to the guest list',
-                'date': guest.added_date,
-                'type': 'guest'
-            })
-        
-        # Add vendor events
-        for vendor in wedding.vendors.all():
-            events.append({
-                'event': f'Vendor {vendor.name} - {vendor.get_status_display()}',
-                'description': f'{vendor.name} ({vendor.get_vendor_type_display()}) - {vendor.get_status_display()}',
-                'date': vendor.updated_at,
-                'type': 'vendor'
-            })
-        
-        # Add expense events
-        for expense in wedding.expenses.all():
-            events.append({
-                'event': f'Expense: {expense.description}',
-                'description': f'{expense.get_category_display()} - ${expense.actual_cost or expense.estimated_cost}',
-                'date': expense.created_at,
-                'type': 'expense'
-            })
-        
-        # Sort events by date
-        events.sort(key=lambda x: x['date'], reverse=True)
-        
-        return Response(events[:20])  # Return last 20 events
-    except Wedding.DoesNotExist:
-        return Response([], status=status.HTTP_200_OK)
+    """
+    Recent activity feed for the wedding.
+
+    This is an audit trail of recent changes across the wedding's records, NOT
+    the wedding-day schedule. Keep the three concepts distinct:
+
+    * timeline.TimelineEvent - the schedule: what happens, and when, on the day.
+    * tasks.Task             - outstanding work to be done before the day.
+    * this endpoint           - a reverse-chronological feed of what changed.
+
+    Events generated from a task carry `task` on the TimelineEvent so the same
+    item is not tracked twice.
+    """
+    wedding = get_request_wedding(request)
+
+    events = []
+
+    for guest in wedding.guests.all():
+        events.append({
+            'event': f'Guest {guest.full_name or guest.email} added',
+            'description': f'{guest.full_name or guest.email} was added to the guest list',
+            'date': guest.added_date,
+            'type': 'guest',
+        })
+
+    for vendor in wedding.vendors.all():
+        vendor_name = vendor.vendor_catalog.name if vendor.vendor_catalog else 'Vendor'
+        category = vendor.vendor_catalog.category.name if vendor.vendor_catalog and vendor.vendor_catalog.category else 'vendor'
+        events.append({
+            'event': f'Vendor {vendor_name} - {vendor.status.name if vendor.status else "unknown"}',
+            'description': f'{vendor_name} ({category}) - {vendor.status.name if vendor.status else "unknown"}',
+            'date': vendor.updated_at or vendor.created_at,
+            'type': 'vendor',
+        })
+
+    for expense in wedding.expenses.all():
+        category = expense.budget_category.name if expense.budget_category else 'expense'
+        events.append({
+            'event': f'Expense: {expense.title}',
+            'description': f'{category} - ${expense.amount}',
+            'date': expense.created_at,
+            'type': 'expense',
+        })
+
+    events.sort(key=lambda item: item['date'], reverse=True)
+
+    # Return the most recent 20 entries.
+    return APIResponse.success(events[:20], "Wedding timeline retrieved successfully")
 
 
 @api_view(['GET'])

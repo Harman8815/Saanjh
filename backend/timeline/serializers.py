@@ -16,13 +16,15 @@ class TimelineEventSerializer(serializers.ModelSerializer):
 
     status = TimelineStatusSerializer(read_only=True)
     status_id = serializers.IntegerField(write_only=True, required=False)
+    # Link to the originating task, so the same work item is not tracked twice.
+    task = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = TimelineEvent
         fields = [
             'id', 'title', 'description', 'date', 'time', 'type',
             'status', 'status_id', 'priority', 'location', 'notes',
-            'created_at', 'updated_at'
+            'task', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -59,7 +61,7 @@ class TimelineEventCreateSerializer(serializers.ModelSerializer):
         model = TimelineEvent
         fields = [
             'title', 'description', 'date', 'time', 'type',
-            'status_id', 'priority', 'location', 'notes'
+            'status_id', 'priority', 'location', 'notes', 'task'
         ]
 
     def create(self, validated_data):
@@ -82,5 +84,5 @@ class TimelineEventUpdateSerializer(serializers.ModelSerializer):
         model = TimelineEvent
         fields = [
             'title', 'description', 'date', 'time', 'type',
-            'status_id', 'priority', 'location', 'notes'
+            'status_id', 'priority', 'location', 'notes', 'task'
         ]
