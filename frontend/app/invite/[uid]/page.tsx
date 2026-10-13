@@ -3,7 +3,10 @@
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Calendar, MapPin, MessageSquare, X } from 'lucide-react';
+import { Heart, Calendar, MapPin, MessageSquare, X, Check, Loader2, Upload, AlertCircle } from 'lucide-react';
+import { WeddingCardService } from '../../../services/weddingCards';
+import { WeddingCard } from '../../../types/api';
+import toast, { Toaster } from 'react-hot-toast';
 
 // Mock data structure - in production this would come from API/database
 interface InvitationData {
@@ -34,100 +37,35 @@ interface EventSection {
   order: number;
 }
 
-// Mock function to fetch invitation data by UID
-const fetchInvitationData = async (uid: string): Promise<InvitationData | null> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock data - in production this would be a database call
-  const mockInvitations: Record<string, InvitationData> = {
-    'abc123': {
-      uid: 'abc123',
-      brideName: 'Sarah',
-      groomName: 'Michael',
-      weddingDate: '2024-06-15',
-      venue: 'Grand Garden Estate',
-      message: 'We can\'t wait to celebrate our special day with you! Your presence means the world to us as we begin this new chapter together.',
-      selectedTemplate: 'elegant-classic',
-      eventSections: [
-        {
-          id: 'ceremony',
-          title: 'Wedding Ceremony',
-          date: '2024-06-15',
-          time: '3:00 PM',
-          venue: 'St. Mary\'s Cathedral',
-          description: 'Join us for the sacred ceremony where we exchange our vows.',
-          type: 'ceremony',
-          order: 1
-        },
-        {
-          id: 'reception',
-          title: 'Wedding Reception',
-          date: '2024-06-15',
-          time: '6:00 PM',
-          venue: 'Grand Garden Estate',
-          description: 'Celebrate with us at an elegant reception with dinner, dancing, and celebration.',
-          type: 'reception',
-          order: 2
-        }
-      ],
-      customColors: {
-        primary: '#d97706',
-        secondary: '#dc2626',
-        accent: '#f59e0b'
-      },
-      fontFamily: 'serif'
-    },
-    'xyz789': {
-      uid: 'xyz789',
-      brideName: 'Emma',
-      groomName: 'James',
-      weddingDate: '2024-09-20',
-      venue: 'Sunset Beach Resort',
-      message: 'Join us as we begin our forever together under the stars. Love is in the air and we want you there!',
-      selectedTemplate: 'modern-animated',
-      eventSections: [
-        {
-          id: 'cocktail',
-          title: 'Cocktail Hour',
-          date: '2024-09-20',
-          time: '4:00 PM',
-          venue: 'Sunset Beach Resort - Terrace',
-          description: 'Welcome drinks and appetizers as we watch the sunset together.',
-          type: 'cocktail',
-          order: 1
-        },
-        {
-          id: 'ceremony',
-          title: 'Beach Ceremony',
-          date: '2024-09-20',
-          time: '5:30 PM',
-          venue: 'Sunset Beach Resort - Beach',
-          description: 'An intimate beach ceremony with the ocean as our witness.',
-          type: 'ceremony',
-          order: 2
-        },
-        {
-          id: 'reception',
-          title: 'Dinner & Dancing',
-          date: '2024-09-20',
-          time: '7:00 PM',
-          venue: 'Sunset Beach Resort - Ballroom',
-          description: 'Join us for a magical evening of dining, dancing, and celebration.',
-          type: 'reception',
-          order: 3
-        }
-      ],
-      customColors: {
-        primary: '#3b82f6',
-        secondary: '#8b5cf6',
-        accent: '#ec4899'
-      },
-      fontFamily: 'sans-serif'
-    }
-  };
+// Map the API wedding card to the invitation display shape
+const mapCardToInvitationData = (card: WeddingCard, uid: string): InvitationData => {
+  // couple_names like "Sarah & Michael" or "Sarah and Michael"
+  let brideName = 'Bride';
+  let groomName = '';
+  const parts = card.couple_names.split(/\s*(?:&|\band\b)\s*/i).filter(Boolean);
+  if (parts.length >= 2) {
+    brideName = parts[0].trim();
+    groomName = parts.slice(1).join(' & ').trim();
+  } else {
+    brideName = card.couple_names;
+  }
 
-  return mockInvitations[uid] || null;
+  return {
+    uid,
+    brideName,
+    groomName,
+    weddingDate: card.created_at || new Date().toISOString(),
+    venue: '',
+    message: card.wedding_details || '',
+    selectedTemplate: card.template === 2 ? 'modern-animated' : 'elegant-classic',
+    eventSections: [],
+    customColors: {
+      primary: card.primary_color,
+      secondary: card.primary_color,
+      accent: card.primary_color,
+    },
+    fontFamily: ['elegant', 'vintage', 'classic'].includes(card.font_style) ? 'serif' : 'sans-serif',
+  };
 };
 
 // Elegant Classic Template Component
@@ -1142,10 +1080,236 @@ const ModernAnimatedTemplate = ({ data }: { data: InvitationData }) => {
   );
 };
 
+// RSVP form shown below the invitation
+const RsvpSection = ({
+  shareableLink,
+  allowGuestPhotos,
+  primaryColor,
+}: {
+  shareableLink: string;
+  allowGuestPhotos: boolean;
+  primaryColor: string;
+}) => {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    plus_one: false,
+    plus_one_name: '',
+    dietary_restrictions: '',
+    notes: '',
+  });
+  const [status, setStatus] = useState<'idle' | 'confirmed' | 'declined'>('idle');
+  const [submitting, setSubmitting] = useState(false);
+  const [rsvpDone, setRsvpDone] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const handleSubmit = async (rsvpStatus: 'confirmed' | 'declined') => {
+    if (!form.name.trim() || !form.email.trim()) {
+      toast.error('Please enter your name and email');
+      return;
+    }
+    if (rsvpStatus === 'confirmed' && !form.email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await WeddingCardService.submitPublicRsvp(shareableLink, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        rsvp_status: rsvpStatus,
+        plus_one: form.plus_one,
+        plus_one_name: form.plus_one ? form.plus_one_name : '',
+        dietary_restrictions: form.dietary_restrictions,
+        notes: form.notes,
+      });
+      setStatus(rsvpStatus);
+      setRsvpDone(true);
+      toast.success(rsvpStatus === 'confirmed' ? 'RSVP confirmed - see you there!' : 'Thanks for letting us know');
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || 'Failed to submit RSVP. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!form.email.trim()) {
+      toast.error('Enter your email above so we can match your RSVP');
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      await WeddingCardService.uploadPublicGuestPhoto(shareableLink, form.email.trim(), file);
+      toast.success('Photo uploaded - thank you!');
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || 'Failed to upload photo. Please RSVP first.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  if (rsvpDone) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md mx-auto my-12 p-8 bg-white rounded-2xl shadow-lg text-center"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', delay: 0.1 }}
+          className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+          style={{ backgroundColor: status === 'confirmed' ? '#dcfce7' : '#fee2e2' }}
+        >
+          {status === 'confirmed' ? (
+            <Check className="w-8 h-8 text-green-600" />
+          ) : (
+            <X className="w-8 h-8 text-red-600" />
+          )}
+        </motion.div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {status === 'confirmed' ? 'Thank You!' : 'Response Recorded'}
+        </h2>
+        <p className="text-gray-600">
+          {status === 'confirmed'
+            ? 'We cannot wait to celebrate with you.'
+            : 'Thank you for letting us know. You will be missed.'}
+        </p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-md mx-auto my-12 p-8 bg-white rounded-2xl shadow-lg"
+    >
+      <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">RSVP</h2>
+      <p className="text-gray-500 text-sm text-center mb-6">Kindly respond at your earliest convenience</p>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            placeholder="Your name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            placeholder="you@email.com"
+          />
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.plus_one}
+            onChange={e => setForm({ ...form, plus_one: e.target.checked })}
+            className="w-4 h-4 rounded"
+          />
+          <span className="text-sm text-gray-700">I am bringing a plus one</span>
+        </label>
+        {form.plus_one && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Plus One Name</label>
+            <input
+              type="text"
+              value={form.plus_one_name}
+              onChange={e => setForm({ ...form, plus_one_name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="Guest name"
+            />
+          </div>
+        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Dietary Restrictions</label>
+          <input
+            type="text"
+            value={form.dietary_restrictions}
+            onChange={e => setForm({ ...form, dietary_restrictions: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            placeholder="Vegetarian, allergies, etc."
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <textarea
+            value={form.notes}
+            onChange={e => setForm({ ...form, notes: e.target.value })}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            placeholder="Any message for the couple"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={() => handleSubmit('confirmed')}
+          disabled={submitting}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+          style={{ backgroundColor: primaryColor }}
+        >
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          Accept
+        </button>
+        <button
+          onClick={() => handleSubmit('declined')}
+          disabled={submitting}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          Decline
+        </button>
+      </div>
+
+      {allowGuestPhotos && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Share a Photo</label>
+          <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 transition-colors">
+            {photoUploading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+            ) : (
+              <Upload className="w-4 h-4 text-gray-500" />
+            )}
+            <span className="text-sm text-gray-600">
+              {photoUploading ? 'Uploading...' : 'Upload a photo'}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={photoUploading}
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) handlePhotoUpload(file);
+              }}
+            />
+          </label>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 export default function InvitationPage() {
   const params = useParams();
   const uid = params.uid as string;
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
+  const [weddingCard, setWeddingCard] = useState<WeddingCard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -1153,16 +1317,18 @@ export default function InvitationPage() {
     const loadInvitation = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchInvitationData(uid);
-        
-        if (data) {
-          setInvitationData(data);
+        const card = await WeddingCardService.getPublicWeddingCard(uid);
+
+        if (card) {
+          setWeddingCard(card);
+          setInvitationData(mapCardToInvitationData(card, uid));
           setError(null);
         } else {
           setError('Invitation not found');
         }
       } catch (err) {
-        setError('Failed to load invitation');
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        setError(status === 404 ? 'Invitation not found' : 'Failed to load invitation');
       } finally {
         setIsLoading(false);
       }
@@ -1299,6 +1465,7 @@ export default function InvitationPage() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <Toaster position="top-center" />
       {invitationData.selectedTemplate === 'elegant-classic' && (
         <ElegantClassicTemplate data={invitationData} />
       )}
@@ -1308,6 +1475,17 @@ export default function InvitationPage() {
       {!invitationData.selectedTemplate && (
         <ElegantClassicTemplate data={invitationData} />
       )}
+
+      {/* RSVP section */}
+      <RsvpSection
+        shareableLink={uid}
+        allowGuestPhotos={weddingCard?.allow_guest_photos ?? false}
+        primaryColor={weddingCard?.primary_color || '#8B5CF6'}
+      />
+
+      <footer className="text-center pb-8 text-sm text-gray-400">
+        Powered by Wedding Proposal Generator
+      </footer>
     </motion.div>
   );
 }
