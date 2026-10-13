@@ -35,6 +35,10 @@ class VenueCatalog(models.Model):
     capacity_max = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     rating = models.FloatField(default=0.0)
+    # Optional coordinates, used by the map search and radius filtering.
+    # Null when an admin has not geocoded the address yet.
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.name} - {self.get_type_display()}"
@@ -130,6 +134,8 @@ class Wedding(models.Model):
     )
     wedding_date = models.DateField(blank=True, null=True)
     theme = models.CharField(max_length=100, blank=True, null=True)
+    # Venue catalog ids the couple shortlisted while browsing the catalog.
+    saved_venues = models.JSONField(default=list, blank=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

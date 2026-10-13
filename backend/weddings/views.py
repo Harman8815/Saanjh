@@ -207,6 +207,43 @@ class WeddingDetailView(generics.RetrieveUpdateAPIView):
             return WeddingUpdateSerializer
         return WeddingSerializer
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def wedding_toggle_saved_venue(request, venue_id):
+    """Add or remove a venue catalog entry from the couple's shortlist"""
+    wedding, _ = Wedding.objects.get_or_create(user=request.user)
+    venue = get_object_or_404(VenueCatalog, id=venue_id)
+
+    saved = [vid for vid in (wedding.saved_venues or []) if vid != venue.id]
+    if len(saved) == len(wedding.saved_venues or []):
+        # The id was not present, so this call adds it.
+        saved.append(venue.id)
+        action = 'added'
+    else:
+        action = 'removed'
+
+    wedding.saved_venues = saved
+    wedding.save(update_fields=['saved_venues', 'updated_at'])
+
+    return APIResponse.success(
+        {'saved_venues': wedding.saved_venues, 'action': action},
+        f'Venue {action} {"to" if action == "added" else "from"} saved venues'
+    )
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def wedding_saved_venues(request):
+    """List the venue catalog entries the couple shortlisted"""
+    wedding, _ = Wedding.objects.get_or_create(user=request.user)
+    saved_ids = [vid for vid in (wedding.saved_venues or [])]
+
+    # Preserve the order the couple saved them in.
+    venues = {venue.id: venue for venue in VenueCatalog.objects.filter(id__in=saved_ids)}
+    ordered = [venues[vid] for vid in saved_ids if vid in venues]
+
+    serializer = VenueCatalogSerializer(ordered, many=True)
+    return APIResponse.success(serializer.data, 'Saved venues retrieved successfully')
+
 class WeddingCreateView(generics.CreateAPIView):
     """Create wedding endpoint"""
     serializer_class = WeddingCreateSerializer
