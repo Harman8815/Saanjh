@@ -380,3 +380,19 @@ AUTH_COOKIE_DOMAIN = None
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
+
+
+# Email delivery
+# In development the console backend prints messages instead of sending them.
+# Production deployments should override these with real SMTP/API credentials.
+EMAIL_BACKEND = _env(
+    'DJANGO_EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = _env('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@weddingapp.local')
+EMAIL_HOST = _env('DJANGO_EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(_env('DJANGO_EMAIL_PORT', '587'))
+EMAIL_USE_TLS = _env_bool('DJANGO_EMAIL_USE_TLS', True)
+EMAIL_HOST_USER = _env('DJANGO_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = _env('DJANGO_EMAIL_HOST_PASSWORD', '')

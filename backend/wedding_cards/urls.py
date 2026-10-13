@@ -11,4 +11,9 @@ urlpatterns = [
     path('<int:card_id>/analytics/', views.wedding_card_analytics, name='card-analytics'),
     path('<int:card_id>/guests/<int:guest_id>/upload-photo/', views.wedding_card_upload_photo, name='card-guest-upload-photo'),
     path('<int:card_id>/export/', views.wedding_card_guests_export, name='card-guests-export'),
+    path('<int:card_id>/generate-link/', views.wedding_card_generate_link, name='card-generate-link'),
+    path('<int:card_id>/update-link/', views.wedding_card_update_link, name='card-update-link'),
+    path('<int:card_id>/disable-link/', views.wedding_card_disable_link, name='card-disable-link'),
+    path('<int:card_id>/send-invitations/', views.wedding_card_send_invitations, name='card-send-invitations'),
+    path('<int:card_id>/send-reminders/', views.wedding_card_send_reminders, name='card-send-reminders'),
 ]
