@@ -76,9 +76,13 @@ export interface Wedding {
   id: number;
   user: number;
   venue?: Venue;
+  venue_catalog?: VenueCatalog;
   status: WeddingStatus;
+  saved_venues?: number[];
   wedding_date?: string;
   theme?: string;
+  couple_names?: string;
+  days_until_wedding?: number;
   created_at: string;
   updated_at: string;
 }
@@ -103,6 +107,8 @@ export interface VenueCatalog {
   price: number;
   rating: number;
   amenities?: VenueAmenity[];
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface VenueAmenity {
@@ -370,16 +376,48 @@ export interface WeddingCardGuest {
   id: number;
   guest: number;
   wedding_card: number;
+  name: string;
+  email: string;
+  rsvp_status: 'pending' | 'confirmed' | 'declined';
+  rsvp_date?: string;
+  plus_one: boolean;
+  plus_one_name: string;
+  dietary_restrictions: string;
+  notes: string;
   photo_url?: string;
   photo_uploaded_at?: string;
-  notes?: string;
+  uploaded_photos: string[];
   created_at: string;
+}
+
+export interface WeddingCardGuestCreateRequest {
+  name: string;
+  email: string;
+  rsvp_status?: 'pending' | 'confirmed' | 'declined';
+  plus_one?: boolean;
+  plus_one_name?: string;
+  dietary_restrictions?: string;
+  notes?: string;
+}
+
+export interface PublicRsvpRequest {
+  name: string;
+  email: string;
+  rsvp_status: 'confirmed' | 'declined';
+  plus_one?: boolean;
+  plus_one_name?: string;
+  dietary_restrictions?: string;
+  notes?: string;
 }
 
 export interface WeddingCardAnalytics {
   total_views: number;
   unique_guests: number;
   photos_uploaded: number;
+  total_photos_uploaded: number;
+  total_rsvps: number;
+  confirmed_rsvps: number;
+  declined_rsvps: number;
   last_activity: string;
 }
 

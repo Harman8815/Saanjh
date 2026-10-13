@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { WeddingCardService } from '../services';
-import { WeddingCard, WeddingCardGuest, WeddingCardAnalytics, WeddingCardCreateRequest, PaginatedResponse } from '../types/api';
+import { WeddingCard, WeddingCardGuest, WeddingCardGuestCreateRequest, PublicRsvpRequest, WeddingCardAnalytics, WeddingCardCreateRequest, PaginatedResponse } from '../types/api';
 
 // Fetch wedding cards with pagination
 export function useWeddingCards(page = 1, pageSize = 20) {
@@ -76,6 +76,25 @@ export function useWeddingCardAnalytics(cardId: number) {
   };
 }
 
+// Fetch single wedding card
+export function useWeddingCard(cardId: number) {
+  const { data, error, isLoading, mutate } = useSWR<WeddingCard>(
+    cardId ? `wedding-card-${cardId}` : null,
+    () => WeddingCardService.getWeddingCard(cardId),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // 30 seconds
+    }
+  );
+
+  return {
+    weddingCard: data,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
 // Fetch public wedding card
 export function usePublicWeddingCard(shareableLink: string) {
   const { data, error, isLoading, mutate } = useSWR<WeddingCard>(
@@ -95,23 +114,28 @@ export function usePublicWeddingCard(shareableLink: string) {
   };
 }
 
-// Fetch public wedding card guests
-export function usePublicWeddingCardGuests(shareableLink: string) {
-  const { data, error, isLoading, mutate } = useSWR<WeddingCardGuest[]>(
-    shareableLink ? `public-card-${shareableLink}-guests` : null,
-    () => WeddingCardService.getPublicWeddingCardGuests(shareableLink),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes
-    }
-  );
+// Submit public RSVP mutation
+export function useSubmitPublicRsvp() {
+  const queryClient = useQueryClient();
 
-  return {
-    guests: data || [],
-    isLoading,
-    error,
-    mutate,
-  };
+  return useMutation<WeddingCardGuest, Error, { shareableLink: string; rsvpData: PublicRsvpRequest }>({
+    mutationFn: ({ shareableLink, rsvpData }) => WeddingCardService.submitPublicRsvp(shareableLink, rsvpData),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`public-card-${variables.shareableLink}`] });
+    },
+  });
+}
+
+// Upload public guest photo mutation
+export function useUploadPublicGuestPhoto() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ uploaded_photos: string[] }, Error, { shareableLink: string; email: string; photoFile: File }>({
+    mutationFn: ({ shareableLink, email, photoFile }) => WeddingCardService.uploadPublicGuestPhoto(shareableLink, email, photoFile),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`public-card-${variables.shareableLink}`] });
+    },
+  });
 }
 
 // Create wedding card mutation
@@ -155,7 +179,7 @@ export function useDeleteWeddingCard() {
 export function useAddGuestToWeddingCard() {
   const queryClient = useQueryClient();
 
-  return useMutation<WeddingCardGuest, Error, { cardId: number; guestData: Omit<WeddingCardGuest, 'id' | 'created_at'> }>({
+  return useMutation<WeddingCardGuest, Error, { cardId: number; guestData: WeddingCardGuestCreateRequest }>({
     mutationFn: ({ cardId, guestData }) => WeddingCardService.addGuestToWeddingCard(cardId, guestData),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [`wedding-card-${variables.cardId}-guests`] });
@@ -203,18 +227,6 @@ export function useUploadGuestPhoto() {
   });
 }
 
-// Upload public guest photo mutation
-export function useUploadPublicGuestPhoto() {
-  const queryClient = useQueryClient();
-
-  return useMutation<WeddingCardGuest, Error, { shareableLink: string; guestId: number; photoFile: File }>({
-    mutationFn: ({ shareableLink, guestId, photoFile }) => WeddingCardService.uploadPublicGuestPhoto(shareableLink, guestId, photoFile),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`public-card-${variables.shareableLink}-guests`] });
-    },
-  });
-}
-
 // Export wedding card guests mutation
 export function useExportWeddingCardGuests() {
   return useMutation<Blob, Error, { cardId: number; format: string }>({
@@ -230,5 +242,55 @@ export function useExportWeddingCardGuests() {
       link.remove();
       window.URL.revokeObjectURL(url);
     },
+  });
+}
+
+// Generate shareable link mutation
+export function useGenerateShareableLink() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ shareable_link: string }, Error, number>({
+    mutationFn: (cardId) => WeddingCardService.generateShareableLink(cardId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`wedding-card-${variables}`] });
+    },
+  });
+}
+
+// Disable shareable link mutation
+export function useDisableShareableLink() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, number>({
+    mutationFn: (cardId) => WeddingCardService.disableShareableLink(cardId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`wedding-card-${variables}`] });
+    },
+  });
+}
+
+// Update shareable link mutation
+export function useUpdateShareableLink() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ shareable_link: string }, Error, number>({
+    mutationFn: (cardId) => WeddingCardService.updateShareableLink(cardId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`wedding-card-${variables}`] });
+    },
+  });
+}
+
+// Send invitation emails mutation
+export function useSendInvitationEmails() {
+  return useMutation<void, Error, number>({
+    mutationFn: (cardId) => WeddingCardService.sendInvitationEmails(cardId),
+  });
+}
+
+// Send reminder emails mutation
+export function useSendReminderEmails() {
+  return useMutation<void, Error, number>({
+    mutationFn: (cardId) => WeddingCardService.sendReminderEmails(cardId),
   });
 }
