@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Heart, Camera, Share2, BarChart3, Edit, Eye, Users, Star } from 'lucide-react';
+import { Plus, Heart, Camera, Share2, BarChart3, Edit, Eye, Users, Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { DataLoadingState, EmptyState } from '../../components/ui/loading-states';
 import WeddingCardService from '../../services/weddingCards';
+import { useWeddingCardAnalytics } from '../../hooks/useWeddingCards';
 import { WeddingCard } from '../../types/api';
 
 interface CardTemplate {
@@ -15,6 +16,36 @@ interface CardTemplate {
   preview: string;
   features: string[];
   popularity: number;
+}
+
+// Live analytics badge for a single wedding card
+function CardAnalyticsBadge({ cardId }: { cardId: number }) {
+  const { analytics, isLoading } = useWeddingCardAnalytics(cardId);
+
+  if (isLoading) {
+    return <Loader2 size={14} className="animate-spin text-text-secondary" />;
+  }
+
+  if (!analytics) return null;
+
+  return (
+    <div className="flex items-center gap-3 text-xs text-text-secondary">
+      <span className="flex items-center gap-1">
+        <Eye size={12} />
+        {analytics.total_views} views
+      </span>
+      <span className="flex items-center gap-1">
+        <Users size={12} />
+        {analytics.total_rsvps} RSVPs
+      </span>
+      {analytics.total_photos_uploaded > 0 && (
+        <span className="flex items-center gap-1">
+          <Camera size={12} />
+          {analytics.total_photos_uploaded}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export default function WeddingCardsPage() {
@@ -323,12 +354,21 @@ export default function WeddingCardsPage() {
                           {formatCardDate(card.created_at)}
                         </span>
                       </div>
+                      <div className="pt-2 border-t border-white/10">
+                        <CardAnalyticsBadge cardId={card.id} />
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Link href={`/wedding-cards/${card.id}`} className="flex-1">
                         <button className="btn-secondary w-full flex items-center justify-center gap-1">
                           <Eye size={16} />
                           View
+                        </button>
+                      </Link>
+                      <Link href={`/invitation-preview/${card.id}`} className="flex-1">
+                        <button className="btn-secondary w-full flex items-center justify-center gap-1">
+                          <Share2 size={16} />
+                          Preview
                         </button>
                       </Link>
                       <Link href={`/wedding-cards/${card.id}`} className="flex-1">
