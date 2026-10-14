@@ -8,6 +8,12 @@ import {
   BulkGuestCreate,
   BulkRSVPUpdate,
   GuestCreateRequest,
+  GuestGroup,
+  GuestGroupCreateRequest,
+  DietaryOption,
+  GuestImportPreview,
+  GuestImportResult,
+  DuplicateCluster,
   PaginatedResponse 
 } from '../types/api';
 
@@ -147,6 +153,104 @@ export class GuestService {
 
   static async getAllMeals(): Promise<Meal[]> {
     return apiClient.get<Meal[]>('/guests/meals/');
+  }
+
+  // ------------------------------------------------------------------
+  // Stage 2: groups, plus-ones, dietary preferences, import, duplicates
+  // ------------------------------------------------------------------
+
+  // Guest group operations
+  static async getGroups(): Promise<GuestGroup[]> {
+    return apiClient.get<GuestGroup[]>('/guests/groups/');
+  }
+
+  static async createGroup(groupData: GuestGroupCreateRequest): Promise<GuestGroup> {
+    return apiClient.post<GuestGroup>('/guests/groups/', groupData);
+  }
+
+  static async updateGroup(
+    groupId: number,
+    groupData: Partial<GuestGroupCreateRequest>
+  ): Promise<GuestGroup> {
+    return apiClient.patch<GuestGroup>(`/guests/groups/${groupId}/`, groupData);
+  }
+
+  static async deleteGroup(groupId: number): Promise<void> {
+    return apiClient.delete(`/guests/groups/${groupId}/`);
+  }
+
+  // Dietary options (global list)
+  static async getDietaryOptions(): Promise<DietaryOption[]> {
+    return apiClient.get<DietaryOption[]>('/guests/dietary-options/');
+  }
+
+  // Duplicate detection: score + cluster probable duplicates.
+  static async getDuplicates(): Promise<{
+    clusters: DuplicateCluster[];
+    cluster_count: number;
+  }> {
+    return apiClient.get('/guests/duplicates/');
+  }
+
+  // Two-phase spreadsheet import. Phase 1 previews (server validates and
+  // caches the rows); phase 2 commits using the preview token.
+  static async previewImport(file: File): Promise<GuestImportPreview> {
+    const formData = new FormData();
+    formData.append('file', file);
+    // No explicit Content-Type: the browser must set the multipart boundary.
+    return apiClient.post<GuestImportPreview>('/guests/import/preview/', formData);
+  }
+
+  static async commitImport(token: string): Promise<GuestImportResult> {
+    return apiClient.post<GuestImportResult>('/guests/import/', { token });
+  }
+
+  static async downloadImportTemplate(
+    fileType: 'csv' | 'xlsx' = 'csv'
+  ): Promise<Blob> {
+    // `type` not `format`: DRF reserves ?format= for content negotiation.
+    return apiClient.get(`/guests/import-template/?type=${fileType}`, {
+      responseType: 'blob'
+    });
+  }
+
+  // Bulk field updates with a server-side allowlist.
+  static async bulkUpdate(
+    guestIds: number[],
+    updates: Partial<Guest>
+  ): Promise<{ updated_count: number }> {
+    return apiClient.post('/guests/bulk-update/', { guest_ids: guestIds, updates });
+  }
+
+  // RSVP reminders: schedule notifications.Reminder rows for pending guests.
+  static async scheduleReminders(
+    guestIds: number[],
+    scheduledFor: string,
+    channel: 'email' | 'in_app' = 'email'
+  ): Promise<{ scheduled_count: number; reminder_ids: number[] }> {
+    return apiClient.post('/guests/reminders/schedule/', {
+      guest_ids: guestIds,
+      scheduled_for: scheduledFor,
+      channel,
+    });
+  }
+
+  // Seating: seat many guests at one table, or auto-assign everyone.
+  static async bulkAssignTable(
+    tableId: number,
+    guestIds: number[]
+  ): Promise<{ assigned_count: number }> {
+    return apiClient.post(`/guests/tables/${tableId}/bulk_assign/`, {
+      guest_ids: guestIds
+    });
+  }
+
+  static async autoAssignSeating(): Promise<{
+    assigned: number;
+    unassigned: number;
+    unassignable: number[];
+  }> {
+    return apiClient.post('/guests/seating/auto-assign/', {});
   }
 }
 

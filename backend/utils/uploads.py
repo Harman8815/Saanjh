@@ -16,6 +16,8 @@ ALLOWED_EXTENSIONS = {
         '.txt', '.csv', '.rtf', '.odt', '.ods', '.odp',
     ],
     'images': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'],
+    # Guest-list spreadsheets (import flows).
+    'guestlist': ['.csv', '.xlsx'],
 }
 
 # MIME types allowed per group. A request must pass both checks.
@@ -36,12 +38,20 @@ ALLOWED_MIME_TYPES = {
     'images': [
         'image/jpeg', 'image/png', 'image/gif', 'image/webp',
     ],
+    'guestlist': [
+        'text/csv', 'application/csv',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        # Some browsers/clients send this for .xlsx; harmless overlap.
+        'application/vnd.ms-excel',
+    ],
 }
 
-# Size ceilings. Documents are contracts/floorplans; photos come from guests.
+# Size ceilings. Documents are contracts/floorplans; photos come from guests;
+# guest list spreadsheets are capped at 5000 rows server-side.
 MAX_UPLOAD_SIZES = {
     'documents': 25 * 1024 * 1024,   # 25 MB
     'images': 10 * 1024 * 1024,      # 10 MB
+    'guestlist': 5 * 1024 * 1024,    # 5 MB
 }
 
 
