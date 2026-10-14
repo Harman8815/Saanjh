@@ -1,18 +1,21 @@
 from rest_framework import generics, permissions, status, viewsets
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Sum, Q
-from .models import Expense, BudgetCategory, ExpenseStatus
+from .models import Expense, BudgetCategory, ExpenseStatus, PaymentSchedule, ExpenseReceipt
 from .serializers import (
     ExpenseSerializer, ExpenseCreateSerializer, ExpenseUpdateSerializer,
     ExpensePaymentUpdateSerializer, BudgetCategorySerializer,
     BudgetCategoryCreateSerializer, BudgetCategoryUpdateSerializer,
-    ExpenseStatusSerializer
+    ExpenseStatusSerializer, PaymentScheduleSerializer, PaymentScheduleCreateSerializer,
+    ExpenseReceiptSerializer
 )
 from utils.api_response import APIResponse
 from utils.api_response import get_request_wedding
+from utils.exports import write_csv, write_xlsx
 from accounts.permissions import IsAdminOrReadOnly
 
 class ExpenseStatusViewSet(viewsets.ModelViewSet):
@@ -178,6 +181,135 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         }, f"Updated {updated_count} expenses successfully")
 
 
+class PaymentScheduleViewSet(viewsets.ModelViewSet):
+    """ViewSet for PaymentSchedule model"""
+    serializer_class = PaymentScheduleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return PaymentSchedule.objects.filter(wedding=self.request.user.wedding)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PaymentScheduleCreateSerializer
+        return PaymentScheduleSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(wedding=self.request.user.wedding)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Payment schedules retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Payment schedule created successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Payment schedule retrieved successfully")
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return APIResponse.success(serializer.data, "Payment schedule updated successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Payment schedule deleted successfully")
+
+
+class ExpenseReceiptViewSet(viewsets.ModelViewSet):
+    """ViewSet for ExpenseReceipt model"""
+    queryset = ExpenseReceipt.objects.all()
+    serializer_class = ExpenseReceiptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get_queryset(self):
+        return ExpenseReceipt.objects.filter(expense__wedding=self.request.user.wedding)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, "Expense receipts retrieved successfully")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return APIResponse.created(serializer.data, "Receipt uploaded successfully")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIResponse.success(serializer.data, "Receipt retrieved successfully")
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return APIResponse.success({}, "Receipt deleted successfully")
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def expense_export(request):
+    """Export expenses as CSV or XLSX"""
+    from django.utils import timezone
+    
+    wedding = get_request_wedding(request)
+    format_param = request.query_params.get('format', 'csv').lower()
+    
+    expenses = wedding.expenses.select_related(
+        'budget_category', 'status', 'vendor', 'vendor__vendor_catalog'
+    ).order_by('-expense_date')
+    
+    headers = [
+        ('id', 'ID'),
+        ('title', 'Title'),
+        ('amount', 'Amount'),
+        ('paid_amount', 'Paid Amount'),
+        ('budget_category__name', 'Category'),
+        ('status__name', 'Status'),
+        ('vendor__vendor_catalog__name', 'Vendor'),
+        ('expense_date', 'Expense Date'),
+        ('due_date', 'Due Date'),
+        ('paid_date', 'Paid Date'),
+        ('notes', 'Notes'),
+    ]
+    
+    rows = []
+    for expense in expenses:
+        rows.append([
+            expense.id,
+            expense.title,
+            expense.amount,
+            expense.paid_amount,
+            expense.budget_category.name if expense.budget_category else '',
+            expense.status.name if expense.status else '',
+            expense.vendor.vendor_catalog.name if expense.vendor and expense.vendor.vendor_catalog else '',
+            expense.expense_date.isoformat() if expense.expense_date else '',
+            expense.due_date.isoformat() if expense.due_date else '',
+            expense.paid_date.isoformat() if expense.paid_date else '',
+            expense.notes or '',
+        ])
+    
+    filename = f'expenses_export_{timezone.now().strftime("%Y%m%d_%H%M%S")}'
+    if format_param == 'xlsx':
+        return write_xlsx(rows, headers, filename=f'{filename}.xlsx', sheet_name='Expenses')
+    else:
+        return write_csv(rows, headers, filename=f'{filename}.csv')
+
+
+# Legacy generic views below
 class ExpenseListCreateView(generics.ListCreateAPIView):
     """Expense list and create endpoint (legacy)"""
     permission_classes = [permissions.IsAuthenticated]
