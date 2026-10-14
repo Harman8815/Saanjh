@@ -271,41 +271,32 @@ def wedding_dashboard(request):
         # Check if user has permission to access this wedding
         APIErrorHandler.handle_ownership_check(wedding, request.user, "wedding")
         
-        # Get guest statistics
-        guests = wedding.guests.all()
-        guest_stats = {
-            'total': guests.count(),
-            'confirmed': guests.filter(rsvp_status__name='confirmed').count(),
-            'pending': guests.filter(rsvp_status__name='pending').count(),
-            'declined': guests.filter(rsvp_status__name='declined').count(),
-        }
+        # All metric/alert/readiness numbers come from the single source of
+        # truth in utils.wedding_insights so the dashboard, module pages, and
+        # the notification digest can never disagree.
+        from utils.wedding_insights import (
+            get_alerts, get_metrics, get_readiness, get_recent_activity
+        )
+
+        metrics = get_metrics(wedding)
+        guest_stats = metrics['guest_stats']
+        vendor_stats = metrics['vendor_stats']
         
-        # Get vendor statistics
-        vendors = wedding.vendors.all()
-        vendor_stats = {
-            'total': vendors.count(),
-            'confirmed': vendors.filter(status__name='confirmed').count(),
-            'pending': vendors.filter(status__name='pending').count(),
-            'contacted': vendors.filter(status__name='contacted').count(),
-        }
-        
-        # Get expense statistics
-        expenses = wedding.expenses.all()
-        total_expenses = sum(expense.amount for expense in expenses)
-        total_paid = sum(expense.paid_amount for expense in expenses)
-        
+        # Legacy expense stats block kept for existing consumers. The two
+        # wrong values are now correct: budget_used is the real
+        # committed/total-budget percentage, and total_actual is what has
+        # actually been paid rather than a copy of total_estimated.
         expense_stats = {
-            'total_estimated': float(total_expenses),
-            'total_actual': float(total_expenses),
-            'total_paid': float(total_paid),
-            'remaining': float(total_expenses - total_paid),
-            'budget_used': 0,  # Placeholder - budget field not available in Wedding model
+            'total_estimated': metrics['total_budget'],
+            'total_actual': metrics['paid'],
+            'total_paid': metrics['paid'],
+            'remaining': metrics['outstanding'],
+            'budget_used': metrics['budget_used_pct'],
         }
-        
-        # Get recent activities
-        recent_guests = guests.order_by('-added_date')[:5]
-        recent_expenses = expenses.order_by('-created_at')[:5]
-        recent_vendors = vendors.order_by('-id')[:5]  # Vendor model doesn't have updated_at field
+
+        # Get recent activities (real vendor dates now that Vendor has
+        # created_at/updated_at).
+        recent_activity = get_recent_activity(wedding)
         
         # Prepare dashboard data
         dashboard_data = {
@@ -313,29 +304,11 @@ def wedding_dashboard(request):
             'guest_stats': guest_stats,
             'vendor_stats': vendor_stats,
             'expense_stats': expense_stats,
-            'recent_activities': {
-                'guests': [
-                    {
-                        'name': f"{g.first_name} {g.last_name}".strip(),
-                        'date': g.added_date.isoformat() if g.added_date else None,
-                        'type': 'guest_added'
-                    } for g in recent_guests
-                ],
-                'expenses': [
-                    {
-                        'description': e.title,
-                        'date': e.created_at.isoformat() if e.created_at else None,
-                        'type': 'expense_logged'
-                    } for e in recent_expenses
-                ],
-                'vendors': [
-                    {
-                        'name': v.vendor_catalog.name if v.vendor_catalog else 'Unknown',
-                        'date': None,
-                        'type': 'vendor_updated'
-                    } for v in recent_vendors
-                ],
-            },
+            'recent_activities': recent_activity,
+            # Phase 3 additions.
+            'metrics': metrics,
+            'readiness': get_readiness(wedding),
+            'alerts': get_alerts(wedding),
         }
         
         return APIResponse.success(

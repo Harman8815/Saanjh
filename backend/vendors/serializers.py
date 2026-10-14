@@ -41,12 +41,17 @@ class VendorSerializer(serializers.ModelSerializer):
     vendor_catalog_id = serializers.IntegerField(write_only=True)
     status = VendorStatusSerializer(read_only=True)
     status_id = serializers.IntegerField(write_only=True, required=False)
+    # actual_cost - cost_estimate once both are known (None otherwise).
+    cost_variance = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
     
     class Meta:
         model = Vendor
         fields = [
             'id', 'vendor_catalog', 'vendor_catalog_id', 'status', 'status_id',
-            'cost_estimate', 'actual_cost'
+            'cost_estimate', 'actual_cost', 'cost_variance',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id']
 

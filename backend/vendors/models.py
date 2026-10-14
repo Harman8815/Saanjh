@@ -74,14 +74,29 @@ class Vendor(models.Model):
     )
     cost_estimate = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     actual_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    
+
+    # Timestamps. The dashboard's recent-activity feed orders vendors by
+    # updated_at, and the "stuck in contacted" alert needs to know how long a
+    # vendor has sat in one status.
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"{self.vendor_catalog.name} - {self.vendor_catalog.category.name}"
-    
+
+    @property
+    def cost_variance(self):
+        """actual_cost - cost_estimate; None until an actual cost is recorded."""
+        if self.actual_cost is None or self.cost_estimate is None:
+            return None
+        return self.actual_cost - self.cost_estimate
+
     class Meta:
         db_table = 'vendors_vendor'
         ordering = ['vendor_catalog__category', 'vendor_catalog__name']
         indexes = [
             # Vendors are scoped by wedding and filtered by status.
             models.Index(fields=['wedding', 'status']),
+            # The dashboard feed orders by recency within a wedding.
+            models.Index(fields=['wedding', '-updated_at']),
         ]
