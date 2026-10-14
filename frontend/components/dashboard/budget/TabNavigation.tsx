@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LayoutDashboard, PieChart as PieChartIcon, History } from 'lucide-react';
+import { LayoutDashboard, PieChart as PieChartIcon, History, TrendingUp } from 'lucide-react';
 import { TabType } from './types';
 
 interface TabNavigationProps {
@@ -11,6 +11,7 @@ interface TabNavigationProps {
 
 const tabs = [
   { id: 'budget' as TabType, label: 'Budget', icon: LayoutDashboard },
+  { id: 'projection' as TabType, label: 'Projection', icon: TrendingUp },
   { id: 'demographics' as TabType, label: 'Demographics', icon: PieChartIcon },
   { id: 'history' as TabType, label: 'History', icon: History }
 ];

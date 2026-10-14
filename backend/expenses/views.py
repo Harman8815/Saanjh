@@ -434,20 +434,36 @@ def expense_statistics(request):
                 status_stats[status_name] = status_stats.get(status_name, 0) + 1
         stats['by_status'] = status_stats
         
-        # Category breakdown
+        # Metric insights
+        from utils.wedding_insights import get_metrics
+        insights_metrics = get_metrics(wedding)
+        stats['committed'] = insights_metrics.get('committed', stats['total_amount'])
+        stats['projected_final_cost'] = insights_metrics.get('projected_final_cost', stats['total_amount'])
+        stats['budget_used_pct'] = insights_metrics.get('budget_used_pct', stats['budget_used'])
+        stats['paid'] = stats['total_paid']
+        stats['outstanding'] = round(stats['committed'] - stats['paid'], 2)
+        
+        # Category breakdown with projection and variance
+        categories = wedding.budget_categories.all()
         category_stats = {}
-        for expense in expenses:
-            if expense.budget_category:
-                category = expense.budget_category.name
-                if category not in category_stats:
-                    category_stats[category] = {
-                        'count': 0,
-                        'amount': 0,
-                        'paid': 0
-                    }
-                category_stats[category]['count'] += 1
-                category_stats[category]['amount'] += expense.amount
-                category_stats[category]['paid'] += expense.paid_amount
+        for cat in categories:
+            cat_expenses = expenses.filter(budget_category=cat)
+            cat_amount = cat_expenses.aggregate(total=Sum('amount'))['total'] or 0
+            cat_paid = cat_expenses.aggregate(total=Sum('paid_amount'))['total'] or 0
+            allocated = float(cat.allocated_amount or 0)
+            committed = float(cat_amount)
+            variance = round(allocated - committed, 2)
+            variance_pct = round((variance / allocated * 100), 1) if allocated > 0 else 0.0
+            category_stats[cat.name] = {
+                'id': cat.id,
+                'count': cat_expenses.count(),
+                'allocated': allocated,
+                'amount': committed,
+                'paid': float(cat_paid),
+                'projected': committed,
+                'variance': variance,
+                'variance_pct': variance_pct,
+            }
         
         stats['by_category'] = category_stats
         

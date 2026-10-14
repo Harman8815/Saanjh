@@ -2,7 +2,9 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, ArrowUpDown, Calendar, X, Edit2, Trash2 } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Calendar, X, Edit2, Trash2, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { ExpenseService } from '../../../services/expenses';
 import { BudgetCategory, Expense, PaymentStatus, SortField, SortOrder, DateRange } from './types';
 import { paymentStatusConfig } from './data';
 import { formatCurrency, getCardStyle } from './utils';
@@ -108,6 +110,23 @@ export default function HistoryTab({
     onFilterCategoryChange('all');
     onFilterStatusChange('all');
     onDateRangeChange({ from: '', to: '' });
+  };
+
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    try {
+      const blob = await ExpenseService.exportExpenses(format);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expenses_export.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Exported expenses as ${format.toUpperCase()}`);
+    } catch (err) {
+      toast.error('Failed to export expenses');
+    }
   };
 
   return (
@@ -229,12 +248,28 @@ export default function HistoryTab({
         </div>
       </div>
 
-      {/* Results Count */}
-      <div className="flex justify-between items-center">
-        <p className="text-text-secondary">
+      {/* Results Count & Export Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-text-secondary text-sm">
           Showing <span className="text-text-primary font-semibold">{filteredExpenses.length}</span> of{' '}
           <span className="text-text-primary font-semibold">{allExpenses.length}</span> expenses
         </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleExport('csv')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface border border-white/10 hover:bg-white/5 text-text-primary transition-colors shadow-xs"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExport('xlsx')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-surface border border-white/10 hover:bg-white/5 text-text-primary transition-colors shadow-xs"
+          >
+            <Download size={14} /> Export Excel
+          </button>
+        </div>
       </div>
 
       {/* Expenses Table */}

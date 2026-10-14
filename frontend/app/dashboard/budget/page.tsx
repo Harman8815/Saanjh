@@ -7,6 +7,7 @@ import { Wallet } from 'lucide-react';
 import {
   TabNavigation,
   BudgetTab,
+  ProjectionTab,
   DemographicsTab,
   HistoryTab,
   ExpenseModal,
@@ -322,6 +323,15 @@ export default function BudgetTrackerPage() {
             onAddExpense={openAddModal}
             onEditExpense={openEditModal}
             onDeleteExpense={deleteExpense}
+          />
+        )}
+
+        {activeTab === 'projection' && (
+          <ProjectionTab
+            categories={categories}
+            totalBudget={currentTotalBudget}
+            totalSpent={totalSpent}
+            totalPaid={totalPaid}
           />
         )}
 
