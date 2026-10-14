@@ -116,6 +116,64 @@ export interface VenueAmenity {
   name: string;
 }
 
+// Wedding insights: shared metric names, readiness, and alerts.
+// Computed server-side in utils/wedding_insights.py — the single source of truth.
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+
+export interface WeddingAlert {
+  id: string;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  action_label: string | null;
+  action_url: string | null;
+  entity_type: string | null;
+  entity_id: number | null;
+}
+
+export interface ReadinessDomain {
+  key: string;
+  label: string;
+  /** Completion percentage (0-100) for this domain. */
+  pct: number;
+  /** Weight in the overall score (weights sum to 1.0). */
+  weight: number;
+  /** Optional supporting counts (e.g. confirmed/total guests). */
+  detail?: Record<string, number>;
+}
+
+export interface Readiness {
+  /** Weighted mean of the domain percentages (0-100). */
+  score: number;
+  domains: ReadinessDomain[];
+}
+
+export interface WeddingMetrics {
+  total_budget: number;
+  committed: number;
+  paid: number;
+  outstanding: number;
+  budget_used_pct: number;
+  projected_final_cost: number;
+  guest_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    declined: number;
+    invitations_sent: number;
+  };
+  vendor_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    contacted: number;
+  };
+  tasks: Record<string, number>;
+  tasks_completion_pct: number;
+  expenses_count: number;
+  overdue_expenses_count: number;
+}
+
 export interface WeddingDashboard {
   wedding: {
     id: number;
@@ -180,6 +238,12 @@ export interface WeddingDashboard {
       type: string;
     }>;
   };
+  /** Phase 3 metrics block (same definitions everywhere). */
+  metrics?: WeddingMetrics;
+  /** Weighted readiness score with per-domain breakdown. */
+  readiness?: Readiness;
+  /** Actionable alerts, most severe first. */
+  alerts?: WeddingAlert[];
 }
 
 export interface WeddingTimeline {
@@ -241,6 +305,75 @@ export interface Guest {
   reminder_sent_date?: string;
   added_date: string;
   updated_at: string;
+  // Stage 2: groups, plus-ones, dietary preferences
+  group?: GuestGroup | null;
+  group_id?: number | null;
+  plus_one_name?: string;
+  plus_one_rsvp_status?: RsvpStatus | null;
+  plus_one_rsvp_status_id?: number | null;
+  is_plus_one_of?: number | null;
+  dietary_preferences?: DietaryOption[];
+  dietary_ids?: number[];
+}
+
+export interface GuestGroup {
+  id: number;
+  name: string;
+  side: 'bride' | 'groom' | 'both';
+  side_display: string;
+  group_type: 'family' | 'friend' | 'colleague' | 'household';
+  group_type_display: string;
+  notes?: string;
+  guest_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GuestGroupCreateRequest {
+  name: string;
+  side?: GuestGroup['side'];
+  group_type?: GuestGroup['group_type'];
+  notes?: string;
+}
+
+export interface DietaryOption {
+  id: number;
+  name: string;
+}
+
+/** One parsed spreadsheet row from the import preview. */
+export interface GuestImportRowPreview {
+  row: number;
+  valid: boolean;
+  data: Record<string, unknown> | null;
+  errors: string[];
+  is_duplicate: boolean;
+}
+
+export interface GuestImportPreview {
+  token: string;
+  summary: {
+    total_rows: number;
+    valid_rows: number;
+    invalid_rows: number;
+    duplicate_rows: number;
+  };
+  rows: GuestImportRowPreview[];
+  max_rows: number;
+}
+
+export interface GuestImportResult {
+  created: number;
+  skipped: number;
+  errors?: string[];
+}
+
+export interface DuplicateCluster {
+  cluster_id: number;
+  suggested_primary: number;
+  match_score: number;
+  reason: string;
+  guests: Guest[];
 }
 
 export interface RsvpStatus {

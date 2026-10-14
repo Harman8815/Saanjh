@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'documents',
     'tasks',
     'internal_admin',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -289,6 +290,9 @@ JAZZMIN_SETTINGS = {
             {'model': 'timeline.timelineevent', 'label': 'Timeline Events'},
             {'model': 'timeline.timestatus', 'label': 'Timeline Status'},
         ]},
+        {'app': 'notifications', 'label': '🔔 Notifications', 'models': [
+            {'model': 'notifications.reminder', 'label': 'Reminders'},
+        ]},
     ],
     'icons': {
         'accounts': 'fas fa-user-circle',
@@ -396,3 +400,33 @@ EMAIL_PORT = int(_env('DJANGO_EMAIL_PORT', '587'))
 EMAIL_USE_TLS = _env_bool('DJANGO_EMAIL_USE_TLS', True)
 EMAIL_HOST_USER = _env('DJANGO_EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = _env('DJANGO_EMAIL_HOST_PASSWORD', '')
+
+# Celery (background tasks)
+# Redis is the broker and result backend. Both default to localhost so the
+# reminder pipeline works out of the box in development; production should
+# point DJANGO_CELERY_BROKER_URL at a real Redis instance. The
+# send_due_reminders management command works without Redis for tests.
+CELERY_BROKER_URL = _env('DJANGO_CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = _env('DJANGO_CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TIME_LIMIT = 300
+# Reminders must never be dropped: a worker killed mid-task redelivers the
+# message instead of acknowledging it.
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_BEAT_SCHEDULE = {
+    'send-due-reminders': {
+        'task': 'notifications.tasks.send_due_reminders',
+        # Every 15 minutes. Latency between a reminder falling due and its
+        # delivery is at most one interval.
+        'schedule': timedelta(minutes=15),
+    },
+}
+
+# Run tasks inline (no broker) under pytest so reminder delivery is covered
+# by unit tests without a live Redis.
+import sys as _sys
+
+if 'pytest' in _sys.modules or 'test' in _sys.argv:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
