@@ -405,6 +405,99 @@ export interface GuestStatistics {
 }
 
 // Vendor types
+export interface VendorQuote {
+  id: number;
+  vendor: number;
+  title: string;
+  amount: number | string;
+  valid_until?: string | null;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  notes?: string;
+  document?: number | null;
+  document_title?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorContract {
+  id: number;
+  vendor: number;
+  signed_date?: string | null;
+  terms?: string;
+  expiry_date?: string | null;
+  document?: number | null;
+  document_title?: string | null;
+  deposit_amount: number | string;
+  deposit_paid: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorMilestone {
+  id: number;
+  vendor: number;
+  name: string;
+  amount: number | string;
+  due_date?: string | null;
+  paid: boolean;
+  paid_date?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorCommunication {
+  id: number;
+  vendor: number;
+  type: 'email' | 'call' | 'meeting' | 'note';
+  direction: 'inbound' | 'outbound';
+  subject: string;
+  body: string;
+  occurred_at: string;
+  follow_up_date?: string | null;
+  created_by?: number | null;
+  created_by_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorComparisonItem {
+  id: number;
+  name: string;
+  category: string;
+  contact: string;
+  price_range: number | string;
+  rating?: number | null;
+  status: string;
+  cost_estimate?: number | null;
+  actual_cost?: number | null;
+  cost_variance?: number | null;
+  follow_up_date?: string | null;
+  contract?: {
+    id: number;
+    signed_date?: string | null;
+    expiry_date?: string | null;
+    deposit_amount: number;
+    deposit_paid: boolean;
+    document_id?: number | null;
+  } | null;
+  quotes: {
+    total_count: number;
+    has_accepted: boolean;
+    accepted_amount?: number | null;
+    latest_status?: string | null;
+  };
+  milestones: {
+    total_count: number;
+    paid_count: number;
+    total_amount: number;
+    paid_amount: number;
+  };
+  expenses: {
+    total: number;
+    paid: number;
+  };
+}
+
 export interface Vendor {
   id: number;
   wedding: number;
@@ -412,6 +505,14 @@ export interface Vendor {
   status: VendorStatus;
   cost_estimate?: number;
   actual_cost?: number;
+  cost_variance?: number | null;
+  follow_up_date?: string | null;
+  quotes?: VendorQuote[];
+  contract?: VendorContract | null;
+  milestones?: VendorMilestone[];
+  expenses_total?: string | number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface VendorCatalog {

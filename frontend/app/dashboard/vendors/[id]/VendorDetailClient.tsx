@@ -11,6 +11,10 @@ import CateringMenu from '../../../../components/dashboard/vendors/CateringMenu'
 import PhotographerPortfolio from '../../../../components/dashboard/vendors/PhotographerPortfolio';
 import DecorationServices from '../../../../components/dashboard/vendors/DecorationServices';
 import OtherServices from '../../../../components/dashboard/vendors/OtherServices';
+import QuotesTab from '../../../../components/dashboard/vendors/QuotesTab';
+import ContractPaymentsTab from '../../../../components/dashboard/vendors/ContractPaymentsTab';
+import CommunicationTab from '../../../../components/dashboard/vendors/CommunicationTab';
+import CompareTab from '../../../../components/dashboard/vendors/CompareTab';
 import { 
   Vendor, 
   VendorCategory, 
@@ -26,33 +30,11 @@ interface VendorDetailClientProps {
   vendorReviews: any[];
 }
 
-// Sample reviews data
-const sampleReviews = [
-  {
-    id: '1',
-    vendorId: 'photo-1',
-    userName: 'Sarah Johnson',
-    rating: 5,
-    title: 'Absolutely Stunning Photos!',
-    content: 'Moments Forever captured our wedding day perfectly. The photos are breathtaking and they really captured the emotion of the day. Highly recommend!',
-    date: '2024-03-15',
-    helpful: 24,
-  },
-  {
-    id: '2',
-    vendorId: 'photo-1',
-    userName: 'Michael Chen',
-    rating: 5,
-    title: 'Professional and Talented',
-    content: 'From engagement session to wedding day, everything was perfect. They were professional, creative, and made us feel comfortable.',
-    date: '2024-02-28',
-    helpful: 18,
-  },
-];
-
 export default function VendorDetailClient({ vendor, vendorReviews }: VendorDetailClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'menu' | 'decoration' | 'services' | 'packages' | 'reviews'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'portfolio' | 'menu' | 'decoration' | 'services' | 'packages' | 'quotes' | 'contracts' | 'communications' | 'compare' | 'reviews'
+  >('overview');
 
   const config = VENDOR_CATEGORY_CONFIG[vendor.category];
 
@@ -192,6 +174,10 @@ export default function VendorDetailClient({ vendor, vendorReviews }: VendorDeta
               { id: 'decoration', label: 'Decoration', show: vendor.category === 'decoration' },
               { id: 'services', label: 'Services', show: vendor.category === 'others' },
               { id: 'packages', label: 'Packages' },
+              { id: 'quotes', label: 'Quotes' },
+              { id: 'contracts', label: 'Contract & Payments' },
+              { id: 'communications', label: 'Communication' },
+              { id: 'compare', label: 'Compare' },
               { id: 'reviews', label: 'Reviews' },
             ].filter(tab => tab.show !== false).map((tab) => (
               <button
@@ -511,6 +497,54 @@ export default function VendorDetailClient({ vendor, vendorReviews }: VendorDeta
               transition={{ duration: 0.3 }}
             >
               <Reviews reviews={vendorReviews} />
+            </motion.div>
+          )}
+
+          {activeTab === 'quotes' && (
+            <motion.div
+              key="quotes"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <QuotesTab vendorId={vendor.id} />
+            </motion.div>
+          )}
+
+          {activeTab === 'contracts' && (
+            <motion.div
+              key="contracts"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ContractPaymentsTab vendorId={vendor.id} />
+            </motion.div>
+          )}
+
+          {activeTab === 'communications' && (
+            <motion.div
+              key="communications"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CommunicationTab vendorId={vendor.id} />
+            </motion.div>
+          )}
+
+          {activeTab === 'compare' && (
+            <motion.div
+              key="compare"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CompareTab initialVendorId={vendor.id} />
             </motion.div>
           )}
         </AnimatePresence>
