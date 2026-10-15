@@ -1,16 +1,23 @@
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, serializers, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Count, Q, Prefetch
 from django.utils import timezone
+from django.http import HttpResponse
+from datetime import date, datetime, time, timedelta, timezone as datetime_timezone
+import calendar
 
-from .models import Task, TaskStatus, TaskPriority, TaskCategory
+from .models import (
+    Task, TaskStatus, TaskPriority, TaskCategory, TaskComment, TaskOccurrence,
+    TaskTemplate,
+)
 from .serializers import (
     TaskSerializer, TaskListSerializer, TaskCreateSerializer, TaskUpdateSerializer,
     TaskStatusSerializer, TaskPrioritySerializer, TaskCategorySerializer,
-    TaskBulkUpdateSerializer
+    TaskBulkUpdateSerializer, TaskCommentSerializer, TaskOccurrenceSerializer,
+    TaskTemplateSerializer,
 )
 from utils.api_response import APIResponse
 from accounts.permissions import IsAdminOrReadOnly
@@ -27,10 +34,11 @@ BULK_UPDATE_FIELDS = {
     'description': 'str',
     'due_date': 'plain',
     'progress': 'plain',
+    'depends_on': 'm2m',
 }
 
 
-def _resolve_bulk_updates(model, updates):
+def _resolve_bulk_updates(model, updates, wedding_id=None):
     """
     Normalise a bulk update payload into values safe to assign on instances.
 
@@ -53,9 +61,78 @@ def _resolve_bulk_updates(model, updates):
                 # Silently skip invalid ids rather than failing the batch.
                 continue
             resolved[field] = related
+        elif kind == 'm2m':
+            model_field = model._meta.get_field(field)
+            related_model = model_field.related_model
+            related = related_model.objects.filter(pk__in=value)
+            if wedding_id is not None and hasattr(related_model, 'wedding_id'):
+                related = related.filter(wedding_id=wedding_id)
+            if related.count() != len(set(value)):
+                raise serializers.ValidationError({field: 'Every dependency must belong to this wedding.'})
+            resolved[field] = list(related)
         else:
             resolved[field] = value
     return resolved
+
+
+def _dependency_reaches(task, target_id):
+    pending = [task]
+    visited = set()
+    while pending:
+        current = pending.pop()
+        if current.pk == target_id:
+            return True
+        if current.pk in visited:
+            continue
+        visited.add(current.pk)
+        pending.extend(current.depends_on.all())
+    return False
+
+
+def _add_months(value, months):
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return value.replace(year=year, month=month, day=day)
+
+
+def _next_due_date(task, current_date):
+    interval = max(task.recurrence_interval, 1)
+    if task.recurrence == 'daily':
+        next_date = current_date + timedelta(days=interval)
+    elif task.recurrence == 'weekly':
+        next_date = current_date + timedelta(weeks=interval)
+    elif task.recurrence == 'monthly':
+        next_date = _add_months(current_date, interval)
+    else:
+        return None
+    if task.recurrence_ends_on and next_date.date() > task.recurrence_ends_on:
+        return None
+    return next_date
+
+
+def _ical_escape(value):
+    return str(value or '').replace('\\', '\\\\').replace(';', '\\;').replace(',', '\\,').replace('\n', '\\n')
+
+
+def _ical_response(events, filename='tasks.ics'):
+    lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wedding Planner//Tasks//EN', 'CALSCALE:GREGORIAN']
+    for event in events:
+        lines.extend([
+            'BEGIN:VEVENT',
+            f"UID:{event['uid']}",
+            f"DTSTAMP:{timezone.now().strftime('%Y%m%dT%H%M%SZ')}",
+            f"DTSTART:{event['start']}",
+            f"SUMMARY:{_ical_escape(event['title'])}",
+        ])
+        if event.get('description'):
+            lines.append(f"DESCRIPTION:{_ical_escape(event['description'])}")
+        lines.append('END:VEVENT')
+    lines.append('END:VCALENDAR')
+    response = HttpResponse('\r\n'.join(lines) + '\r\n', content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 class TaskStatusViewSet(viewsets.ModelViewSet):
@@ -308,12 +385,26 @@ class TaskViewSet(viewsets.ModelViewSet):
             wedding=request.user.wedding
         )
 
+        resolved_updates = _resolve_bulk_updates(
+            Task, updates, wedding_id=request.user.wedding_id
+        )
+        if 'depends_on' in resolved_updates:
+            for task in tasks:
+                if any(dependency.pk == task.pk or _dependency_reaches(dependency, task.pk)
+                       for dependency in resolved_updates['depends_on']):
+                    raise serializers.ValidationError({
+                        'depends_on': 'This update would create a dependency cycle.'
+                    })
+
         # Iterate rather than queryset.update() so Task.save() runs: that is
         # what keeps completed_at and progress consistent with the status
         # (a bulk update would otherwise skip both the setting and clearing).
         updated_count = 0
         for task in tasks:
-            for field, value in _resolve_bulk_updates(Task, updates).items():
+            for field, value in resolved_updates.items():
+                if field == 'depends_on':
+                    task.depends_on.set(value)
+                    continue
                 setattr(task, field, value)
             task.save()
             updated_count += 1
@@ -342,6 +433,180 @@ class TaskViewSet(viewsets.ModelViewSet):
             }
         
         return APIResponse.success(result, "Tasks by status retrieved successfully")
+
+    @action(detail=False, methods=['get'])
+    def board(self, request):
+        categories = TaskCategory.objects.all().order_by('name')
+        category_id = request.query_params.get('category')
+        if not category_id:
+            return APIResponse.success({
+                'categories': TaskCategorySerializer(categories, many=True).data,
+                'selected_category': None,
+                'columns': [],
+            }, 'Task board categories retrieved successfully')
+        try:
+            category = categories.get(pk=category_id)
+        except (TaskCategory.DoesNotExist, ValueError):
+            return APIResponse.error(
+                'Task category not found', ['Select a valid task category'],
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        board_tasks = self.get_queryset().filter(category=category)
+        columns = []
+        for task_status in TaskStatus.objects.all():
+            column_tasks = board_tasks.filter(status=task_status)
+            columns.append({
+                'task_status': TaskStatusSerializer(task_status).data,
+                'count': column_tasks.count(),
+                'tasks': TaskListSerializer(
+                    column_tasks, many=True, context={'request': request}
+                ).data,
+            })
+        return APIResponse.success({
+            'categories': TaskCategorySerializer(categories, many=True).data,
+            'selected_category': TaskCategorySerializer(category).data,
+            'columns': columns,
+        }, 'Task board retrieved successfully')
+
+    @action(detail=False, methods=['get'])
+    def templates(self, request):
+        templates = TaskTemplate.objects.filter(is_active=True).prefetch_related('items')
+        return APIResponse.success(
+            TaskTemplateSerializer(templates, many=True).data,
+            'Task templates retrieved successfully',
+        )
+
+    @action(detail=False, methods=['post'], url_path='from-template')
+    def from_template(self, request):
+        template_id = request.data.get('template_id')
+        template = TaskTemplate.objects.filter(is_active=True, pk=template_id).prefetch_related('items').first()
+        if not template:
+            return APIResponse.error('Task template not found', ['Select an active template'], status.HTTP_404_NOT_FOUND)
+        anchor_value = request.data.get('anchor_date')
+        try:
+            anchor = date.fromisoformat(anchor_value) if anchor_value else request.user.wedding.wedding_date
+        except (TypeError, ValueError):
+            return APIResponse.error('Invalid anchor date', ['Use YYYY-MM-DD'], status.HTTP_400_BAD_REQUEST)
+        if not anchor:
+            return APIResponse.error('Anchor date required', ['Provide anchor_date when the wedding date is not set'], status.HTTP_400_BAD_REQUEST)
+
+        status_value = TaskStatus.objects.filter(name__iexact='todo').first() or TaskStatus.objects.first()
+        priority_value = TaskPriority.objects.first()
+        if not status_value or not priority_value:
+            return APIResponse.error('Task defaults are not configured', ['Create task statuses and priorities first'], status.HTTP_400_BAD_REQUEST)
+
+        created = []
+        for item in template.items.all():
+            due = anchor + timedelta(days=item.offset_days)
+            created.append(Task.objects.create(
+                wedding=request.user.wedding,
+                title=item.title,
+                description=item.description,
+                due_date=timezone.make_aware(datetime.combine(due, time.min)),
+                status=status_value,
+                priority=item.priority or priority_value,
+                category=item.category,
+                created_by=request.user,
+            ))
+        return APIResponse.created(
+            TaskListSerializer(created, many=True, context={'request': request}).data,
+            f'Created {len(created)} tasks from template',
+        )
+
+    @action(detail=True, methods=['get', 'post'])
+    def comments(self, request, pk=None):
+        task = self.get_object()
+        if request.method == 'GET':
+            return APIResponse.success(
+                TaskCommentSerializer(task.comments.select_related('author'), many=True).data,
+                'Task comments retrieved successfully',
+            )
+        serializer = TaskCommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        comment = serializer.save(task=task, author=request.user)
+        return APIResponse.created(TaskCommentSerializer(comment).data, 'Task comment created successfully')
+
+    @action(detail=True, methods=['get'])
+    def dependencies(self, request, pk=None):
+        task = self.get_object()
+        chain = []
+        pending = list(task.depends_on.all())
+        visited = set()
+        due_dates = []
+        while pending:
+            dependency = pending.pop(0)
+            if dependency.pk in visited:
+                continue
+            visited.add(dependency.pk)
+            chain.append(dependency)
+            if dependency.due_date:
+                due_dates.append(dependency.due_date)
+            pending.extend(dependency.depends_on.all())
+        earliest = max(due_dates) if due_dates else timezone.now()
+        return APIResponse.success({
+            'task_id': task.pk,
+            'dependencies': TaskListSerializer(chain, many=True, context={'request': request}).data,
+            'earliest_feasible_start': earliest,
+        }, 'Task dependencies retrieved successfully')
+
+    def _record_occurrence(self, request, task, outcome):
+        if task.recurrence == 'none':
+            return APIResponse.error('Task is not recurring', ['Set a recurrence before recording an occurrence'], status.HTTP_400_BAD_REQUEST)
+        current = task.due_date or timezone.now()
+        scheduled_for = timezone.localtime(current).date() if timezone.is_aware(current) else current.date()
+        occurrence, created = TaskOccurrence.objects.get_or_create(
+            task=task,
+            scheduled_for=scheduled_for,
+            defaults={'outcome': outcome},
+        )
+        if not created:
+            return APIResponse.error('Occurrence already recorded', ['This date already has an outcome'], status.HTTP_409_CONFLICT)
+        task.due_date = _next_due_date(task, current)
+        task.save(update_fields=['due_date', 'updated_at'])
+        return APIResponse.success({
+            'occurrence': TaskOccurrenceSerializer(occurrence).data,
+            'next_due_date': task.due_date,
+        }, 'Recurring task occurrence recorded successfully')
+
+    @action(detail=True, methods=['post'], url_path='recurrence/skip')
+    def skip_occurrence(self, request, pk=None):
+        return self._record_occurrence(request, self.get_object(), 'skipped')
+
+    @action(detail=True, methods=['post'], url_path='complete-occurrence')
+    def complete_occurrence(self, request, pk=None):
+        return self._record_occurrence(request, self.get_object(), 'completed')
+
+    @action(detail=False, methods=['get'], url_path='export/ical')
+    def export_ical(self, request):
+        events = []
+        for task in self.get_queryset().filter(due_date__isnull=False).select_related('status'):
+            due = task.due_date
+            if timezone.is_aware(due):
+                start = due.astimezone(datetime_timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+            else:
+                start = due.strftime('%Y%m%dT%H%M%S')
+            events.append({
+                'uid': f'task-{task.pk}@wedding-planner',
+                'start': start,
+                'title': task.title,
+                'description': task.description,
+            })
+        if request.query_params.get('include_timeline') == 'true':
+            from timeline.models import TimelineEvent
+            for event in TimelineEvent.objects.filter(wedding=request.user.wedding, date__isnull=False):
+                event_start = event.date.strftime('%Y%m%d')
+                if event.time:
+                    event_start += f'T{event.time.strftime("%H%M%S")}'
+                else:
+                    event_start = f';VALUE=DATE:{event_start}'
+                events.append({
+                    'uid': f'timeline-{event.pk}@wedding-planner',
+                    'start': event_start,
+                    'title': event.title,
+                    'description': event.description,
+                })
+        return _ical_response(events)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):

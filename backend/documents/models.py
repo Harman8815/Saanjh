@@ -55,6 +55,7 @@ class Document(models.Model):
     file = models.FileField(upload_to='documents/%Y/%m/')
     file_type = models.CharField(max_length=50, blank=True)
     file_size = models.BigIntegerField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
     
     # Tags
     tags = models.ManyToManyField(DocumentTag, blank=True, related_name='documents')
@@ -105,3 +106,36 @@ class Document(models.Model):
             # Documents are scoped by wedding and listed newest first.
             models.Index(fields=['wedding', 'uploaded_at']),
         ]
+
+
+class DocumentVersion(models.Model):
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='versions')
+    file = models.FileField(upload_to='documents/versions/%Y/%m/')
+    version_number = models.PositiveIntegerField()
+    note = models.CharField(max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(
+        'accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='document_versions',
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'documents_document_version'
+        ordering = ['-version_number']
+        constraints = [
+            models.UniqueConstraint(fields=['document', 'version_number'], name='unique_document_version_number'),
+        ]
+
+
+class DocumentAccess(models.Model):
+    ACTION_CHOICES = [('download', 'Download'), ('preview', 'Preview')]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='access_events')
+    user = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True)
+    at = models.DateTimeField(auto_now_add=True)
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES, default='download')
+
+    class Meta:
+        db_table = 'documents_document_access'
+        ordering = ['-at']
+        indexes = [models.Index(fields=['document', 'at'])]

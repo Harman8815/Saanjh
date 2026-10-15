@@ -8,6 +8,7 @@ interface Event {
   time: string;
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
   color?: string;
+  has_conflict?: boolean;
 }
 
 // Get color classes based on event color or category
@@ -107,6 +108,7 @@ export default function WeekView({ weekDays, timeSlots, onDayClick }: WeekViewPr
                   >
                     <div className="font-medium truncate">{event.title}</div>
                     <div className="text-text-secondary">{event.time}</div>
+                    {event.has_conflict && <span className="text-[10px] font-semibold text-amber-300">Conflict</span>}
                   </div>
                 );
               })}

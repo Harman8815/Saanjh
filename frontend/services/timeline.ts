@@ -4,10 +4,19 @@ import {
   TimelineEvent,
   TimelineStatus,
   TimelineEventCreateRequest,
+  TimelineConflict,
   PaginatedResponse 
 } from '../types/api';
 
 export class TimelineService {
+  static async getConflicts(): Promise<TimelineConflict[]> {
+    return apiClient.get<TimelineConflict[]>('/timeline/timeline-events/conflicts/');
+  }
+
+  static async exportCalendarFile(): Promise<Blob> {
+    return apiClient.get('/timeline/timeline-events/export/ical/', { responseType: 'blob' });
+  }
+
   // Timeline CRUD operations
   static async getTimelines(page = 1, pageSize = 20): Promise<PaginatedResponse<Timeline>> {
     return apiClient.get<PaginatedResponse<Timeline>>(`/timeline/timelines/?page=${page}&page_size=${pageSize}`);
@@ -172,8 +181,8 @@ export class TimelineService {
   }
 
   // Template operations
-  static async getTimelineTemplates(): Promise<any[]> {
-    return apiClient.get<any[]>('/timeline/templates/');
+  static async getTimelineTemplates(): Promise<Array<{ id: number; name: string; description?: string }>> {
+    return apiClient.get<Array<{ id: number; name: string; description?: string }>>('/timeline/templates/');
   }
 
   static async createTimelineFromTemplate(templateId: number, weddingId?: number): Promise<Timeline> {

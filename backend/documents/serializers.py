@@ -1,6 +1,26 @@
+import os
+from django.core.files.base import ContentFile
+from django.db.models import Max
 from rest_framework import serializers
 from utils.uploads import validate_uploaded_file
-from .models import Document, DocumentCategory, DocumentTag
+from .models import Document, DocumentCategory, DocumentTag, DocumentVersion
+
+
+def _create_document_version(document, uploaded_by=None, note=''):
+    if not document.file:
+        return None
+    current_number = document.versions.aggregate(maximum=Max('version_number'))['maximum'] or 0
+    with document.file.open('rb') as source:
+        version_file = ContentFile(source.read(), name=os.path.basename(document.file.name))
+    version = DocumentVersion(
+        document=document,
+        version_number=current_number + 1,
+        uploaded_by=uploaded_by,
+        note=note,
+    )
+    version.file.save(version_file.name, version_file, save=False)
+    version.save()
+    return version
 
 
 class DocumentTagSerializer(serializers.ModelSerializer):
@@ -45,6 +65,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'category', 'category_display',
             'file', 'file_url', 'file_type', 'file_size', 'file_size_display',
+            'expiry_date',
             'tags', 'tag_ids', 'tag_names',
             'uploaded_at', 'updated_at', 'uploaded_by', 'uploaded_by_name'
         ]
@@ -115,7 +136,7 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = [
-            'name', 'description', 'category', 'file', 'tag_names'
+            'name', 'description', 'category', 'file', 'tag_names', 'expiry_date'
         ]
     
     def create(self, validated_data):
@@ -137,6 +158,7 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
             uploaded_by=uploaded_by,
             **validated_data
         )
+        _create_document_version(document, uploaded_by=uploaded_by, note='Initial upload')
         
         # Create and add tags
         if tag_names:
@@ -156,20 +178,32 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
         required=False,
         allow_empty=True
     )
+    file = serializers.FileField(required=False, write_only=True)
+
+    def validate_file(self, value):
+        return validate_uploaded_file(value, group='documents')
     
     class Meta:
         model = Document
         fields = [
-            'name', 'description', 'category', 'tag_names'
+            'name', 'description', 'category', 'tag_names', 'file', 'expiry_date'
         ]
     
     def update(self, instance, validated_data):
         tag_names = validated_data.pop('tag_names', None)
+        replacement_file = validated_data.pop('file', None)
         
         # Update regular fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        if replacement_file:
+            instance.file = replacement_file
+            instance.file_type = ''
+            instance.file_size = None
+            instance.save()
+            _create_document_version(instance, uploaded_by=self.context['request'].user, note='File replaced')
         
         # Update tags if provided
         if tag_names is not None:
@@ -194,6 +228,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'category', 'category_display',
             'file_url', 'file_type', 'file_size_display',
+            'expiry_date',
             'tags', 'uploaded_at'
         ]
     

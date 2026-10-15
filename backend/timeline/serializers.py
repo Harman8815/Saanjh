@@ -22,7 +22,7 @@ class TimelineEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
         fields = [
-            'id', 'title', 'description', 'date', 'time', 'type',
+            'id', 'title', 'description', 'date', 'time', 'end_time', 'type',
             'status', 'status_id', 'priority', 'location', 'notes',
             'task', 'created_at', 'updated_at'
         ]
@@ -60,9 +60,16 @@ class TimelineEventCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
         fields = [
-            'title', 'description', 'date', 'time', 'type',
+            'title', 'description', 'date', 'time', 'end_time', 'type',
             'status_id', 'priority', 'location', 'notes', 'task'
         ]
+
+    def validate(self, attrs):
+        start = attrs.get('time')
+        end = attrs.get('end_time')
+        if start and end and end <= start:
+            raise serializers.ValidationError({'end_time': 'End time must be later than start time.'})
+        return attrs
 
     def create(self, validated_data):
         # Get the timeline for the current user's wedding
@@ -83,6 +90,13 @@ class TimelineEventUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
         fields = [
-            'title', 'description', 'date', 'time', 'type',
+            'title', 'description', 'date', 'time', 'end_time', 'type',
             'status_id', 'priority', 'location', 'notes', 'task'
         ]
+
+    def validate(self, attrs):
+        start = attrs.get('time', self.instance.time)
+        end = attrs.get('end_time', self.instance.end_time)
+        if start and end and end <= start:
+            raise serializers.ValidationError({'end_time': 'End time must be later than start time.'})
+        return attrs

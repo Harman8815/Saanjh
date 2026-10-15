@@ -265,6 +265,8 @@ export interface TimelineEvent {
   description?: string;
   date: string;
   time?: string;
+  end_time?: string;
+  has_conflict?: boolean;
   type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
   status: 'pending' | 'completed' | 'overdue' | 'cancelled';
   priority?: 'low' | 'medium' | 'high';
@@ -273,6 +275,13 @@ export interface TimelineEvent {
   notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface TimelineConflict {
+  date: string;
+  overlap_start: string;
+  overlap_end: string;
+  events: TimelineEvent[];
 }
 
 export interface TimelineStatus {
@@ -795,6 +804,7 @@ export interface TimelineEventCreateRequest {
   description?: string;
   date: string;
   time?: string;
+  end_time?: string;
   type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
   priority?: 'low' | 'medium' | 'high';
   location?: string;
@@ -887,6 +897,37 @@ export interface Task {
   tags: string[];
   depends_on: Task[];
   dependent_tasks: Task[];
+  parent?: number | null;
+  subtasks?: Task[];
+  recurrence: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval: number;
+  recurrence_ends_on?: string | null;
+}
+
+export interface TaskBoard {
+  categories: TaskCategory[];
+  selected_category: TaskCategory | null;
+  columns: Array<{
+    task_status: TaskStatus;
+    count: number;
+    tasks: Task[];
+  }>;
+}
+
+export interface TaskTemplate {
+  id: number;
+  name: string;
+  description: string;
+  items: Array<{
+    id: number;
+    title: string;
+    description: string;
+    offset_days: number;
+    priority: number | null;
+    category: number | null;
+    priority_name?: string;
+    category_name?: string;
+  }>;
 }
 
 export interface TaskStatus {
@@ -921,6 +962,10 @@ export interface TaskCreateRequest {
   progress?: number;
   depends_on?: number[];
   tags?: string[];
+  parent?: number | null;
+  recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval?: number;
+  recurrence_ends_on?: string | null;
 }
 
 export interface TaskUpdateRequest {
@@ -934,6 +979,10 @@ export interface TaskUpdateRequest {
   progress?: number;
   depends_on?: number[];
   tags?: string[];
+  parent?: number | null;
+  recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval?: number;
+  recurrence_ends_on?: string | null;
 }
 
 export interface TaskStatistics {

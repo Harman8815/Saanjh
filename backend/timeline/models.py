@@ -101,14 +101,15 @@ class TimelineEvent(models.Model):
     # Legacy fields for backward compatibility
     event_date = models.DateField(editable=False, null=True, blank=True)
     start_time = models.TimeField(editable=False, null=True, blank=True)
-    end_time = models.TimeField(editable=False, null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Sync legacy fields for backward compatibility
         self.event_date = self.date
         if self.time:
             self.start_time = self.time
-            self.end_time = self.time
+            if self.end_time is None:
+                self.end_time = self.time
         super().save(*args, **kwargs)
 
     def __str__(self):

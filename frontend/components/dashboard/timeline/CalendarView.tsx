@@ -6,9 +6,9 @@ import { useMemo } from 'react';
 import MonthView from './MonthView';
 import WeekView from './WeekView';
 import DayView from './DayView';
-import { TimelineEvent } from '../../../types/api';
+import type { TimelineEvent } from '../../../types/api';
 
-interface LocalEvent {
+export interface LocalEvent {
   id: number;
   title: string;
   date: string;
@@ -17,6 +17,8 @@ interface LocalEvent {
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
   color?: string;
+  has_conflict?: boolean;
+  end_time?: string;
 }
 
 interface CalendarViewProps {
@@ -67,7 +69,9 @@ const transformEvent = (event: TimelineEvent): LocalEvent => {
     location: event.location || 'TBD',
     status: statusMap[event.status] || 'upcoming',
     category: typeToCategory[event.type] || 'planning',
-    color: undefined
+    color: undefined,
+    end_time: event.end_time,
+    has_conflict: event.has_conflict,
   };
 };
 
@@ -268,7 +272,6 @@ export default function CalendarView({
                 ...day,
                 events: day.events.map(transformEvent)
               }))}
-              selectedDate={selectedDate}
               onSelectDate={(date) => {
                 setSelectedDate(date);
                 onDayClick?.(date);
@@ -291,7 +294,6 @@ export default function CalendarView({
             <DayView
               currentDate={currentDate}
               timeSlots={timeSlots}
-              events={transformedEvents}
               getEventsForDate={getTransformedEventsForDate}
               getStatusColor={getStatusColor}
               onEventClick={onEventClick}

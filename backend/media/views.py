@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status, viewsets, parsers
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,6 +9,8 @@ from .serializers import (
     MediaTypeSerializer, AlbumSerializer, AlbumListSerializer, AlbumCreateSerializer,
     AlbumUpdateSerializer, MediaAlbumSerializer, AlbumTagSerializer
 )
+from .serializers import _optimize_image
+from wedding_cards.models import WeddingCard
 from utils.api_response import APIResponse
 from utils.api_response import get_request_wedding
 from accounts.permissions import IsAdminOrReadOnly
@@ -185,12 +187,18 @@ class AlbumViewSet(viewsets.ModelViewSet):
         serializer = AlbumListSerializer(albums, many=True)
         return APIResponse.success(serializer.data, "Featured albums retrieved successfully")
 
+    @action(detail=False, methods=['get'])
+    def tags(self, request):
+        tags = AlbumTag.objects.filter(wedding=request.user.wedding).order_by('name')
+        return APIResponse.success(AlbumTagSerializer(tags, many=True).data, 'Album tags retrieved successfully')
+
 
 class MediaViewSet(viewsets.ModelViewSet):
     """ViewSet for Media model"""
     queryset = Media.objects.all()
     serializer_class = MediaSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['media_type']
     search_fields = ['title']
@@ -198,7 +206,11 @@ class MediaViewSet(viewsets.ModelViewSet):
     ordering = ['-uploaded_at']
     
     def get_queryset(self):
-        return Media.objects.filter(wedding=self.request.user.wedding)
+        queryset = Media.objects.filter(wedding=self.request.user.wedding)
+        submission_status = self.request.query_params.get('submission_status')
+        if submission_status:
+            queryset = queryset.filter(submission_status=submission_status)
+        return queryset
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -227,9 +239,100 @@ class MediaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def gallery(self, request):
         """Get gallery view of media files"""
-        media_files = self.get_queryset().filter(media_type__name__in=['photo', 'video'])
+        media_files = self.get_queryset().filter(
+            media_type__name__in=['photo', 'video'],
+            submission_status='approved',
+        )
         serializer = self.get_serializer(media_files, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='bulk-upload')
+    def bulk_upload(self, request):
+        files = request.FILES.getlist('files')
+        if not files:
+            return APIResponse.error('Files are required', ['Attach one or more files under the files field'], status.HTTP_400_BAD_REQUEST)
+        media_type = MediaType.objects.filter(pk=request.data.get('media_type_id')).first() if request.data.get('media_type_id') else MediaType.objects.filter(name__iexact='photo').first()
+        if not media_type:
+            return APIResponse.error('Photo media type is not configured', ['Create a photo media type before uploading'], status.HTTP_400_BAD_REQUEST)
+
+        results = []
+        for upload in files:
+            serializer = MediaCreateSerializer(
+                data={'title': upload.name, 'file': upload, 'media_type_id': media_type.pk},
+                context={'request': request},
+            )
+            if not serializer.is_valid():
+                results.append({'file': upload.name, 'success': False, 'errors': serializer.errors})
+                continue
+            media = serializer.save()
+            results.append({
+                'file': upload.name,
+                'success': True,
+                'media': MediaSerializer(media, context={'request': request}).data,
+            })
+        return APIResponse.success({
+            'results': results,
+            'success_count': sum(result['success'] for result in results),
+            'failed_count': sum(not result['success'] for result in results),
+        }, 'Media upload batch processed successfully')
+
+    @action(detail=False, methods=['get'], url_path='guest-submissions')
+    def guest_submissions(self, request):
+        submissions = self.get_queryset().filter(is_guest_submission=True)
+        requested_status = request.query_params.get('status')
+        if requested_status in {'pending', 'approved', 'rejected'}:
+            submissions = submissions.filter(submission_status=requested_status)
+        data = MediaSerializer(submissions, many=True, context={'request': request}).data
+        return APIResponse.success(data, 'Guest submissions retrieved successfully')
+
+    @action(detail=True, methods=['post'], url_path='moderate-submission')
+    def moderate_submission(self, request, pk=None):
+        media = self.get_object()
+        if not media.is_guest_submission:
+            return APIResponse.error('Not a guest submission', ['Only guest submissions can be moderated'], status.HTTP_400_BAD_REQUEST)
+        new_status = request.data.get('status')
+        if new_status not in {'approved', 'rejected'}:
+            return APIResponse.error('Invalid status', ['Choose approved or rejected'], status.HTTP_400_BAD_REQUEST)
+        media.submission_status = new_status
+        media.save(update_fields=['submission_status'])
+        return APIResponse.success(MediaSerializer(media, context={'request': request}).data, 'Guest submission updated successfully')
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='guest-submissions/submit',
+        permission_classes=[permissions.AllowAny],
+        parser_classes=[parsers.MultiPartParser, parsers.FormParser],
+    )
+    def submit_guest_photo(self, request):
+        card = WeddingCard.objects.select_related('wedding').filter(
+            shareable_link=request.data.get('shareable_link'),
+            allow_guest_photos=True,
+        ).first()
+        if not card:
+            return APIResponse.error('Guest photo submissions are unavailable', ['Check the wedding link or photo permissions'], status.HTTP_404_NOT_FOUND)
+        upload = request.FILES.get('file')
+        try:
+            from utils.uploads import validate_uploaded_file
+            validate_uploaded_file(upload, group='images')
+        except Exception as error:
+            return APIResponse.error('Invalid image', [str(error)], status.HTTP_400_BAD_REQUEST)
+        if not upload:
+            return APIResponse.error('Image is required', ['Attach an image file'], status.HTTP_400_BAD_REQUEST)
+        photo_type = MediaType.objects.filter(name__iexact='photo').first()
+        if not photo_type:
+            return APIResponse.error('Photo media type is not configured', ['Contact the wedding organizer'], status.HTTP_400_BAD_REQUEST)
+        media = Media.objects.create(
+            wedding=card.wedding,
+            media_type=photo_type,
+            title=upload.name,
+            is_guest_submission=True,
+            submitted_by_name=(request.data.get('name') or '').strip()[:150],
+            submitted_by_email=(request.data.get('email') or '').strip(),
+            submission_status='pending',
+        )
+        _optimize_image(media, upload)
+        return APIResponse.created({'id': media.pk, 'submission_status': media.submission_status}, 'Photo submitted for approval')
 
 
 @api_view(['GET'])

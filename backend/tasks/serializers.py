@@ -1,6 +1,53 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Task, TaskStatus, TaskPriority, TaskCategory
+from .models import (
+    Task, TaskStatus, TaskPriority, TaskCategory, TaskComment, TaskOccurrence,
+    TaskTemplate, TaskTemplateItem,
+)
+
+
+def _validate_task_relationships(serializer, dependencies):
+    request = serializer.context.get('request')
+    wedding_id = serializer.instance.wedding_id if serializer.instance else getattr(
+        getattr(request, 'user', None), 'wedding_id', None
+    )
+    for dependency in dependencies:
+        if dependency.wedding_id != wedding_id:
+            raise serializers.ValidationError('Dependencies must belong to this wedding.')
+        if serializer.instance and _depends_on_task(dependency, serializer.instance.pk):
+            raise serializers.ValidationError('This dependency would create a cycle.')
+    return dependencies
+
+
+def _depends_on_task(task, target_id):
+    pending = [task]
+    visited = set()
+    while pending:
+        current = pending.pop()
+        if current.pk == target_id:
+            return True
+        if current.pk in visited:
+            continue
+        visited.add(current.pk)
+        pending.extend(current.depends_on.all())
+    return False
+
+
+def _validate_parent(serializer, parent):
+    if parent is None:
+        return parent
+    request = serializer.context.get('request')
+    wedding_id = serializer.instance.wedding_id if serializer.instance else getattr(
+        getattr(request, 'user', None), 'wedding_id', None
+    )
+    if parent.wedding_id != wedding_id:
+        raise serializers.ValidationError('Parent task must belong to this wedding.')
+    current = parent
+    while current:
+        if serializer.instance and current.pk == serializer.instance.pk:
+            raise serializers.ValidationError('A task cannot be its own parent.')
+        current = current.parent
+    return parent
 
 
 def validate_task_assignee(user, request=None):
@@ -62,6 +109,7 @@ class TaskSerializer(serializers.ModelSerializer):
     tags = serializers.StringRelatedField(many=True, read_only=True)
     depends_on = serializers.SerializerMethodField()
     dependent_tasks = serializers.SerializerMethodField()
+    subtasks = serializers.SerializerMethodField()
     
     class Meta:
         model = Task
@@ -72,7 +120,8 @@ class TaskSerializer(serializers.ModelSerializer):
             'due_date', 'completed_at', 'progress', 'created_by', 
             'created_by_name', 'created_at', 'updated_at',
             'is_overdue', 'days_until_due', 'can_start',
-            'tags', 'depends_on', 'dependent_tasks'
+            'tags', 'depends_on', 'dependent_tasks', 'subtasks', 'parent',
+            'recurrence', 'recurrence_interval', 'recurrence_ends_on'
         ]
     
     def get_depends_on(self, obj):
@@ -80,6 +129,9 @@ class TaskSerializer(serializers.ModelSerializer):
     
     def get_dependent_tasks(self, obj):
         return TaskListSerializer(obj.dependent_tasks.all(), many=True).data
+
+    def get_subtasks(self, obj):
+        return TaskListSerializer(obj.subtasks.all(), many=True).data
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -103,7 +155,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             'id', 'title', 'status', 'status_name', 'priority', 'priority_name',
             'category', 'category_name', 'assigned_to', 'assigned_to_name',
             'due_date', 'progress', 'is_overdue', 'days_until_due', 'can_start',
-            'tags'
+            'tags', 'parent', 'recurrence', 'recurrence_interval', 'recurrence_ends_on'
         ]
 
 
@@ -116,7 +168,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'title', 'description', 'status', 'priority', 'category',
-            'assigned_to', 'due_date', 'progress', 'depends_on', 'tags'
+            'assigned_to', 'due_date', 'progress', 'depends_on', 'tags', 'parent',
+            'recurrence', 'recurrence_interval', 'recurrence_ends_on'
         ]
     
     def validate_progress(self, value):
@@ -131,6 +184,12 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     def validate_assigned_to(self, value):
         """Restrict assignees to users who share the caller's wedding."""
         return validate_task_assignee(value, self.context.get('request'))
+
+    def validate_depends_on(self, value):
+        return _validate_task_relationships(self, value)
+
+    def validate_parent(self, value):
+        return _validate_parent(self, value)
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
@@ -156,7 +215,8 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'title', 'description', 'status', 'priority', 'category',
-            'assigned_to', 'due_date', 'progress', 'depends_on', 'tags'
+            'assigned_to', 'due_date', 'progress', 'depends_on', 'tags', 'parent',
+            'recurrence', 'recurrence_interval', 'recurrence_ends_on'
         ]
     
     def validate_progress(self, value):
@@ -167,6 +227,12 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
     def validate_assigned_to(self, value):
         """Restrict assignees to users who share the caller's wedding."""
         return validate_task_assignee(value, self.context.get('request'))
+
+    def validate_depends_on(self, value):
+        return _validate_task_relationships(self, value)
+
+    def validate_parent(self, value):
+        return _validate_parent(self, value)
 
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
@@ -196,3 +262,36 @@ class TaskBulkUpdateSerializer(serializers.Serializer):
         if not value:
             raise serializers.ValidationError("At least one task ID is required")
         return value
+
+
+class TaskCommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.get_full_name', read_only=True)
+
+    class Meta:
+        model = TaskComment
+        fields = ['id', 'body', 'author', 'author_name', 'created_at']
+        read_only_fields = ['id', 'author', 'author_name', 'created_at']
+
+
+class TaskOccurrenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskOccurrence
+        fields = ['id', 'scheduled_for', 'outcome', 'recorded_at']
+        read_only_fields = fields
+
+
+class TaskTemplateItemSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    priority_name = serializers.CharField(source='priority.name', read_only=True)
+
+    class Meta:
+        model = TaskTemplateItem
+        fields = ['id', 'title', 'description', 'offset_days', 'priority', 'priority_name', 'category', 'category_name']
+
+
+class TaskTemplateSerializer(serializers.ModelSerializer):
+    items = TaskTemplateItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TaskTemplate
+        fields = ['id', 'name', 'description', 'items']
