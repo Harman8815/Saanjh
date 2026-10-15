@@ -308,10 +308,9 @@ class TestGetRecentActivity(InsightsTestCase):
         self.assertIsNotNone(activity['guests'][0]['date'])
         self.assertEqual(activity['expenses'][0]['description'], 'Flowers')
 
-    def test_vendor_dates_are_none_before_timestamp_migration(self):
-        # Vendor.updated_at arrives in Stage 1; until then the feed must not
-        # raise, and vendor dates stay null.
+    def test_vendor_dates_are_real_after_timestamp_migration(self):
+        # Vendor created_at/updated_at arrives in Stage 1; the feed now includes real dates.
         self.make_vendor('Studio')
         activity = get_recent_activity(self.wedding)
         self.assertEqual(activity['vendors'][0]['name'], 'Studio')
-        self.assertIsNone(activity['vendors'][0]['date'])
+        self.assertIsNotNone(activity['vendors'][0]['date'])
