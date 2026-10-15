@@ -1,0 +1,582 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Trash2,
+  ListTodo,
+  Columns3,
+  Download,
+} from 'lucide-react';
+import { TaskList } from '@/components/dashboard/tasks/TaskList';
+import { TaskBoard } from '@/components/dashboard/tasks/TaskBoard';
+import { TaskModal } from '@/components/dashboard/tasks/TaskModal';
+import { DeleteTaskModal } from '@/components/dashboard/tasks/DeleteTaskModal';
+import { 
+  useTasks, 
+  useTaskStatistics, 
+  useCreateTask, 
+  useUpdateTask, 
+  useDeleteTask, 
+  useBulkDeleteTasks,
+  useMarkTaskComplete,
+  useDuplicateTask,
+  useTaskBoard,
+} from '@/hooks/useTasks';
+import { TaskService } from '@/services';
+import { useToast, ToastContainer } from '@/components/gallery/ToastNotification';
+import { ApiErrorHelper } from '@/utils/error-handling';
+import type { Task, TaskStatus, TaskPriority, TaskCategory, TaskTemplate, TaskCreateRequest, TaskUpdateRequest } from '@/types/api';
+
+export default function TasksPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<number | undefined>();
+  const [selectedPriority, setSelectedPriority] = useState<number | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [boardCategoryId, setBoardCategoryId] = useState<number | undefined>();
+  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+  const [templates, setTemplates] = useState<TaskTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<number | undefined>();
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage] = useState(1);
+  const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const { toasts, addToast, removeToast } = useToast();
+
+  // Fetch tasks with filters
+  const { tasks, isLoading, mutate } = useTasks(
+    currentPage, 
+    20, 
+    {
+      search: searchQuery || undefined,
+      status: selectedStatus,
+      priority: selectedPriority,
+      category: selectedCategory,
+    }
+  );
+  const { board, isLoading: boardLoading, mutate: refreshBoard } = useTaskBoard(boardCategoryId);
+
+  // Fetch statistics
+  const { statistics } = useTaskStatistics();
+
+  // Fetch dropdown data
+  const [statuses, setStatuses] = useState<TaskStatus[]>([]);
+  const [priorities, setPriorities] = useState<TaskPriority[]>([]);
+  const [categories, setCategories] = useState<TaskCategory[]>([]);
+  const [users, setUsers] = useState<Array<{ id: number; first_name: string; last_name: string }>>([]);
+
+  // Mutations
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+  const bulkDeleteMutation = useBulkDeleteTasks();
+  const markCompleteMutation = useMarkTaskComplete();
+  const duplicateTaskMutation = useDuplicateTask();
+
+  useEffect(() => {
+    // Load dropdown data
+    const loadDropdownData = async () => {
+      try {
+        const [statusesData, prioritiesData, categoriesData, usersData, templatesData] = await Promise.all([
+          TaskService.getTaskStatuses(),
+          TaskService.getTaskPriorities(),
+          TaskService.getTaskCategories(),
+          TaskService.getUsers(),
+          TaskService.getTaskTemplates(),
+        ]);
+        setStatuses(statusesData);
+        setPriorities(prioritiesData);
+        setCategories(categoriesData);
+        setBoardCategoryId(categoriesData[0]?.id);
+        setUsers(usersData);
+        setTemplates(templatesData);
+      } catch (error) {
+        console.error('Failed to load dropdown data:', error);
+      }
+    };
+
+    loadDropdownData();
+  }, []);
+
+  const handleApplyTemplate = async () => {
+    if (!selectedTemplate) return;
+    try {
+      const created = await TaskService.createTasksFromTemplate(selectedTemplate);
+      await Promise.all([mutate(), refreshBoard()]);
+      addToast({ type: 'success', title: 'Template Applied', message: `${created.length} tasks were added` });
+    } catch (error) {
+      addToast({ type: 'error', title: 'Template Failed', message: ApiErrorHelper.extractErrorMessage(error) });
+    }
+  };
+
+  const handleCalendarExport = async () => {
+    try {
+      const file = await TaskService.exportCalendar(true);
+      const url = URL.createObjectURL(file);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = 'wedding-tasks.ics';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      addToast({ type: 'error', title: 'Export Failed', message: ApiErrorHelper.extractErrorMessage(error) });
+    }
+  };
+
+  const handleBoardStatusChange = async (task: Task, status: TaskStatus) => {
+    try {
+      await updateTaskMutation.mutateAsync({ taskId: task.id, taskData: { status: status.id } });
+      await Promise.all([refreshBoard(), mutate()]);
+    } catch (error) {
+      addToast({ type: 'error', title: 'Status Update Failed', message: ApiErrorHelper.extractErrorMessage(error) });
+      throw error;
+    }
+  };
+
+  const handleRecordOccurrence = async (task: Task, outcome: 'skip' | 'complete') => {
+    try {
+      await TaskService.recordOccurrence(task.id, outcome);
+      await Promise.all([mutate(), refreshBoard()]);
+      addToast({ type: 'success', title: 'Recurrence Updated', message: `Occurrence ${outcome === 'skip' ? 'skipped' : 'completed'}` });
+    } catch (error) {
+      addToast({ type: 'error', title: 'Recurrence Failed', message: ApiErrorHelper.extractErrorMessage(error) });
+    }
+  };
+
+  const handleCreateTask = async (data: TaskCreateRequest | TaskUpdateRequest) => {
+    try {
+      await createTaskMutation.mutateAsync(data as TaskCreateRequest);
+      setShowTaskModal(false);
+      setEditingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Created',
+        message: 'Task has been created successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Create Task',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleUpdateTask = async (data: TaskCreateRequest | TaskUpdateRequest) => {
+    if (!editingTask) return;
+    
+    try {
+      await updateTaskMutation.mutateAsync({ taskId: editingTask.id, taskData: data });
+      setShowTaskModal(false);
+      setEditingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Updated',
+        message: 'Task has been updated successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Update Task',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!deletingTask) return;
+    
+    try {
+      await deleteTaskMutation.mutateAsync(deletingTask.id);
+      setShowDeleteModal(false);
+      setDeletingTask(null);
+      addToast({
+        type: 'success',
+        title: 'Task Deleted',
+        message: 'Task has been deleted successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Delete Task',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleToggleComplete = async (task: Task) => {
+    try {
+      await markCompleteMutation.mutateAsync(task.id);
+      addToast({
+        type: 'success',
+        title: 'Task Status Updated',
+        message: 'Task has been marked as complete'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Update Task',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleDuplicateTask = async (task: Task) => {
+    try {
+      await duplicateTaskMutation.mutateAsync(task.id);
+      addToast({
+        type: 'success',
+        title: 'Task Duplicated',
+        message: 'Task has been duplicated successfully'
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Duplicate Task',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleSelectTask = (taskId: number) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTasks.length === tasks.length) {
+      setSelectedTasks([]);
+    } else {
+      setSelectedTasks(tasks.map(task => task.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTasks.length === 0) return;
+    
+    try {
+      await bulkDeleteMutation.mutateAsync(selectedTasks);
+      setSelectedTasks([]);
+      addToast({
+        type: 'success',
+        title: 'Tasks Deleted',
+        message: `${selectedTasks.length} task(s) have been deleted successfully`
+      });
+    } catch (error) {
+      const errorMessage = ApiErrorHelper.extractErrorMessage(error);
+      addToast({
+        type: 'error',
+        title: 'Failed to Delete Tasks',
+        message: errorMessage
+      });
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-6xl mx-auto"
+      >
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Tasks</h1>
+          <p className="text-text-secondary">Manage your wedding planning tasks and checklists</p>
+        </div>
+
+        {/* Statistics Cards */}
+        {statistics && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+          >
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+              <div className="text-3xl font-bold text-text-primary mb-2">{statistics.total_count}</div>
+              <div className="text-text-secondary text-sm">Total Tasks</div>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+              <div className="text-3xl font-bold text-amber-500 mb-2">{statistics.overdue_count}</div>
+              <div className="text-text-secondary text-sm">Overdue</div>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+              <div className="text-3xl font-bold text-blue-500 mb-2">{statistics.due_soon_count}</div>
+              <div className="text-text-secondary text-sm">Due Soon</div>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
+              <div className="text-3xl font-bold text-green-500 mb-2">{statistics.recent_count}</div>
+              <div className="text-text-secondary text-sm">Recent</div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Search and Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 mb-8"
+        >
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary placeholder-text-secondary"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <div className="flex overflow-hidden border border-white/20">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  aria-pressed={viewMode === 'list'}
+                  className={`px-3 py-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-white/10'}`}
+                >
+                  <ListTodo className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('board')}
+                  aria-label="Board view"
+                  aria-pressed={viewMode === 'board'}
+                  className={`px-3 py-2 ${viewMode === 'board' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-white/10'}`}
+                >
+                  <Columns3 className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={handleCalendarExport}
+                title="Export task calendar"
+                aria-label="Export task calendar"
+                className="border border-white/20 px-3 py-2 text-text-primary hover:bg-white/10"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                  showFilters 
+                    ? 'bg-primary text-white' 
+                    : 'bg-white/10 border border-white/20 text-text-primary hover:bg-white/20'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+              </button>
+
+              <button
+                onClick={() => {
+                  setEditingTask(null);
+                  setShowTaskModal(true);
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Task
+              </button>
+            </div>
+          </div>
+
+          {viewMode === 'board' && (
+            <div className="mt-4 flex flex-col gap-3 border-t border-white/15 pt-4 sm:flex-row sm:items-end sm:justify-between">
+              <label className="text-sm text-text-secondary">
+                Board category
+                <select
+                  value={boardCategoryId || ''}
+                  onChange={(event) => setBoardCategoryId(event.target.value ? Number(event.target.value) : undefined)}
+                  className="mt-1 block min-w-56 border border-white/20 bg-[#1a1a22] px-3 py-2 text-text-primary"
+                >
+                  {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+              </label>
+              {templates.length > 0 && (
+                <div className="flex flex-wrap items-end gap-2">
+                  <label className="text-sm text-text-secondary">
+                    Task template
+                    <select
+                      value={selectedTemplate || ''}
+                      onChange={(event) => setSelectedTemplate(event.target.value ? Number(event.target.value) : undefined)}
+                      className="mt-1 block min-w-56 border border-white/20 bg-[#1a1a22] px-3 py-2 text-text-primary"
+                    >
+                      <option value="">Choose a template</option>
+                      {templates.map(template => <option key={template.id} value={template.id}>{template.name}</option>)}
+                    </select>
+                  </label>
+                  <button type="button" onClick={handleApplyTemplate} disabled={!selectedTemplate} className="border border-white/20 px-3 py-2 text-sm text-text-primary disabled:opacity-40">
+                    Apply template
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Filters */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 pt-4 border-t border-white/20 grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Status</label>
+                <select
+                  value={selectedStatus || ''}
+                  onChange={(e) => setSelectedStatus(e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary"
+                >
+                  <option value="">All Statuses</option>
+                  {statuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Priority</label>
+                <select
+                  value={selectedPriority || ''}
+                  onChange={(e) => setSelectedPriority(e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary"
+                >
+                  <option value="">All Priorities</option>
+                  {priorities.map((priority) => (
+                    <option key={priority.id} value={priority.id}>
+                      {priority.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Category</label>
+                <select
+                  value={selectedCategory || ''}
+                  onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Bulk Actions */}
+        {selectedTasks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-amber-800 font-medium">
+                {selectedTasks.length} task{selectedTasks.length > 1 ? 's' : ''} selected
+              </span>
+            </div>
+            <button
+              onClick={handleBulkDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              disabled={bulkDeleteMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected
+            </button>
+          </motion.div>
+        )}
+
+        {/* Task List */}
+        {viewMode === 'board' ? (
+          <TaskBoard board={board} isLoading={boardLoading} onStatusChange={handleBoardStatusChange} />
+        ) : <TaskList
+          tasks={tasks}
+          isLoading={isLoading}
+          onEditTask={(task) => {
+            setEditingTask(task);
+            setShowTaskModal(true);
+          }}
+          onDeleteTask={(task) => {
+            setDeletingTask(task);
+            setShowDeleteModal(true);
+          }}
+          onDuplicateTask={handleDuplicateTask}
+          onToggleComplete={handleToggleComplete}
+          onRecordOccurrence={handleRecordOccurrence}
+          selectedTasks={selectedTasks}
+          onSelectTask={handleSelectTask}
+          onSelectAll={handleSelectAll}
+        />}
+      </motion.div>
+
+      {/* Task Modal */}
+      <TaskModal
+        isOpen={showTaskModal}
+        onClose={() => {
+          setShowTaskModal(false);
+          setEditingTask(null);
+        }}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+        task={editingTask}
+        statuses={statuses}
+        priorities={priorities}
+        categories={categories}
+        users={users}
+        allTasks={tasks}
+        isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
+      />
+
+      {/* Delete Modal */}
+      <DeleteTaskModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingTask(null);
+        }}
+        onConfirm={handleDeleteTask}
+        task={deletingTask}
+        isLoading={deleteTaskMutation.isPending}
+      />
+      
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+    </div>
+  );
+}

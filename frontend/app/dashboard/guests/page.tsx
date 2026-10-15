@@ -1,0 +1,189 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+// Force dynamic rendering to avoid SSR issues
+export const dynamic = 'force-dynamic';
+import { motion } from 'framer-motion';
+import { Users, Check, Clock, X, List, MapPin, Utensils, UserPlus } from 'lucide-react';
+import Link from 'next/link';
+import GuestLayoutSkeleton from '../../../components/dashboard/GuestLayoutSkeleton';
+import { GuestService } from '../../../services/guests';
+import { EmptyState } from '../../../components/ui/loading-states';
+
+export default function GuestManagementDashboard() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    confirmed: 0,
+    pending: 0,
+    declined: 0,
+    mealPreferences: 0
+  });
+
+  // Fetch guest statistics from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const statistics = await GuestService.getStatistics();
+        setStats({
+          total: statistics.total_guests,
+          confirmed: statistics.confirmed,
+          pending: statistics.pending,
+          declined: statistics.declined,
+          mealPreferences: statistics.dietary_restrictions || 0
+        });
+      } catch (err: any) {
+        console.error('Error fetching guest statistics:', err);
+        setError(err.message || 'Failed to load guest statistics');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const dashboardCards = [
+    {
+      id: 'guest-list',
+      title: 'Guest List',
+      description: 'View and manage all guest information',
+      icon: <List size={32} />,
+      color: 'primary',
+      count: stats.total,
+      href: '/dashboard/guests/list'
+    },
+    {
+      id: 'rsvp-status',
+      title: 'RSVP Status',
+      description: 'Track guest responses and attendance',
+      icon: <Check size={32} />,
+      color: 'green',
+      count: stats.confirmed,
+      href: '/dashboard/guests/rsvp'
+    },
+    {
+      id: 'seating-chart',
+      title: 'Seating Chart',
+      description: 'Organize guest seating arrangements',
+      icon: <MapPin size={32} />,
+      color: 'secondary',
+      count: stats.confirmed,
+      href: '/dashboard/guests/seating'
+    },
+    {
+      id: 'meal-preferences',
+      title: 'Meal Preferences',
+      description: 'Manage dietary requirements and choices',
+      icon: <Utensils size={32} />,
+      color: 'accent',
+      count: stats.mealPreferences,
+      href: '/dashboard/guests/meals'
+    }
+  ];
+
+  return (
+    <>
+      {isLoading ? (
+        <GuestLayoutSkeleton />
+      ) : (
+        <div className=" bg-background flex items-center justify-center">
+          <div className="container mx-auto px-4 py-8">
+            {/* Header */}
+            <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
+        >
+          <h1 className="heading-emotional text-emotional-4xl text-text-primary mb-4">
+            <span className="text-glow">Guest Management</span>
+          </h1>
+          <p className="body-emotional text-emotional-xl text-text-muted max-w-3xl mx-auto">
+            Manage your wedding guests and track RSVP responses
+          </p>
+        </motion.div>
+
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {dashboardCards.map((card, index) => (
+            <Link key={card.id} href={card.href}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                className="glass-card p-6 cursor-pointer hover:scale-105 transition-all duration-300 group"
+                whileHover={{ y: -5 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-emotional-3xl text-primary group-hover:scale-110 transition-transform">
+                    {card.icon}
+                  </div>
+                  {card.count !== undefined && (
+                    <span className="text-data-2xl font-bold text-primary bg-primary/20 px-3 py-1 rounded-full">
+                      {card.count}
+                    </span>
+                  )}
+                </div>
+                <h3 className="heading-data text-data-lg text-text-primary mb-2 group-hover:text-primary transition-colors">
+                  {card.title}
+                </h3>
+                <p className="body-data text-data-sm text-text-muted">
+                  {card.description}
+                </p>
+                <div className="mt-4 flex items-center text-text-muted">
+                  <span className="text-xs">Click to manage ?</span>
+                </div>
+              </motion.div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="glass-card p-6"
+        >
+          {stats.total === 0 ? (
+            <EmptyState
+              title="No guests yet"
+              description="Add your first guests to start tracking RSVPs, meals and seating."
+              icon={<Users size={24} />}
+              action={
+                <Link href="/dashboard/guests/list">
+                  <button className="btn-primary">Go to Guest List</button>
+                </Link>
+              }
+            />
+          ) : (
+            <>
+              <h2 className="heading-data text-data-2xl text-text-primary mb-6">Quick Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Invited', value: stats.total, icon: <UserPlus size={20} />, color: 'primary' },
+                  { label: 'Confirmed', value: stats.confirmed, icon: <Check size={20} />, color: 'green' },
+                  { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, color: 'yellow' },
+                  { label: 'Declined', value: stats.declined, icon: <X size={20} />, color: 'red' }
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
+                    <div className="text-primary">{stat.icon}</div>
+                    <div>
+                      <div className={`text-data-lg font-bold text-${stat.color}`}>{stat.value}</div>
+                      <div className="label-ui text-ui-xs text-text-muted">{stat.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+        </div>
+      )}
+    </>
+  );
+}

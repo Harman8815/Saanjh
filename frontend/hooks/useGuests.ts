@@ -1,0 +1,275 @@
+'use client';
+
+import useSWR from 'swr';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { GuestService } from '../services';
+import { Guest, GuestStatistics, BulkGuestCreate, BulkRSVPUpdate, PaginatedResponse } from '../types/api';
+
+// Fetch guests with pagination
+export function useGuests(page = 1, pageSize = 20) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Guest>>(
+    `guests?page=${page}&page_size=${pageSize}`,
+    () => GuestService.getGuests(page, pageSize),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // 30 seconds
+    }
+  );
+
+  return {
+    guests: data?.results || [],
+    pagination: data ? {
+      count: data.count,
+      next: data.next,
+      previous: data.previous,
+      currentPage: page,
+      totalPages: Math.ceil(data.count / pageSize),
+    } : null,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Fetch guest statistics
+export function useGuestStatistics() {
+  const { data, error, isLoading, mutate } = useSWR<GuestStatistics>(
+    'guest-statistics',
+    () => GuestService.getStatistics(),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000, // 5 minutes
+    }
+  );
+
+  return {
+    statistics: data,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Search guests
+export function useSearchGuests(query: string) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Guest>>(
+    query ? `search-guests-${query}` : null,
+    () => GuestService.searchGuests(query),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // 30 seconds
+    }
+  );
+
+  return {
+    guests: data?.results || [],
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Filter guests by RSVP status
+export function useFilterGuestsByRSVP(rsvpStatus: number) {
+  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Guest>>(
+    rsvpStatus ? `guests-filter-rsvp-${rsvpStatus}` : null,
+    () => GuestService.filterGuestsByRSVP(rsvpStatus),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // 30 seconds
+    }
+  );
+
+  return {
+    guests: data?.results || [],
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Create guest mutation
+export function useCreateGuest() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Guest, Error, Omit<Guest, 'id' | 'created_at' | 'updated_at'>>({
+    mutationFn: (guestData) => GuestService.createGuest(guestData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Bulk create guests mutation
+export function useBulkCreateGuests() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Guest[], Error, BulkGuestCreate>({
+    mutationFn: (bulkData) => GuestService.bulkCreateGuests(bulkData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Update guest mutation
+export function useUpdateGuest() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Guest, Error, { guestId: number; guestData: Partial<Guest> }>({
+    mutationFn: ({ guestId, guestData }) => GuestService.updateGuest(guestId, guestData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Delete guest mutation
+export function useDeleteGuest() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, number>({
+    mutationFn: (guestId) => GuestService.deleteGuest(guestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Bulk RSVP update mutation
+export function useBulkRSVPUpdate() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, BulkRSVPUpdate>({
+    mutationFn: (bulkData) => GuestService.bulkRSVPUpdate(bulkData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Send invitations mutation
+export function useSendInvitations() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, number[] | undefined>({
+    mutationFn: (guestIds) => GuestService.sendInvitations(guestIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+    },
+  });
+}
+
+// Export guests mutation
+export function useExportGuests() {
+  return useMutation<Blob, Error, string>({
+    mutationFn: (format: string = 'csv') => GuestService.exportGuests(format),
+    onSuccess: (blob, variables) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `guests_export.${variables}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    },
+  });
+}
+
+// Guest groups query
+export function useGuestGroups() {
+  const { data, error, isLoading, mutate } = useSWR(
+    'guest-groups',
+    () => GuestService.getGroups(),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+
+  return {
+    groups: data || [],
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Dietary options query
+export function useDietaryOptions() {
+  const { data, error, isLoading } = useSWR(
+    'dietary-options',
+    () => GuestService.getDietaryOptions(),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
+  return {
+    dietaryOptions: data || [],
+    isLoading,
+    error,
+  };
+}
+
+// Duplicate guests query
+export function useDuplicateGuests() {
+  const { data, error, isLoading, mutate } = useSWR(
+    'duplicate-guests',
+    () => GuestService.getDuplicates(),
+    { revalidateOnFocus: false }
+  );
+
+  return {
+    clusters: data?.clusters || [],
+    clusterCount: data?.cluster_count || 0,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Bulk update guests mutation
+export function useBulkUpdateGuests() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ updated_count: number }, Error, { guestIds: number[]; updates: Partial<Guest> }>({
+    mutationFn: ({ guestIds, updates }) => GuestService.bulkUpdate(guestIds, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Schedule reminders mutation
+export function useScheduleReminders() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { scheduled_count: number; reminder_ids: number[] },
+    Error,
+    { guestIds: number[]; scheduledFor: string; channel?: 'email' | 'in_app' }
+  >({
+    mutationFn: ({ guestIds, scheduledFor, channel }) =>
+      GuestService.scheduleReminders(guestIds, scheduledFor, channel),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+    },
+  });
+}
+
+// Auto-assign seating mutation
+export function useAutoAssignSeating() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ assigned: number; unassigned: number; unassignable: number[] }, Error, void>({
+    mutationFn: () => GuestService.autoAssignSeating(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+  });
+}
