@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { WeddingService } from '../services';
-import { Wedding, WeddingDashboard, TimelineEvent } from '../types/api';
+import { Wedding, WeddingDashboard, TimelineEvent, VenueCatalog } from '../types/api';
 
 // Fetch wedding details
 export function useWedding() {
@@ -84,6 +84,38 @@ export function useUpdateWedding() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wedding'] });
       queryClient.invalidateQueries({ queryKey: ['wedding-dashboard'] });
+    },
+  });
+}
+
+// Fetch saved venue shortlist
+export function useSavedVenues() {
+  const { data, error, isLoading, mutate } = useSWR<VenueCatalog[]>(
+    'saved-venues',
+    () => WeddingService.getSavedVenues(),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // 1 minute
+    }
+  );
+
+  return {
+    savedVenues: data ?? [],
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Toggle a venue in the saved shortlist
+export function useToggleSavedVenue() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ saved_venues: number[]; action: 'added' | 'removed' }, Error, number>({
+    mutationFn: (venueId) => WeddingService.toggleSavedVenue(venueId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-venues'] });
+      queryClient.invalidateQueries({ queryKey: ['wedding'] });
     },
   });
 }

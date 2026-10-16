@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Wallet } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { WeddingService } from '../../services/weddings';
 import { GuestService } from '../../services/guests';
@@ -11,10 +13,14 @@ import { TimelineService } from '../../services/timeline';
 import { AdminService } from '../../services/admin';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
 import FirstTimeModal from '../../components/common/FirstTimeModal';
+import AddGuestModal from '../../components/dashboard/AddGuestModal';
+import { ExpenseModal } from '../../components/dashboard/budget';
+import { AlertBanner } from '../../components/ui/AlertBanner';
+import { ProgressRing } from '../../components/ui/ProgressRing';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { useDateFormat } from '../../hooks/useDateFormat';
 import { useToast, ToastContainer } from '../../components/gallery/ToastNotification';
-import { Wedding, WeddingDashboard, Guest, Expense, Vendor, TimelineEvent } from '../../types/api';
+import { Wedding, WeddingDashboard, Guest, Expense, Vendor, TimelineEvent, BudgetCategory } from '../../types/api';
 
 
 export default function DashboardPage() {
@@ -22,6 +28,7 @@ export default function DashboardPage() {
   const { formatCurrency } = useFormatCurrency();
   const { formatDateForDisplay } = useDateFormat();
   const { toasts, addToast, removeToast } = useToast();
+  const router = useRouter();
 
   // State management
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +38,11 @@ export default function DashboardPage() {
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const [isGeneratingData, setIsGeneratingData] = useState(false);
 
+  // Quick action modals
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+
   // Data state
   const [wedding, setWedding] = useState<Wedding | null>(null);
   const [dashboardData, setDashboardData] = useState<WeddingDashboard | null>(null);
@@ -39,6 +51,7 @@ export default function DashboardPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState<string[]>([]);
 
   // Fetch dashboard data on component mount
   useEffect(() => {
@@ -65,17 +78,19 @@ export default function DashboardPage() {
       setDashboardData(dashboardStats);
 
       // Fetch other data in parallel
-      const [guestsData, expensesData, vendorsData, timelineData] = await Promise.all([
+      const [guestsData, expensesData, vendorsData, timelineData, categoryData] = await Promise.all([
         GuestService.getGuests(1, 20),
         ExpenseService.getExpenses(1, 20),
         VendorService.getVendors(1, 20),
-        TimelineService.getTimelineEvents(1, 20)
+        TimelineService.getTimelineEvents(1, 20),
+        ExpenseService.getBudgetCategories()
       ]);
 
       setGuests(guestsData.results);
       setExpenses(expensesData.results);
       setVendors(vendorsData.results);
       setTimeline(timelineData.results);
+      setBudgetCategories(categoryData);
 
     } catch (err: any) {
       console.error('Error fetching dashboard data:', err);
@@ -134,6 +149,49 @@ export default function DashboardPage() {
     }
   };
 
+  // Quick action handlers: open the real modals instead of dead buttons.
+  const handleAddGuestClose = () => setShowGuestModal(false);
+
+  const handleGuestAdded = () => {
+    setShowGuestModal(false);
+    addToast({ type: 'success', title: 'Guest added', message: 'The guest was added to your list.' });
+    void fetchDashboardData();
+  };
+
+  const handleExpenseModalClose = () => setShowExpenseModal(false);
+
+  const handleExpenseSave = async (expenseData: any) => {
+    // Resolve the status id by name so the dashboard does not hardcode ids
+    // (the seeded ids differ between environments).
+    try {
+      const statuses = await ExpenseService.getExpenseStatuses();
+      const statusName = expenseData.status === 'paid' ? 'paid'
+        : expenseData.status === 'partial' ? 'partial'
+        : 'pending';
+      const status = statuses.find(s => s.name.toLowerCase() === statusName);
+
+      await ExpenseService.createExpense({
+        title: expenseData.vendorName || 'Expense',
+        amount: Number(expenseData.amount) || 0,
+        paid_amount: Number(expenseData.paidAmount) || 0,
+        expense_date: expenseData.date,
+        notes: expenseData.notes,
+        budget_category_id: budgetCategories[0]?.id,
+        status_id: status?.id,
+      });
+      setShowExpenseModal(false);
+      addToast({ type: 'success', title: 'Expense logged', message: 'The expense was added to your budget.' });
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error('Error saving expense:', err);
+      addToast({ type: 'error', title: 'Could not log expense', message: err.message || 'Please try again.' });
+    }
+  };
+
+  const dismissAlert = (alertId: string) => {
+    setDismissedAlertIds(previous => [...previous, alertId]);
+  };
+
   // Calculate days until wedding
   const calculateDaysUntilWedding = () => {
     if (!wedding?.wedding_date) return 0;
@@ -147,10 +205,24 @@ export default function DashboardPage() {
   // Calculate budget percentage
   const calculateBudgetPercentage = () => {
     if (!dashboardData) return 0;
+    // Prefer the canonical committed/total-budget percentage from the metrics
+    // block; fall back to paid/total for older payloads.
+    if (dashboardData.metrics) {
+      return Math.round(dashboardData.metrics.budget_used_pct);
+    }
     const totalBudget = dashboardData.expense_stats.total_actual || 0;
     const paidExpenses = dashboardData.expense_stats.total_paid || 0;
     return totalBudget > 0 ? Math.round((paidExpenses / totalBudget) * 100) : 0;
   };
+
+  // Canonical task completion percentage (never recompute it on the client).
+  const tasksCompletionPct = Math.round(dashboardData?.metrics?.tasks_completion_pct ?? 0);
+  const totalTasks = dashboardData?.metrics?.tasks?.total ?? 0;
+
+  // Alerts, minus any dismissed locally this session.
+  const visibleAlerts = (dashboardData?.alerts ?? []).filter(
+    alert => !dismissedAlertIds.includes(alert.id)
+  );
 
   return (
     <>
@@ -181,6 +253,11 @@ export default function DashboardPage() {
             >
               Edit Details
             </button>
+          </div>
+
+          {/* Server-computed alerts (overdue payments, stale RSVPs, ...) */}
+          <div className="mb-8">
+            <AlertBanner alerts={visibleAlerts} onDismiss={dismissAlert} />
           </div>
 
 
@@ -254,13 +331,48 @@ export default function DashboardPage() {
                   <span className="text-2xl">Tasks</span>
                 </div>
                 <div className="text-3xl font-bold text-primary mb-2">
-                  {timeline.length > 0 ? Math.round((timeline.filter(t => t.status === 'completed').length / timeline.length) * 100) : 0}%
+                  {tasksCompletionPct}%
                 </div>
                 <p className="text-text-secondary text-sm">
-                  {timeline.length} total tasks
+                  {totalTasks} total tasks
                 </p>
               </motion.div>
             </div>
+
+            {/* Planning readiness: weighted score with per-domain rings */}
+            {dashboardData?.readiness && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="glass-card p-8 mb-8"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-8">
+                  <div className="flex flex-col items-center">
+                    <ProgressRing
+                      value={dashboardData.readiness.score}
+                      size={128}
+                      label="Overall readiness"
+                    />
+                  </div>
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                    {dashboardData.readiness.domains.map(domain => (
+                      <div key={domain.key} className="flex flex-col items-center text-center">
+                        <ProgressRing
+                          value={domain.pct}
+                          size={72}
+                          strokeWidth={6}
+                          sublabel={`${Math.round(domain.weight * 100)}% weight`}
+                        />
+                        <span className="body-data mt-2 text-data-xs text-text-secondary">
+                          {domain.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content */}
@@ -357,7 +469,10 @@ export default function DashboardPage() {
                     <h2 className="text-2xl font-bold text-text-primary">
                       Upcoming Tasks
                     </h2>
-                    <button className="btn-primary btn-sm">
+                    <button
+                      onClick={() => router.push('/dashboard/tasks')}
+                      className="btn-primary btn-sm"
+                    >
                       Add Task
                     </button>
                   </div>
@@ -453,16 +568,28 @@ export default function DashboardPage() {
                     Quick Actions
                   </h3>
                   <div className="space-y-2">
-                    <button className="w-full btn-secondary">
+                    <button
+                      onClick={() => setShowGuestModal(true)}
+                      className="w-full btn-secondary"
+                    >
                       Add Guest
                     </button>
-                    <button className="w-full btn-secondary">
+                    <button
+                      onClick={() => setShowExpenseModal(true)}
+                      className="w-full btn-secondary"
+                    >
                       Log Expense
                     </button>
-                    <button className="w-full btn-secondary">
+                    <button
+                      onClick={() => router.push('/dashboard/vendors')}
+                      className="w-full btn-secondary"
+                    >
                       Contact Vendor
                     </button>
-                    <button className="w-full btn-secondary">
+                    <button
+                      onClick={() => router.push('/dashboard/timeline')}
+                      className="w-full btn-secondary"
+                    >
                       Update Timeline
                     </button>
                     <button
@@ -512,6 +639,30 @@ export default function DashboardPage() {
         isEditMode={!showFirstTimeModal}
         wedding={wedding}
         onSave={handleWeddingUpdate}
+      />
+
+      {/* Quick action modals */}
+      <AddGuestModal
+        isOpen={showGuestModal}
+        onClose={handleAddGuestClose}
+        onGuestAdded={handleGuestAdded}
+        existingGuests={guests}
+      />
+      <ExpenseModal
+        isOpen={showExpenseModal}
+        onClose={handleExpenseModalClose}
+        onSave={handleExpenseSave}
+        editingExpense={null}
+        category={budgetCategories[0]
+          ? {
+              id: String(budgetCategories[0].id),
+              name: budgetCategories[0].name,
+              icon: Wallet,
+              allocated: budgetCategories[0].allocated_amount || 0,
+              expenses: [],
+              color: '#8B5CF6',
+            }
+          : null}
       />
     </>
   );

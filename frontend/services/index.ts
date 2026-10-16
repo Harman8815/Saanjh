@@ -11,3 +11,4 @@ export { WeddingCardService } from './weddingCards';
 export { DocumentService } from './documents';
 export { MediaService } from './media';
 export { TaskService } from './tasks';
+export { VenueService } from './venues';

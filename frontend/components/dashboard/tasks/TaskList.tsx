@@ -23,6 +23,7 @@ interface TaskListProps {
   onDeleteTask?: (task: Task) => void;
   onDuplicateTask?: (task: Task) => void;
   onToggleComplete?: (task: Task) => void;
+  onRecordOccurrence?: (task: Task, outcome: 'skip' | 'complete') => void;
   selectedTasks?: number[];
   onSelectTask?: (taskId: number) => void;
   onSelectAll?: () => void;
@@ -35,6 +36,7 @@ export function TaskList({
   onDeleteTask,
   onDuplicateTask,
   onToggleComplete,
+  onRecordOccurrence,
   selectedTasks = [],
   onSelectTask,
   onSelectAll
@@ -244,6 +246,31 @@ export function TaskList({
                       <Check className="w-4 h-4" />
                       Mark Complete
                     </button>
+                  )}
+
+                  {task.recurrence !== 'none' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          onRecordOccurrence?.(task, 'complete');
+                          setShowDropdown(null);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-gray-700"
+                      >
+                        <Check className="w-4 h-4" />
+                        Complete occurrence
+                      </button>
+                      <button
+                        onClick={() => {
+                          onRecordOccurrence?.(task, 'skip');
+                          setShowDropdown(null);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-gray-700"
+                      >
+                        <Clock className="w-4 h-4" />
+                        Skip occurrence
+                      </button>
+                    </>
                   )}
                   
                   <button

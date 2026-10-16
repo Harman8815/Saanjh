@@ -19,14 +19,15 @@ class AlbumAdmin(admin.ModelAdmin):
 
 @admin.register(AlbumTag)
 class AlbumTagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'album']
-    search_fields = ['name']
+    list_display = ['name', 'wedding']
+    list_filter = ['wedding']
+    search_fields = ['name', 'wedding__user__email']
 
 
 @admin.register(Media)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = ['title', 'media_type', 'file_url', 'file_size', 'uploaded_at']
-    list_filter = ['media_type', 'uploaded_at']
+    list_display = ['title', 'media_type', 'submission_status', 'file_size', 'uploaded_at']
+    list_filter = ['media_type', 'submission_status', 'is_guest_submission', 'uploaded_at']
     search_fields = ['title']
 
 

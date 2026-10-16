@@ -1,21 +1,27 @@
+from utils.api_response import get_request_wedding
+from accounts.permissions import IsAdminOrReadOnly
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.http import HttpResponse
+from django.utils import timezone
+from datetime import datetime
 from .models import Timeline, TimelineEvent, TimelineStatus
 from .serializers import (
     TimelineSerializer, TimelineCreateSerializer,
     TimelineEventSerializer, TimelineEventCreateSerializer,
     TimelineEventUpdateSerializer, TimelineStatusSerializer
 )
+from utils.api_response import APIResponse
 
 
 class TimelineStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for TimelineStatus model"""
     queryset = TimelineStatus.objects.all()
     serializer_class = TimelineStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class TimelineEventViewSet(viewsets.ModelViewSet):
@@ -32,7 +38,7 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Get events for the current user's wedding timeline
         try:
-            wedding = self.request.user.wedding
+            wedding = get_request_wedding(self.request)
             timeline = wedding.timeline
             queryset = TimelineEvent.objects.filter(timeline=timeline)
 
@@ -112,6 +118,64 @@ class TimelineEventViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(past_events, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def conflicts(self, request):
+        events = list(
+            self.get_queryset().filter(date__isnull=False, time__isnull=False)
+            .order_by('date', 'time', 'id')
+        )
+        conflicts = []
+        for index, first in enumerate(events):
+            first_start = first.time
+            first_end = first.end_time or first_start
+            for second in events[index + 1:]:
+                if second.date != first.date:
+                    if second.date > first.date:
+                        break
+                    continue
+                second_start = second.time
+                second_end = second.end_time or second_start
+                if first_start == first_end and second_start == second_end:
+                    overlaps = first_start == second_start
+                elif first_start == first_end:
+                    overlaps = second_start <= first_start < second_end
+                elif second_start == second_end:
+                    overlaps = first_start <= second_start < first_end
+                else:
+                    overlaps = first_start < second_end and second_start < first_end
+                if overlaps:
+                    conflicts.append({
+                        'date': first.date,
+                        'overlap_start': max(first_start, second_start),
+                        'overlap_end': min(first_end, second_end),
+                        'events': TimelineEventSerializer([first, second], many=True).data,
+                    })
+        return APIResponse.success(conflicts, 'Timeline conflicts retrieved successfully')
+
+    @action(detail=False, methods=['get'], url_path='export/ical')
+    def export_ical(self, request):
+        lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wedding Planner//Timeline//EN', 'CALSCALE:GREGORIAN']
+        for event in self.get_queryset().filter(date__isnull=False):
+            lines.extend([
+                'BEGIN:VEVENT',
+                f'UID:timeline-{event.pk}@wedding-planner',
+                f"DTSTAMP:{timezone.now().strftime('%Y%m%dT%H%M%SZ')}",
+            ])
+            if event.time:
+                start = datetime.combine(event.date, event.time)
+                end = datetime.combine(event.date, event.end_time or event.time)
+                lines.append(f'DTSTART:{start.strftime("%Y%m%dT%H%M%S")}')
+                if end > start:
+                    lines.append(f'DTEND:{end.strftime("%Y%m%dT%H%M%S")}')
+            else:
+                lines.append(f'DTSTART;VALUE=DATE:{event.date.strftime("%Y%m%d")}')
+            title = (event.title or '').replace('\\', '\\\\').replace(';', '\\;').replace(',', '\\,').replace('\n', '\\n')
+            lines.extend([f'SUMMARY:{title}', 'END:VEVENT'])
+        lines.append('END:VCALENDAR')
+        response = HttpResponse('\r\n'.join(lines) + '\r\n', content_type='text/calendar; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="timeline.ics"'
+        return response
+
 
 class TimelineViewSet(viewsets.ModelViewSet):
     """ViewSet for Timeline model"""
@@ -168,7 +232,7 @@ class TimelineViewSet(viewsets.ModelViewSet):
 def my_timeline(request):
     """Get current user's wedding timeline"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         timeline, created = Timeline.objects.get_or_create(
             wedding=wedding,
             defaults={'name': f"{wedding.get_couple_name() or 'Wedding'} Timeline"}

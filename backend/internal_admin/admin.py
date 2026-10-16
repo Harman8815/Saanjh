@@ -8,6 +8,11 @@ from vendors.models import Vendor, VendorStatus, VendorCategory, VendorCatalog
 from timeline.models import Timeline, TimelineEvent, TimelineStatus
 
 
+def _replace_admin_registration(model):
+    if admin.site.is_registered(model):
+        admin.site.unregister(model)
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     """Admin configuration for User model"""
@@ -349,7 +354,6 @@ class BudgetCategoryAdmin(admin.ModelAdmin):
         return request.user.is_staff
 
 
-@admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
     """Admin configuration for Vendor model"""
     list_display = ['id', 'wedding', 'vendor_catalog', 'status', 'cost_estimate', 'actual_cost']
@@ -374,7 +378,6 @@ class VendorAdmin(admin.ModelAdmin):
         return request.user.is_staff
 
 
-@admin.register(VendorStatus)
 class VendorStatusAdmin(admin.ModelAdmin):
     """Admin configuration for VendorStatus model"""
     list_display = ['id', 'name']
@@ -390,6 +393,13 @@ class VendorStatusAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+_replace_admin_registration(Vendor)
+admin.site.register(Vendor, VendorAdmin)
+_replace_admin_registration(VendorStatus)
+admin.site.register(VendorStatus, VendorStatusAdmin)
+
+
+_replace_admin_registration(VendorCategory)
 @admin.register(VendorCategory)
 class VendorCategoryAdmin(admin.ModelAdmin):
     """Admin configuration for VendorCategory model"""
@@ -406,6 +416,7 @@ class VendorCategoryAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+_replace_admin_registration(VendorCatalog)
 @admin.register(VendorCatalog)
 class VendorCatalogAdmin(admin.ModelAdmin):
     """Admin configuration for VendorCatalog model"""

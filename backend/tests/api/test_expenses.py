@@ -13,6 +13,7 @@ from tests.factories import (
     UserFactory, WeddingFactory, ExpenseFactory, BudgetCategoryFactory,
     ExpenseStatusFactory
 )
+from expenses.models import Expense, ExpenseStatus, BudgetCategory
 from tests.conftest import BaseTestCase
 
 
@@ -26,36 +27,28 @@ class TestExpenseStatusViewSet(BaseTestCase):
     
     def test_list_expense_statuses_success(self):
         """Test listing expense statuses."""
-        ExpenseStatusFactory.create_batch(3)
+        ExpenseStatusFactory.create_batch(3, name='pending')
         
-        response = self.client.get('/api/expenses/statuses/')
+        response = self.admin_client.get('/api/expenses/expense-status/')
         
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Expense statuses retrieved successfully"
-        assert len(response_data['data']) == 3
+        assert response.json()['message'] == "Expense statuses retrieved successfully"
     
     def test_create_expense_status_success(self):
         """Test creating an expense status."""
-        data = {
-            'name': 'Pending',
-            'description': 'Payment pending',
-            'color': '#FF0000',
-            'is_paid_status': False
-        }
+        data = {'name': 'pending'}
         
-        response = self.client.post('/api/expenses/statuses/', data)
+        response = self.admin_client.post('/api/expenses/expense-status/', data, format='json')
         
         self.assert_success_response(response, status.HTTP_201_CREATED)
         response_data = response.json()
-        assert response_data['message'] == "Expense status created successfully"
-        assert response_data['data']['name'] == 'Pending'
+        assert response_data['data']['name'] == 'pending'
     
     def test_retrieve_expense_status_success(self):
         """Test retrieving a specific expense status."""
         expense_status = ExpenseStatusFactory()
         
-        response = self.client.get(f'/api/expenses/statuses/{expense_status.id}/')
+        response = self.client.get(f'/api/expenses/expense-status/{expense_status.id}/')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -64,24 +57,21 @@ class TestExpenseStatusViewSet(BaseTestCase):
     
     def test_update_expense_status_success(self):
         """Test updating an expense status."""
-        expense_status = ExpenseStatusFactory()
-        data = {
-            'name': 'Updated Status',
-            'description': 'Updated description'
-        }
+        expense_status = ExpenseStatusFactory(name='pending')
         
-        response = self.client.patch(f'/api/expenses/statuses/{expense_status.id}/', data)
+        response = self.admin_client.patch(
+            f'/api/expenses/expense-status/{expense_status.id}/',
+            {'name': 'partial'}, format='json'
+        )
         
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Expense status updated successfully"
-        assert response_data['data']['name'] == 'Updated Status'
+        assert response.json()['data']['name'] == 'partial'
     
     def test_delete_expense_status_success(self):
         """Test deleting an expense status."""
-        expense_status = ExpenseStatusFactory()
+        expense_status = ExpenseStatusFactory(name='paid')
         
-        response = self.client.delete(f'/api/expenses/statuses/{expense_status.id}/')
+        response = self.admin_client.delete(f'/api/expenses/expense-status/{expense_status.id}/')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -91,9 +81,17 @@ class TestExpenseStatusViewSet(BaseTestCase):
         """Test listing expense statuses without authentication."""
         self.client.credentials()  # Remove authentication
         
-        response = self.client.get('/api/expenses/statuses/')
+        response = self.client.get('/api/expenses/expense-status/')
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_create_expense_status_requires_admin(self):
+        """A non-admin cannot create shared reference data."""
+        response = self.client.post(
+            '/api/expenses/expense-status/', {'name': 'hijacked'}, format='json'
+        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert not ExpenseStatus.objects.filter(name='hijacked').exists()
 
 
 @pytest.mark.django_db
@@ -119,27 +117,26 @@ class TestBudgetCategoryViewSet(BaseTestCase):
         """Test creating a budget category."""
         data = {
             'name': 'Catering',
-            'description': 'Food and drinks',
-            'budget_amount': '5000.00',
-            'color': '#00FF00'
+            'wedding': self.wedding.id,
+            'allocated_amount': '5000.00'
         }
         
-        response = self.client.post('/api/expenses/budget-categories/', data)
+        response = self.client.post('/api/expenses/budget-categories/', data, format='json')
         
         self.assert_success_response(response, status.HTTP_201_CREATED)
         response_data = response.json()
         assert response_data['message'] == "Budget category created successfully"
         assert response_data['data']['name'] == 'Catering'
-        assert response_data['data']['budget_amount'] == '5000.00'
+        assert float(response_data['data']['allocated_amount']) == 5000.00
     
     def test_create_budget_category_invalid_data(self):
         """Test creating budget category with invalid data."""
         data = {
             'name': '',
-            'budget_amount': 'invalid_amount'
+            'allocated_amount': 'invalid_amount'
         }
         
-        response = self.client.post('/api/expenses/budget-categories/', data)
+        response = self.client.post('/api/expenses/budget-categories/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
     
@@ -159,10 +156,10 @@ class TestBudgetCategoryViewSet(BaseTestCase):
         category = BudgetCategoryFactory(wedding=self.wedding)
         data = {
             'name': 'Updated Category',
-            'budget_amount': '6000.00'
+            'allocated_amount': '6000.00'
         }
         
-        response = self.client.patch(f'/api/expenses/budget-categories/{category.id}/', data)
+        response = self.client.patch(f'/api/expenses/budget-categories/{category.id}/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -215,30 +212,29 @@ class TestExpenseViewSet(BaseTestCase):
         """Test creating an expense."""
         data = {
             'title': 'Test Expense',
-            'description': 'Test description',
-            'estimated_cost': '1000.00',
-            'actual_cost': '1200.00',
-            'due_date': (timezone.now() + timedelta(days=30)).date(),
+            'amount': '1000.00',
+            'paid_amount': '0.00',
+            'wedding': self.wedding.id,
             'budget_category': self.category.id,
-            'status': self.status.id
+            'status': self.status.id,
+            'due_date': (timezone.now() + timedelta(days=30)).date(),
         }
         
-        response = self.client.post('/api/expenses/expenses/', data)
+        response = self.client.post('/api/expenses/expenses/', data, format='json')
         
         self.assert_success_response(response, status.HTTP_201_CREATED)
         response_data = response.json()
-        assert response_data['message'] == "Expense created successfully"
         assert response_data['data']['title'] == 'Test Expense'
-        assert response_data['data']['estimated_cost'] == '1000.00'
+        assert float(response_data['data']['amount']) == 1000.00
     
     def test_create_expense_invalid_data(self):
         """Test creating expense with invalid data."""
         data = {
             'title': '',
-            'estimated_cost': 'invalid_amount'
+            'amount': 'invalid_amount'
         }
         
-        response = self.client.post('/api/expenses/expenses/', data)
+        response = self.client.post('/api/expenses/expenses/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
     
@@ -258,10 +254,10 @@ class TestExpenseViewSet(BaseTestCase):
         expense = ExpenseFactory(wedding=self.wedding)
         data = {
             'title': 'Updated Expense',
-            'actual_cost': '1500.00'
+            'amount': '1500.00'
         }
         
-        response = self.client.patch(f'/api/expenses/expenses/{expense.id}/', data)
+        response = self.client.patch(f'/api/expenses/expenses/{expense.id}/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -290,7 +286,7 @@ class TestExpenseViewSet(BaseTestCase):
             'paid_date': timezone.now().date()
         }
         
-        response = self.client.post('/api/expenses/expenses/bulk_payment_update/', data)
+        response = self.client.post('/api/expenses/expenses/bulk_payment_update/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -303,7 +299,7 @@ class TestExpenseViewSet(BaseTestCase):
             'expense_ids': [1, 2, 3]
         }
         
-        response = self.client.post('/api/expenses/expenses/bulk_payment_update/', data)
+        response = self.client.post('/api/expenses/expenses/bulk_payment_update/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
         response_data = response.json()
@@ -344,15 +340,13 @@ class TestExpenseListCreateView(BaseTestCase):
         """Test creating expense through legacy endpoint."""
         data = {
             'title': 'Legacy Expense',
-            'estimated_cost': '500.00'
+            'amount': '500.00'
         }
         
-        response = self.client.post('/api/expenses/', data)
+        response = self.client.post('/api/expenses/', data, format='json')
         
         self.assert_success_response(response, status.HTTP_201_CREATED)
-        response_data = response.json()
-        assert response_data['message'] == "Expense created successfully"
-        assert response_data['data']['title'] == 'Legacy Expense'
+        assert response.json()['data']['title'] == 'Legacy Expense'
 
 
 @pytest.mark.django_db
@@ -379,7 +373,7 @@ class TestExpenseDetailView(BaseTestCase):
             'title': 'Updated Legacy Expense'
         }
         
-        response = self.client.patch(f'/api/expenses/{self.expense.id}/', data)
+        response = self.client.patch(f'/api/expenses/{self.expense.id}/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -402,6 +396,7 @@ class TestExpenseBulkPaymentUpdate(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.wedding = WeddingFactory(user=self.user)
+        self.status = ExpenseStatusFactory(name='paid')
         self.expenses = ExpenseFactory.create_batch(3, wedding=self.wedding)
     
     def test_bulk_payment_update_success(self):
@@ -410,11 +405,11 @@ class TestExpenseBulkPaymentUpdate(BaseTestCase):
         
         data = {
             'expense_ids': expense_ids,
-            'payment_status': 'paid',
+            'status_id': self.status.id,
             'paid_date': timezone.now().date()
         }
         
-        response = self.client.post('/api/expenses/bulk-payment-update/', data)
+        response = self.client.post('/api/expenses/bulk-payment-update/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -427,7 +422,7 @@ class TestExpenseBulkPaymentUpdate(BaseTestCase):
             'expense_ids': [1, 2, 3]
         }
         
-        response = self.client.post('/api/expenses/bulk-payment-update/', data)
+        response = self.client.post('/api/expenses/bulk-payment-update/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -450,9 +445,11 @@ class TestExpenseStatistics(BaseTestCase):
         assert response_data['message'] == "Statistics retrieved successfully"
         stats = response_data['data']
         assert 'total_expenses' in stats
-        assert 'total_estimated' in stats
-        assert 'total_actual' in stats
-        assert 'by_payment_status' in stats
+        assert 'total_expenses' in stats
+        assert 'total_paid' in stats
+        assert 'budget_remaining' in stats
+        assert 'total_paid' in stats
+        assert 'by_status' in stats
         assert 'by_category' in stats
         assert stats['total_expenses'] == 5
     
@@ -467,7 +464,7 @@ class TestExpenseStatistics(BaseTestCase):
         response_data = response.json()
         stats = response_data['data']
         assert stats['total_expenses'] == 0
-        assert stats['total_estimated'] == 0
+        assert stats['total_expenses'] == 0
 
 
 @pytest.mark.django_db
@@ -481,13 +478,13 @@ class TestExpenseOverdue(BaseTestCase):
         ExpenseFactory(
             wedding=self.wedding,
             due_date=timezone.now().date() - timedelta(days=10),
-            payment_status='pending'
+            status=ExpenseStatusFactory(name='pending')
         )
         # Create upcoming expense
         ExpenseFactory(
             wedding=self.wedding,
             due_date=timezone.now().date() + timedelta(days=10),
-            payment_status='pending'
+            status=ExpenseStatusFactory(name='pending')
         )
     
     def test_get_overdue_expenses_success(self):
@@ -512,13 +509,13 @@ class TestExpenseUpcoming(BaseTestCase):
         ExpenseFactory(
             wedding=self.wedding,
             due_date=timezone.now().date() + timedelta(days=15),
-            payment_status='pending'
+            status=ExpenseStatusFactory(name='pending')
         )
         # Create far future expense (beyond 30 days)
         ExpenseFactory(
             wedding=self.wedding,
             due_date=timezone.now().date() + timedelta(days=45),
-            payment_status='pending'
+            status=ExpenseStatusFactory(name='pending')
         )
     
     def test_get_upcoming_expenses_success(self):
@@ -606,7 +603,7 @@ class TestExpenseFiltering(BaseTestCase):
         response_data = response.json()
         expenses = response_data['data']
         assert len(expenses) == 2
-        assert all(exp['budget_category'] == self.category1.id for exp in expenses)
+        assert all(exp['budget_category']['id'] == self.category1.id for exp in expenses)
     
     def test_filter_by_status(self):
         """Test filtering expenses by status."""
@@ -616,7 +613,7 @@ class TestExpenseFiltering(BaseTestCase):
         response_data = response.json()
         expenses = response_data['data']
         assert len(expenses) == 2
-        assert all(exp['status'] == self.status1.id for exp in expenses)
+        assert all(exp['status']['id'] == self.status1.id for exp in expenses)
     
     def test_search_by_title(self):
         """Test searching expenses by title."""

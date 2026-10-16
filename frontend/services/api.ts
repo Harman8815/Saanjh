@@ -3,13 +3,21 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 // API base configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+const CSRF_COOKIE_NAME = 'csrftoken';
+
 class ApiClient {
   private client: AxiosInstance;
+
+  // Access tokens are short-lived (15 min); schedule refreshes a bit early.
+  private refreshIntervalMs = 13 * 60 * 1000;
 
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 10000,
+      // Tokens live in HttpOnly cookies set by the server. They are attached
+      // automatically by the browser and cannot be read by scripts.
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -17,16 +25,19 @@ class ApiClient {
 
     console.log('API Client initialized with baseURL:', API_BASE_URL);
 
-    // Request interceptor for adding auth token and cache busting
     this.client.interceptors.request.use(
       (config) => {
-        const token = this.getAuthToken();
-        if (token) {
-          config.headers.Authorization = `Token ${token}`;
+        // Unsafe requests must present the CSRF header matching our cookie.
+        const method = (config.method || 'get').toLowerCase();
+        if (!['get', 'head', 'options'].includes(method)) {
+          const csrfToken = this.getCsrfToken();
+          if (csrfToken) {
+            config.headers['X-CSRFToken'] = csrfToken;
+          }
         }
 
         // Add cache-busting parameter to GET and PATCH requests
-        if (config.method === 'get' || config.method === 'patch') {
+        if (method === 'get' || method === 'patch') {
           config.params = {
             ...config.params,
             _t: Date.now()
@@ -38,38 +49,62 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor for handling errors
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
+      async (error) => {
+        const originalRequest = error.config;
+        const isRefreshRequest = originalRequest?.url?.includes('auth/refresh');
+
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshRequest) {
+          originalRequest._retry = true;
+
+          // A stale/expired access cookie can be rotated transparently, as the
+          // refresh cookie travels sent automatically with the request.
+          try {
+            await this.client.post('auth/refresh/', {});
+            return this.client(originalRequest);
+          } catch {
+            this.handleSessionExpired();
+          }
+        }
+
         if (error.response?.status === 401) {
-          // Handle unauthorized access
-          this.clearAuthToken();
-          window.location.href = '/login';
+          this.handleSessionExpired();
         }
         return Promise.reject(error);
       }
     );
+
+    // Refresh the access cookie proactively before it expires.
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        // The tokens are HttpOnly, so a cached profile is the only hint that a
+        // session may exist. Skip the call entirely for anonymous visitors.
+        if (!localStorage.getItem('user_data')) {
+          return;
+        }
+        void this.client.post('auth/refresh/', {}).catch(() => {
+          // The 401 interceptor handles the session-redirect on real expiry.
+        });
+      }, this.refreshIntervalMs);
+    }
   }
 
-  private getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
-    }
-    return null;
-  }
-
-  private clearAuthToken(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+  private handleSessionExpired(): void {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.href = '/login';
     }
   }
 
-  public setAuthToken(token: string): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
-      console.log('Auth token stored:', token);
+  /** Read the CSRF cookie (it is intentionally not HttpOnly). */
+  private getCsrfToken(): string | null {
+    if (typeof document === 'undefined') {
+      return null;
     }
+    const match = document.cookie.match(
+      new RegExp('(^|;\\s*)' + CSRF_COOKIE_NAME + '=([^;]*)')
+    );
+    return match ? decodeURIComponent(match[2]) : null;
   }
 
   // HTTP methods

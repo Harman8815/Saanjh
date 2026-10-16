@@ -7,7 +7,12 @@ import {
   VendorStatistics,
   BulkVendorStatusUpdate,
   VendorCreateRequest,
-  PaginatedResponse 
+  PaginatedResponse,
+  VendorQuote,
+  VendorContract,
+  VendorMilestone,
+  VendorCommunication,
+  VendorComparisonItem
 } from '../types/api';
 
 export class VendorService {
@@ -123,6 +128,79 @@ export class VendorService {
     return apiClient.get<PaginatedResponse<Vendor>>(`/vendors/?${params.toString()}`);
   }
 
+  // Quotes operations
+  static async getQuotes(vendorId?: number): Promise<VendorQuote[]> {
+    const url = vendorId ? `/vendors/quotes/?vendor=${vendorId}` : '/vendors/quotes/';
+    return apiClient.get<VendorQuote[]>(url);
+  }
+
+  static async createQuote(quoteData: Partial<VendorQuote>): Promise<VendorQuote> {
+    return apiClient.post<VendorQuote>('/vendors/quotes/', quoteData);
+  }
+
+  static async updateQuote(quoteId: number, quoteData: Partial<VendorQuote>): Promise<VendorQuote> {
+    return apiClient.patch<VendorQuote>(`/vendors/quotes/${quoteId}/`, quoteData);
+  }
+
+  static async deleteQuote(quoteId: number): Promise<void> {
+    return apiClient.delete(`/vendors/quotes/${quoteId}/`);
+  }
+
+  // Contract operations
+  static async getContracts(vendorId?: number): Promise<VendorContract[]> {
+    const url = vendorId ? `/vendors/contracts/?vendor=${vendorId}` : '/vendors/contracts/';
+    return apiClient.get<VendorContract[]>(url);
+  }
+
+  static async createContract(contractData: Partial<VendorContract>): Promise<VendorContract> {
+    return apiClient.post<VendorContract>('/vendors/contracts/', contractData);
+  }
+
+  static async updateContract(contractId: number, contractData: Partial<VendorContract>): Promise<VendorContract> {
+    return apiClient.patch<VendorContract>(`/vendors/contracts/${contractId}/`, contractData);
+  }
+
+  // Milestone operations
+  static async getMilestones(vendorId?: number): Promise<VendorMilestone[]> {
+    const url = vendorId ? `/vendors/milestones/?vendor=${vendorId}` : '/vendors/milestones/';
+    return apiClient.get<VendorMilestone[]>(url);
+  }
+
+  static async createMilestone(milestoneData: Partial<VendorMilestone>): Promise<VendorMilestone> {
+    return apiClient.post<VendorMilestone>('/vendors/milestones/', milestoneData);
+  }
+
+  static async updateMilestone(milestoneId: number, milestoneData: Partial<VendorMilestone>): Promise<VendorMilestone> {
+    return apiClient.patch<VendorMilestone>(`/vendors/milestones/${milestoneId}/`, milestoneData);
+  }
+
+  static async deleteMilestone(milestoneId: number): Promise<void> {
+    return apiClient.delete(`/vendors/milestones/${milestoneId}/`);
+  }
+
+  // Communication operations
+  static async getCommunications(vendorId?: number): Promise<VendorCommunication[]> {
+    const url = vendorId ? `/vendors/communications/?vendor=${vendorId}` : '/vendors/communications/';
+    return apiClient.get<VendorCommunication[]>(url);
+  }
+
+  static async createCommunication(communicationData: Partial<VendorCommunication>): Promise<VendorCommunication> {
+    return apiClient.post<VendorCommunication>('/vendors/communications/', communicationData);
+  }
+
+  // Follow-up scheduling
+  static async scheduleFollowUp(
+    vendorId: number,
+    data: { follow_up_date: string; channel?: string; notes?: string }
+  ): Promise<{ message: string; follow_up_date: string; reminder_id: number }> {
+    return apiClient.post(`/vendors/${vendorId}/follow-ups/`, data);
+  }
+
+  // Side-by-side comparison
+  static async compareVendors(vendorIds: number[]): Promise<{ vendors: VendorComparisonItem[] }> {
+    return apiClient.get<{ vendors: VendorComparisonItem[] }>(`/vendors/compare/?ids=${vendorIds.join(',')}`);
+  }
+
   // ViewSet operations for advanced usage
   static async getAllVendors(): Promise<Vendor[]> {
     return apiClient.get<Vendor[]>('/vendors/vendors/');
@@ -142,3 +220,4 @@ export class VendorService {
 }
 
 export default VendorService;
+

@@ -2,63 +2,37 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, Palette, Type, Calendar, MapPin, Users, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, Eye, Palette, Type } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+  IMAGE_TEMPLATES,
+  ImageInvitationTemplate,
+  templateIdForCard,
+  type ImageInvitationData,
+} from '../../../../components/invitations/ImageInvitationTemplate';
 
-// Hardcoded data structures
-const weddingData = {
+// Defaults for a card that has not been customised yet.
+const defaultWeddingData = {
   brideName: 'Sarah Johnson',
   groomName: 'Michael Smith',
-  weddingDate: '2025-06-15',
+  weddingDate: 'June 15, 2025',
   venue: 'Grand Garden Estate',
-  guests: 150,
   ceremonyTime: '4:00 PM',
   receptionTime: '6:00 PM',
   address: '123 Garden Lane, Beverly Hills, CA 90210',
   dressCode: 'Formal Attire',
-  rsvpDeadline: '2025-05-15',
+  rsvpDeadline: 'May 15, 2025',
   parents: {
     brideParents: 'Mr. and Mrs. Robert Johnson',
     groomParents: 'Mr. and Mrs. David Smith'
   }
 };
 
-const imageTemplates = [
-  {
-    id: 'elegant-classic',
-    name: 'Elegant Classic',
-    description: 'Timeless and sophisticated design',
-    preview: '/templates/elegant-classic.jpg',
-    colors: ['amber', 'gold', 'cream']
-  },
-  {
-    id: 'modern-minimal',
-    name: 'Modern Minimal',
-    description: 'Clean and contemporary design',
-    preview: '/templates/modern-minimal.jpg',
-    colors: ['gray', 'white', 'black']
-  },
-  {
-    id: 'romantic-floral',
-    name: 'Romantic Floral',
-    description: 'Soft and romantic with floral elements',
-    preview: '/templates/romantic-floral.jpg',
-    colors: ['pink', 'rose', 'white']
-  },
-  {
-    id: 'bold-artistic',
-    name: 'Bold Artistic',
-    description: 'Creative and eye-catching design',
-    preview: '/templates/bold-artistic.jpg',
-    colors: ['purple', 'blue', 'gold']
-  }
-];
-
 export default function ImageInvitationBuilder() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'templates' | 'data'>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState('elegant-classic');
-  const [formData, setFormData] = useState(weddingData);
+  const [formData, setFormData] = useState(defaultWeddingData);
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -71,97 +45,17 @@ export default function ImageInvitationBuilder() {
     }));
   };
 
-  const renderTemplatePreview = () => {
-    const template = imageTemplates.find(t => t.id === selectedTemplate);
-    
-    switch (selectedTemplate) {
-      case 'elegant-classic':
-        return (
-          <div className="h-full bg-gradient-to-b from-amber-50 to-white p-8 text-center flex flex-col justify-center">
-            <div className="mb-8">
-              <div className="w-24 h-24 border-4 border-amber-600 rounded-full mx-auto mb-6 flex items-center justify-center">
-                <span className="text-amber-600 font-serif text-3xl">S&M</span>
-              </div>
-              <h2 className="text-3xl font-serif text-amber-800 mb-3">{formData.brideName} & {formData.groomName}</h2>
-              <p className="text-amber-600 italic text-lg">Together forever</p>
-            </div>
-            <div className="space-y-4 text-gray-700">
-              <p className="text-lg font-medium">{formData.weddingDate}</p>
-              <p className="text-lg">{formData.venue}</p>
-              <p className="text-sm">{formData.ceremonyTime}</p>
-              <div className="w-16 h-0.5 bg-amber-400 mx-auto my-6"></div>
-              <p className="text-sm text-gray-600 italic">Join us as we begin our forever</p>
-              <p className="text-xs text-gray-500 mt-8">Reception to follow at {formData.receptionTime}</p>
-            </div>
-          </div>
-        );
-      case 'modern-minimal':
-        return (
-          <div className="h-full bg-white p-8 text-center flex flex-col justify-center">
-            <div className="mb-8">
-              <h2 className="text-4xl font-light text-gray-900 mb-2">{formData.brideName}</h2>
-              <div className="text-2xl text-gray-400 mb-2">&</div>
-              <h2 className="text-4xl font-light text-gray-900 mb-6">{formData.groomName}</h2>
-              <div className="w-20 h-0.5 bg-gray-300 mx-auto mb-6"></div>
-            </div>
-            <div className="space-y-3 text-gray-700">
-              <p className="text-sm uppercase tracking-wider">{formData.weddingDate}</p>
-              <p className="text-lg">{formData.venue}</p>
-              <p className="text-sm text-gray-500">{formData.ceremonyTime}</p>
-              <p className="text-xs text-gray-400 mt-8 uppercase tracking-wider">RSVP by {formData.rsvpDeadline}</p>
-            </div>
-          </div>
-        );
-      case 'romantic-floral':
-        return (
-          <div className="h-full bg-gradient-to-b from-pink-50 to-white p-8 text-center flex flex-col justify-center relative overflow-hidden">
-            {/* Decorative floral elements */}
-            <div className="absolute top-4 left-4 w-16 h-16 border-2 border-pink-200 rounded-full opacity-50"></div>
-            <div className="absolute bottom-4 right-4 w-20 h-20 border-2 border-pink-200 rounded-full opacity-50"></div>
-            
-            <div className="mb-8 relative z-10">
-              <h2 className="text-3xl font-serif text-pink-800 mb-2">{formData.brideName} & {formData.groomName}</h2>
-              <p className="text-pink-600 italic">Are getting married</p>
-            </div>
-            <div className="space-y-3 text-gray-700 relative z-10">
-              <p className="text-lg font-medium">{formData.weddingDate}</p>
-              <p className="text-md">{formData.venue}</p>
-              <p className="text-sm text-pink-600 mt-4">{formData.ceremonyTime}</p>
-              <div className="w-16 h-0.5 bg-pink-300 mx-auto my-4"></div>
-              <p className="text-sm text-gray-600 italic">With love and joy</p>
-            </div>
-          </div>
-        );
-      case 'bold-artistic':
-        return (
-          <div className="h-full bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 p-8 text-white text-center flex flex-col justify-center relative overflow-hidden">
-            {/* Animated background elements */}
-            <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute bottom-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-            
-            <div className="mb-8 relative z-10">
-              <h2 className="text-4xl font-bold mb-4">{formData.brideName} & {formData.groomName}</h2>
-              <div className="w-24 h-1 bg-white mx-auto mb-6"></div>
-              <p className="text-xl opacity-90">Are getting married!</p>
-            </div>
-            <div className="space-y-3 relative z-10">
-              <p className="text-lg">{formData.weddingDate}</p>
-              <p className="text-lg">{formData.venue}</p>
-              <p className="text-sm opacity-80 mt-6">{formData.ceremonyTime}</p>
-              <p className="text-xs opacity-60 mt-8">Join us in celebration</p>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="h-full bg-gray-100 flex items-center justify-center">
-            <div className="text-center">
-              <Palette className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Select a template to preview</p>
-            </div>
-          </div>
-        );
-    }
+  // The preview renders through the shared template component so it matches
+  // exactly what /invitation-preview/image/[id] shows.
+  const invitationData: ImageInvitationData = {
+    brideName: formData.brideName,
+    groomName: formData.groomName,
+    weddingDate: formData.weddingDate,
+    venue: formData.venue,
+    ceremonyTime: formData.ceremonyTime,
+    receptionTime: formData.receptionTime,
+    rsvpDeadline: formData.rsvpDeadline,
+    selectedTemplate,
   };
 
   return (
@@ -243,7 +137,7 @@ export default function ImageInvitationBuilder() {
                 className="space-y-4"
               >
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Choose Template</h3>
-                {imageTemplates.map((template) => (
+                {IMAGE_TEMPLATES.map((template) => (
                   <motion.div
                     key={template.id}
                     whileHover={{ scale: 1.02 }}
@@ -357,7 +251,7 @@ export default function ImageInvitationBuilder() {
             className="bg-white rounded-xl shadow-2xl overflow-hidden"
             style={{ width: '400px', height: '600px' }}
           >
-            {renderTemplatePreview()}
+            <ImageInvitationTemplate data={invitationData} />
           </motion.div>
         </div>
       </div>

@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from .models import (
     Wedding, WeddingStatus, Venue, VenueCatalog, 
     VenueAmenity, VenueAmenityMap
@@ -11,27 +12,28 @@ from .serializers import (
     WeddingStatusSerializer, VenueSerializer, VenueCatalogSerializer,
     VenueCatalogCreateSerializer, VenueAmenitySerializer
 )
-from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError
+from accounts.permissions import IsAdminOrReadOnly
+from utils.api_response import APIResponse, APIException, NotFoundError, ValidationError, ForbiddenError, get_request_wedding
 from utils.api_exceptions import handle_api_exceptions, log_api_calls, APIErrorHandler
 
 class WeddingStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for WeddingStatus model"""
     queryset = WeddingStatus.objects.all()
     serializer_class = WeddingStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VenueAmenityViewSet(viewsets.ModelViewSet):
     """ViewSet for VenueAmenity model"""
     queryset = VenueAmenity.objects.all()
     serializer_class = VenueAmenitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VenueCatalogViewSet(viewsets.ModelViewSet):
     """ViewSet for VenueCatalog model"""
     queryset = VenueCatalog.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -43,7 +45,7 @@ class VenueViewSet(viewsets.ModelViewSet):
     """ViewSet for Venue model"""
     queryset = Venue.objects.all()
     serializer_class = VenueSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class WeddingViewSet(viewsets.ModelViewSet):
@@ -92,7 +94,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
                 data=serializer.data,
                 message="Wedding retrieved successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -142,7 +144,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
                 data=serializer.data,
                 message="Wedding updated successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -162,7 +164,7 @@ class WeddingViewSet(viewsets.ModelViewSet):
             return APIResponse.no_content(
                 message="Wedding deleted successfully"
             )
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(resource="Wedding")
         except APIException:
             raise
@@ -205,6 +207,43 @@ class WeddingDetailView(generics.RetrieveUpdateAPIView):
             return WeddingUpdateSerializer
         return WeddingSerializer
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def wedding_toggle_saved_venue(request, venue_id):
+    """Add or remove a venue catalog entry from the couple's shortlist"""
+    wedding, _ = Wedding.objects.get_or_create(user=request.user)
+    venue = get_object_or_404(VenueCatalog, id=venue_id)
+
+    saved = [vid for vid in (wedding.saved_venues or []) if vid != venue.id]
+    if len(saved) == len(wedding.saved_venues or []):
+        # The id was not present, so this call adds it.
+        saved.append(venue.id)
+        action = 'added'
+    else:
+        action = 'removed'
+
+    wedding.saved_venues = saved
+    wedding.save(update_fields=['saved_venues', 'updated_at'])
+
+    return APIResponse.success(
+        {'saved_venues': wedding.saved_venues, 'action': action},
+        f'Venue {action} {"to" if action == "added" else "from"} saved venues'
+    )
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def wedding_saved_venues(request):
+    """List the venue catalog entries the couple shortlisted"""
+    wedding, _ = Wedding.objects.get_or_create(user=request.user)
+    saved_ids = [vid for vid in (wedding.saved_venues or [])]
+
+    # Preserve the order the couple saved them in.
+    venues = {venue.id: venue for venue in VenueCatalog.objects.filter(id__in=saved_ids)}
+    ordered = [venues[vid] for vid in saved_ids if vid in venues]
+
+    serializer = VenueCatalogSerializer(ordered, many=True)
+    return APIResponse.success(serializer.data, 'Saved venues retrieved successfully')
+
 class WeddingCreateView(generics.CreateAPIView):
     """Create wedding endpoint"""
     serializer_class = WeddingCreateSerializer
@@ -223,7 +262,7 @@ def wedding_dashboard(request):
         # Get user's wedding or raise NotFoundError
         try:
             wedding = request.user.wedding
-        except Wedding.DoesNotExist:
+        except (Wedding.DoesNotExist, Http404):
             raise NotFoundError(
                 resource="Wedding",
                 message="No wedding found for this user. Please create a wedding first."
@@ -232,41 +271,32 @@ def wedding_dashboard(request):
         # Check if user has permission to access this wedding
         APIErrorHandler.handle_ownership_check(wedding, request.user, "wedding")
         
-        # Get guest statistics
-        guests = wedding.guests.all()
-        guest_stats = {
-            'total': guests.count(),
-            'confirmed': guests.filter(rsvp_status__name='confirmed').count(),
-            'pending': guests.filter(rsvp_status__name='pending').count(),
-            'declined': guests.filter(rsvp_status__name='declined').count(),
-        }
+        # All metric/alert/readiness numbers come from the single source of
+        # truth in utils.wedding_insights so the dashboard, module pages, and
+        # the notification digest can never disagree.
+        from utils.wedding_insights import (
+            get_alerts, get_metrics, get_readiness, get_recent_activity
+        )
+
+        metrics = get_metrics(wedding)
+        guest_stats = metrics['guest_stats']
+        vendor_stats = metrics['vendor_stats']
         
-        # Get vendor statistics
-        vendors = wedding.vendors.all()
-        vendor_stats = {
-            'total': vendors.count(),
-            'confirmed': vendors.filter(status__name='confirmed').count(),
-            'pending': vendors.filter(status__name='pending').count(),
-            'contacted': vendors.filter(status__name='contacted').count(),
-        }
-        
-        # Get expense statistics
-        expenses = wedding.expenses.all()
-        total_expenses = sum(expense.amount for expense in expenses)
-        total_paid = sum(expense.paid_amount for expense in expenses)
-        
+        # Legacy expense stats block kept for existing consumers. The two
+        # wrong values are now correct: budget_used is the real
+        # committed/total-budget percentage, and total_actual is what has
+        # actually been paid rather than a copy of total_estimated.
         expense_stats = {
-            'total_estimated': float(total_expenses),
-            'total_actual': float(total_expenses),
-            'total_paid': float(total_paid),
-            'remaining': float(total_expenses - total_paid),
-            'budget_used': 0,  # Placeholder - budget field not available in Wedding model
+            'total_estimated': metrics['total_budget'],
+            'total_actual': metrics['paid'],
+            'total_paid': metrics['paid'],
+            'remaining': metrics['outstanding'],
+            'budget_used': metrics['budget_used_pct'],
         }
-        
-        # Get recent activities
-        recent_guests = guests.order_by('-added_date')[:5]
-        recent_expenses = expenses.order_by('-created_at')[:5]
-        recent_vendors = vendors.order_by('-id')[:5]  # Vendor model doesn't have updated_at field
+
+        # Get recent activities (real vendor dates now that Vendor has
+        # created_at/updated_at).
+        recent_activity = get_recent_activity(wedding)
         
         # Prepare dashboard data
         dashboard_data = {
@@ -274,29 +304,11 @@ def wedding_dashboard(request):
             'guest_stats': guest_stats,
             'vendor_stats': vendor_stats,
             'expense_stats': expense_stats,
-            'recent_activities': {
-                'guests': [
-                    {
-                        'name': f"{g.first_name} {g.last_name}".strip(),
-                        'date': g.added_date.isoformat() if g.added_date else None,
-                        'type': 'guest_added'
-                    } for g in recent_guests
-                ],
-                'expenses': [
-                    {
-                        'description': e.title,
-                        'date': e.created_at.isoformat() if e.created_at else None,
-                        'type': 'expense_logged'
-                    } for e in recent_expenses
-                ],
-                'vendors': [
-                    {
-                        'name': v.vendor_catalog.name if v.vendor_catalog else 'Unknown',
-                        'date': None,
-                        'type': 'vendor_updated'
-                    } for v in recent_vendors
-                ],
-            },
+            'recent_activities': recent_activity,
+            # Phase 3 additions.
+            'metrics': metrics,
+            'readiness': get_readiness(wedding),
+            'alerts': get_alerts(wedding),
         }
         
         return APIResponse.success(
@@ -318,47 +330,56 @@ def wedding_dashboard(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@handle_api_exceptions
 def wedding_timeline(request):
-    """Get wedding timeline events"""
-    try:
-        wedding = request.user.wedding
-        
-        # Combine all events into a timeline
-        events = []
-        
-        # Add guest events
-        for guest in wedding.guests.all():
-            events.append({
-                'event': f'Guest {guest.name} added',
-                'description': f'{guest.name} was added to the guest list',
-                'date': guest.added_date,
-                'type': 'guest'
-            })
-        
-        # Add vendor events
-        for vendor in wedding.vendors.all():
-            events.append({
-                'event': f'Vendor {vendor.name} - {vendor.get_status_display()}',
-                'description': f'{vendor.name} ({vendor.get_vendor_type_display()}) - {vendor.get_status_display()}',
-                'date': vendor.updated_at,
-                'type': 'vendor'
-            })
-        
-        # Add expense events
-        for expense in wedding.expenses.all():
-            events.append({
-                'event': f'Expense: {expense.description}',
-                'description': f'{expense.get_category_display()} - ${expense.actual_cost or expense.estimated_cost}',
-                'date': expense.created_at,
-                'type': 'expense'
-            })
-        
-        # Sort events by date
-        events.sort(key=lambda x: x['date'], reverse=True)
-        
-        return Response(events[:20])  # Return last 20 events
-    except Wedding.DoesNotExist:
-        return Response([], status=status.HTTP_200_OK)
+    """
+    Recent activity feed for the wedding.
+
+    This is an audit trail of recent changes across the wedding's records, NOT
+    the wedding-day schedule. Keep the three concepts distinct:
+
+    * timeline.TimelineEvent - the schedule: what happens, and when, on the day.
+    * tasks.Task             - outstanding work to be done before the day.
+    * this endpoint           - a reverse-chronological feed of what changed.
+
+    Events generated from a task carry `task` on the TimelineEvent so the same
+    item is not tracked twice.
+    """
+    wedding = get_request_wedding(request)
+
+    events = []
+
+    for guest in wedding.guests.all():
+        events.append({
+            'event': f'Guest {guest.full_name or guest.email} added',
+            'description': f'{guest.full_name or guest.email} was added to the guest list',
+            'date': guest.added_date,
+            'type': 'guest',
+        })
+
+    for vendor in wedding.vendors.all():
+        vendor_name = vendor.vendor_catalog.name if vendor.vendor_catalog else 'Vendor'
+        category = vendor.vendor_catalog.category.name if vendor.vendor_catalog and vendor.vendor_catalog.category else 'vendor'
+        events.append({
+            'event': f'Vendor {vendor_name} - {vendor.status.name if vendor.status else "unknown"}',
+            'description': f'{vendor_name} ({category}) - {vendor.status.name if vendor.status else "unknown"}',
+            'date': vendor.updated_at or vendor.created_at,
+            'type': 'vendor',
+        })
+
+    for expense in wedding.expenses.all():
+        category = expense.budget_category.name if expense.budget_category else 'expense'
+        events.append({
+            'event': f'Expense: {expense.title}',
+            'description': f'{category} - ${expense.amount}',
+            'date': expense.created_at,
+            'type': 'expense',
+        })
+
+    events.sort(key=lambda item: item['date'], reverse=True)
+
+    # Return the most recent 20 entries.
+    return APIResponse.success(events[:20], "Wedding timeline retrieved successfully")
 
 
 @api_view(['GET'])

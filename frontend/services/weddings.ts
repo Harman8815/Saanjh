@@ -47,6 +47,17 @@ export class WeddingService {
     return apiClient.get<VenueCatalog[]>('/weddings/venue-search/', { params });
   }
 
+  // Saved venue shortlist
+  static async getSavedVenues(): Promise<VenueCatalog[]> {
+    return apiClient.get<VenueCatalog[]>('/weddings/saved-venues/');
+  }
+
+  static async toggleSavedVenue(venueId: number): Promise<{ saved_venues: number[]; action: 'added' | 'removed' }> {
+    return apiClient.post<{ saved_venues: number[]; action: 'added' | 'removed' }>(
+      `/weddings/saved-venues/${venueId}/toggle/`
+    );
+  }
+
   static async getVenueAmenities(): Promise<VenueAmenity[]> {
     return apiClient.get<VenueAmenity[]>('/weddings/venue-amenities/');
   }

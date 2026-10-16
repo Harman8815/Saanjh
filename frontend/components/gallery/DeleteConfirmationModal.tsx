@@ -127,7 +127,7 @@ export default function DeleteConfirmationModal({
               <div className="space-y-3">
                 <div>
                   <label className="block text-text-primary font-medium mb-2">
-                    Type "DELETE" to confirm
+                    Type &ldquo;DELETE&rdquo; to confirm
                   </label>
                   <input
                     type="text"

@@ -59,7 +59,16 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
   user: User;
+  /** Legacy DRF token, still issued for older API clients. */
   token: string;
+  /** Short-lived JWT access token, delivered as an HttpOnly cookie. */
+  access?: string;
+  /** Long-lived refresh token, delivered as an HttpOnly cookie. */
+  refresh?: string;
+  /** Access token lifetime in seconds. */
+  expires_in?: number;
+  /** Id of the session (device) the tokens were issued for. */
+  session_id?: string;
 }
 
 // Wedding types
@@ -67,9 +76,13 @@ export interface Wedding {
   id: number;
   user: number;
   venue?: Venue;
+  venue_catalog?: VenueCatalog;
   status: WeddingStatus;
+  saved_venues?: number[];
   wedding_date?: string;
   theme?: string;
+  couple_names?: string;
+  days_until_wedding?: number;
   created_at: string;
   updated_at: string;
 }
@@ -94,11 +107,71 @@ export interface VenueCatalog {
   price: number;
   rating: number;
   amenities?: VenueAmenity[];
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface VenueAmenity {
   id: number;
   name: string;
+}
+
+// Wedding insights: shared metric names, readiness, and alerts.
+// Computed server-side in utils/wedding_insights.py — the single source of truth.
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+
+export interface WeddingAlert {
+  id: string;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  action_label: string | null;
+  action_url: string | null;
+  entity_type: string | null;
+  entity_id: number | null;
+}
+
+export interface ReadinessDomain {
+  key: string;
+  label: string;
+  /** Completion percentage (0-100) for this domain. */
+  pct: number;
+  /** Weight in the overall score (weights sum to 1.0). */
+  weight: number;
+  /** Optional supporting counts (e.g. confirmed/total guests). */
+  detail?: Record<string, number>;
+}
+
+export interface Readiness {
+  /** Weighted mean of the domain percentages (0-100). */
+  score: number;
+  domains: ReadinessDomain[];
+}
+
+export interface WeddingMetrics {
+  total_budget: number;
+  committed: number;
+  paid: number;
+  outstanding: number;
+  budget_used_pct: number;
+  projected_final_cost: number;
+  guest_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    declined: number;
+    invitations_sent: number;
+  };
+  vendor_stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    contacted: number;
+  };
+  tasks: Record<string, number>;
+  tasks_completion_pct: number;
+  expenses_count: number;
+  overdue_expenses_count: number;
 }
 
 export interface WeddingDashboard {
@@ -165,6 +238,12 @@ export interface WeddingDashboard {
       type: string;
     }>;
   };
+  /** Phase 3 metrics block (same definitions everywhere). */
+  metrics?: WeddingMetrics;
+  /** Weighted readiness score with per-domain breakdown. */
+  readiness?: Readiness;
+  /** Actionable alerts, most severe first. */
+  alerts?: WeddingAlert[];
 }
 
 export interface WeddingTimeline {
@@ -186,6 +265,8 @@ export interface TimelineEvent {
   description?: string;
   date: string;
   time?: string;
+  end_time?: string;
+  has_conflict?: boolean;
   type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
   status: 'pending' | 'completed' | 'overdue' | 'cancelled';
   priority?: 'low' | 'medium' | 'high';
@@ -194,6 +275,13 @@ export interface TimelineEvent {
   notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface TimelineConflict {
+  date: string;
+  overlap_start: string;
+  overlap_end: string;
+  events: TimelineEvent[];
 }
 
 export interface TimelineStatus {
@@ -226,6 +314,75 @@ export interface Guest {
   reminder_sent_date?: string;
   added_date: string;
   updated_at: string;
+  // Stage 2: groups, plus-ones, dietary preferences
+  group?: GuestGroup | null;
+  group_id?: number | null;
+  plus_one_name?: string;
+  plus_one_rsvp_status?: RsvpStatus | null;
+  plus_one_rsvp_status_id?: number | null;
+  is_plus_one_of?: number | null;
+  dietary_preferences?: DietaryOption[];
+  dietary_ids?: number[];
+}
+
+export interface GuestGroup {
+  id: number;
+  name: string;
+  side: 'bride' | 'groom' | 'both';
+  side_display: string;
+  group_type: 'family' | 'friend' | 'colleague' | 'household';
+  group_type_display: string;
+  notes?: string;
+  guest_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GuestGroupCreateRequest {
+  name: string;
+  side?: GuestGroup['side'];
+  group_type?: GuestGroup['group_type'];
+  notes?: string;
+}
+
+export interface DietaryOption {
+  id: number;
+  name: string;
+}
+
+/** One parsed spreadsheet row from the import preview. */
+export interface GuestImportRowPreview {
+  row: number;
+  valid: boolean;
+  data: Record<string, unknown> | null;
+  errors: string[];
+  is_duplicate: boolean;
+}
+
+export interface GuestImportPreview {
+  token: string;
+  summary: {
+    total_rows: number;
+    valid_rows: number;
+    invalid_rows: number;
+    duplicate_rows: number;
+  };
+  rows: GuestImportRowPreview[];
+  max_rows: number;
+}
+
+export interface GuestImportResult {
+  created: number;
+  skipped: number;
+  errors?: string[];
+}
+
+export interface DuplicateCluster {
+  cluster_id: number;
+  suggested_primary: number;
+  match_score: number;
+  reason: string;
+  guests: Guest[];
 }
 
 export interface RsvpStatus {
@@ -257,6 +414,99 @@ export interface GuestStatistics {
 }
 
 // Vendor types
+export interface VendorQuote {
+  id: number;
+  vendor: number;
+  title: string;
+  amount: number | string;
+  valid_until?: string | null;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  notes?: string;
+  document?: number | null;
+  document_title?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorContract {
+  id: number;
+  vendor: number;
+  signed_date?: string | null;
+  terms?: string;
+  expiry_date?: string | null;
+  document?: number | null;
+  document_title?: string | null;
+  deposit_amount: number | string;
+  deposit_paid: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorMilestone {
+  id: number;
+  vendor: number;
+  name: string;
+  amount: number | string;
+  due_date?: string | null;
+  paid: boolean;
+  paid_date?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorCommunication {
+  id: number;
+  vendor: number;
+  type: 'email' | 'call' | 'meeting' | 'note';
+  direction: 'inbound' | 'outbound';
+  subject: string;
+  body: string;
+  occurred_at: string;
+  follow_up_date?: string | null;
+  created_by?: number | null;
+  created_by_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorComparisonItem {
+  id: number;
+  name: string;
+  category: string;
+  contact: string;
+  price_range: number | string;
+  rating?: number | null;
+  status: string;
+  cost_estimate?: number | null;
+  actual_cost?: number | null;
+  cost_variance?: number | null;
+  follow_up_date?: string | null;
+  contract?: {
+    id: number;
+    signed_date?: string | null;
+    expiry_date?: string | null;
+    deposit_amount: number;
+    deposit_paid: boolean;
+    document_id?: number | null;
+  } | null;
+  quotes: {
+    total_count: number;
+    has_accepted: boolean;
+    accepted_amount?: number | null;
+    latest_status?: string | null;
+  };
+  milestones: {
+    total_count: number;
+    paid_count: number;
+    total_amount: number;
+    paid_amount: number;
+  };
+  expenses: {
+    total: number;
+    paid: number;
+  };
+}
+
 export interface Vendor {
   id: number;
   wedding: number;
@@ -264,6 +514,14 @@ export interface Vendor {
   status: VendorStatus;
   cost_estimate?: number;
   actual_cost?: number;
+  cost_variance?: number | null;
+  follow_up_date?: string | null;
+  quotes?: VendorQuote[];
+  contract?: VendorContract | null;
+  milestones?: VendorMilestone[];
+  expenses_total?: string | number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface VendorCatalog {
@@ -338,15 +596,21 @@ export interface ExpenseStatistics {
   upcoming_count: number;
 }
 
+// Venue catalog types (shared reference data, readable by any authenticated user)
+// Using the VenueCatalog defined above (line 96)
+
 // Wedding Card types
-export interface WeddingCard {
-  id: number;
-  title: string;
+export interface WeddingCard {  id: number;
+  template: number;
+  couple_names: string;
+  wedding_details: string;
+  primary_color: string;
+  font_style: string;
+  photos: string[];
+  allow_guest_photos: boolean;
+  require_rsvp: boolean;
+  send_reminders: boolean;
   shareable_link: string;
-  wedding: number;
-  is_public: boolean;
-  allow_photo_upload: boolean;
-  message: string;
   created_at: string;
   updated_at: string;
 }
@@ -355,16 +619,48 @@ export interface WeddingCardGuest {
   id: number;
   guest: number;
   wedding_card: number;
+  name: string;
+  email: string;
+  rsvp_status: 'pending' | 'confirmed' | 'declined';
+  rsvp_date?: string;
+  plus_one: boolean;
+  plus_one_name: string;
+  dietary_restrictions: string;
+  notes: string;
   photo_url?: string;
   photo_uploaded_at?: string;
-  notes?: string;
+  uploaded_photos: string[];
   created_at: string;
+}
+
+export interface WeddingCardGuestCreateRequest {
+  name: string;
+  email: string;
+  rsvp_status?: 'pending' | 'confirmed' | 'declined';
+  plus_one?: boolean;
+  plus_one_name?: string;
+  dietary_restrictions?: string;
+  notes?: string;
+}
+
+export interface PublicRsvpRequest {
+  name: string;
+  email: string;
+  rsvp_status: 'confirmed' | 'declined';
+  plus_one?: boolean;
+  plus_one_name?: string;
+  dietary_restrictions?: string;
+  notes?: string;
 }
 
 export interface WeddingCardAnalytics {
   total_views: number;
   unique_guests: number;
   photos_uploaded: number;
+  total_photos_uploaded: number;
+  total_rsvps: number;
+  confirmed_rsvps: number;
+  declined_rsvps: number;
   last_activity: string;
 }
 
@@ -508,6 +804,7 @@ export interface TimelineEventCreateRequest {
   description?: string;
   date: string;
   time?: string;
+  end_time?: string;
   type: 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder';
   priority?: 'low' | 'medium' | 'high';
   location?: string;
@@ -600,6 +897,37 @@ export interface Task {
   tags: string[];
   depends_on: Task[];
   dependent_tasks: Task[];
+  parent?: number | null;
+  subtasks?: Task[];
+  recurrence: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval: number;
+  recurrence_ends_on?: string | null;
+}
+
+export interface TaskBoard {
+  categories: TaskCategory[];
+  selected_category: TaskCategory | null;
+  columns: Array<{
+    task_status: TaskStatus;
+    count: number;
+    tasks: Task[];
+  }>;
+}
+
+export interface TaskTemplate {
+  id: number;
+  name: string;
+  description: string;
+  items: Array<{
+    id: number;
+    title: string;
+    description: string;
+    offset_days: number;
+    priority: number | null;
+    category: number | null;
+    priority_name?: string;
+    category_name?: string;
+  }>;
 }
 
 export interface TaskStatus {
@@ -634,6 +962,10 @@ export interface TaskCreateRequest {
   progress?: number;
   depends_on?: number[];
   tags?: string[];
+  parent?: number | null;
+  recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval?: number;
+  recurrence_ends_on?: string | null;
 }
 
 export interface TaskUpdateRequest {
@@ -647,6 +979,10 @@ export interface TaskUpdateRequest {
   progress?: number;
   depends_on?: number[];
   tags?: string[];
+  parent?: number | null;
+  recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurrence_interval?: number;
+  recurrence_ends_on?: string | null;
 }
 
 export interface TaskStatistics {

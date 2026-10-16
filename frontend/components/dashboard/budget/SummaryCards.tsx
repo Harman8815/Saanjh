@@ -9,44 +9,60 @@ interface SummaryCardsProps {
   totalSpent: number;
   totalPaid: number;
   totalRemaining: number;
+  committed?: number;
+  outstanding?: number;
 }
 
 export default function SummaryCards({
   totalBudget,
   totalSpent,
   totalPaid,
-  totalRemaining
+  totalRemaining,
+  committed,
+  outstanding
 }: SummaryCardsProps) {
+  const actualCommitted = committed !== undefined ? committed : totalSpent;
+  const actualOutstanding = outstanding !== undefined ? outstanding : Math.max(0, actualCommitted - totalPaid);
+
   const cards = [
     {
       label: 'Total Budget',
       value: totalBudget,
-      subtext: 'Overall allocation',
+      subtext: 'Overall target allocation',
       icon: IndianRupee,
       iconColor: '#d4a574',
       valueColor: 'text-text-primary'
     },
     {
-      label: 'Total Spent',
-      value: totalSpent,
-      subtext: totalBudget > 0 ? (totalSpent > totalBudget ? 'Over budget!' : `${Math.round((totalSpent / totalBudget) * 100)}% used`) : 'No budget set',
+      label: 'Committed',
+      value: actualCommitted,
+      subtext: totalBudget > 0 ? (actualCommitted > totalBudget ? 'Exceeds budget!' : `${Math.round((actualCommitted / totalBudget) * 100)}% committed`) : 'No budget set',
       icon: TrendingUp,
-      iconColor: '#d4a574',
-      valueColor: totalSpent > totalBudget ? 'text-red-400' : 'text-text-primary',
-      subtextColor: totalSpent > totalBudget ? 'text-red-400' : 'text-text-muted'
+      iconColor: '#3b82f6',
+      valueColor: actualCommitted > totalBudget ? 'text-red-400' : 'text-text-primary',
+      subtextColor: actualCommitted > totalBudget ? 'text-red-400' : 'text-text-muted'
     },
     {
-      label: 'Paid So Far',
+      label: 'Paid Cash',
       value: totalPaid,
-      subtext: 'Completed payments',
+      subtext: 'Settled payments',
       icon: CheckCircle2,
       iconColor: '#22c55e',
       valueColor: 'text-text-primary'
     },
     {
+      label: 'Outstanding',
+      value: actualOutstanding,
+      subtext: 'Due to vendors',
+      icon: PiggyBank,
+      iconColor: actualOutstanding > 0 ? '#f59e0b' : '#22c55e',
+      valueColor: actualOutstanding > 0 ? 'text-amber-400' : 'text-text-primary',
+      subtextColor: 'text-text-muted'
+    },
+    {
       label: totalRemaining < 0 ? 'Over Budget' : 'Remaining',
       value: Math.abs(totalRemaining),
-      subtext: totalRemaining < 0 ? 'Over budget' : 'Left to spend',
+      subtext: totalRemaining < 0 ? 'Over budget' : 'Unallocated budget',
       icon: PiggyBank,
       iconColor: totalRemaining < 0 ? '#ef4444' : '#d4a574',
       valueColor: totalRemaining < 0 ? 'text-red-400' : 'text-text-primary',
@@ -59,7 +75,7 @@ export default function SummaryCards({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.1 }}
-      className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+      className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
     >
       {cards.map((card) => {
         const Icon = card.icon;

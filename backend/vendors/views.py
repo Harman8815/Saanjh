@@ -1,34 +1,46 @@
+from django.db import models
+from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import Vendor, VendorCategory, VendorStatus, VendorCatalog
+from utils.api_response import APIResponse
+from utils.api_response import get_request_wedding
+from accounts.permissions import IsAdminOrReadOnly
+from notifications.models import Reminder
+from .models import (
+    Vendor, VendorCategory, VendorStatus, VendorCatalog,
+    VendorQuote, VendorContract, VendorMilestone, VendorCommunication
+)
 from .serializers import (
     VendorSerializer, VendorCreateSerializer, VendorUpdateSerializer,
     VendorStatusUpdateSerializer, VendorCategorySerializer,
     VendorStatusSerializer, VendorCatalogSerializer,
-    VendorCatalogCreateSerializer
+    VendorCatalogCreateSerializer, VendorQuoteSerializer,
+    VendorContractSerializer, VendorMilestoneSerializer,
+    VendorCommunicationSerializer
 )
 
 class VendorCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorCategory model"""
     queryset = VendorCategory.objects.all()
     serializer_class = VendorCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VendorStatusViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorStatus model"""
     queryset = VendorStatus.objects.all()
     serializer_class = VendorStatusSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class VendorCatalogViewSet(viewsets.ModelViewSet):
     """ViewSet for VendorCatalog model"""
     queryset = VendorCatalog.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -114,6 +126,18 @@ class VendorListCreateView(generics.ListCreateAPIView):
             return VendorCreateSerializer
         return VendorSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return APIResponse.success(serializer.data, 'Vendors retrieved successfully')
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return APIResponse.validation_error(serializer.errors)
+        serializer.save(wedding=request.user.wedding)
+        return APIResponse.created(serializer.data, 'Vendor created successfully')
+
 class VendorDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Vendor detail, update, and delete endpoint"""
     permission_classes = [permissions.IsAuthenticated]
@@ -125,6 +149,23 @@ class VendorDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return VendorUpdateSerializer
         return VendorSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object())
+        return APIResponse.success(serializer.data, 'Vendor retrieved successfully')
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if not serializer.is_valid():
+            return APIResponse.validation_error(serializer.errors)
+        serializer.save()
+        return APIResponse.success(serializer.data, 'Vendor updated successfully')
+
+    def destroy(self, request, *args, **kwargs):
+        self.perform_destroy(self.get_object())
+        return APIResponse.no_content()
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -154,7 +195,7 @@ def vendor_bulk_status_update(request):
 def vendor_statistics(request):
     """Get vendor statistics"""
     try:
-        wedding = request.user.wedding
+        wedding = get_request_wedding(request)
         vendors = wedding.vendors.all()
         
         stats = {
@@ -201,11 +242,14 @@ def vendor_statistics(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def vendor_follow_ups(request):
-    """Get vendors that need follow-up"""
+    """Get vendors that need follow-up (either scheduled follow_up_date or in pending/contacted)"""
+    wedding = request.user.wedding
     vendors = Vendor.objects.filter(
-        wedding=request.user.wedding,
-        status__name__in=['pending', 'contacted']
-    ).order_by('vendor_catalog__category', 'vendor_catalog__name')
+        wedding=wedding
+    ).filter(
+        models.Q(follow_up_date__isnull=False) |
+        models.Q(status__name__in=['pending', 'contacted'])
+    ).order_by('follow_up_date', 'vendor_catalog__category', 'vendor_catalog__name')
     
     serializer = VendorSerializer(vendors, many=True)
     return Response(serializer.data)
@@ -239,3 +283,196 @@ def vendor_mark_contacted(request, pk):
             {'error': 'Contacted status not found'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def vendor_schedule_follow_up(request, pk):
+    """Schedule follow-up date and create a Reminder for vendor"""
+    try:
+        vendor = Vendor.objects.get(pk=pk, wedding=request.user.wedding)
+    except Vendor.DoesNotExist:
+        return Response({'error': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    follow_up_date = request.data.get('follow_up_date')
+    if not follow_up_date:
+        return Response({'error': 'follow_up_date is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Parse date or datetime
+    try:
+        from datetime import datetime, time
+        if 'T' in str(follow_up_date):
+            scheduled_dt = datetime.fromisoformat(str(follow_up_date).replace('Z', '+00:00'))
+            date_val = scheduled_dt.date()
+        else:
+            date_val = datetime.strptime(str(follow_up_date)[:10], '%Y-%m-%d').date()
+            scheduled_dt = timezone.make_aware(datetime.combine(date_val, time(9, 0)))
+    except Exception as e:
+        return Response({'error': f'Invalid date format: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    vendor.follow_up_date = date_val
+    vendor.save(update_fields=['follow_up_date'])
+
+    # Create reminder
+    channel = request.data.get('channel', 'email')
+    notes = request.data.get('notes', f"Scheduled follow-up for vendor {vendor.vendor_catalog.name if vendor.vendor_catalog else vendor.id}")
+    vendor_name = vendor.vendor_catalog.name if vendor.vendor_catalog else f"Vendor #{vendor.id}"
+
+    reminder = Reminder.objects.create(
+        wedding=request.user.wedding,
+        kind='vendor_follow_up',
+        channel=channel if channel in ['email', 'in_app'] else 'email',
+        target_type=ContentType.objects.get_for_model(vendor),
+        target_id=vendor.id,
+        to_email=request.user.email,
+        subject=f"Follow-up reminder: {vendor_name}",
+        message=notes,
+        scheduled_for=scheduled_dt,
+    )
+
+    return Response({
+        'message': 'Follow-up scheduled successfully',
+        'follow_up_date': str(vendor.follow_up_date),
+        'reminder_id': reminder.id
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def vendor_compare(request):
+    """
+    Compare multiple vendors side-by-side.
+    Query param: ?ids=1,2,3
+    """
+    ids_param = request.GET.get('ids', '')
+    if not ids_param:
+        return Response({'error': 'ids query parameter is required (e.g. ?ids=1,2,3)'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        id_list = [int(i.strip()) for i in ids_param.split(',') if i.strip()]
+    except ValueError:
+        return Response({'error': 'ids must be a comma-separated list of integers'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not id_list:
+        return Response({'vendors': []})
+
+    vendors = Vendor.objects.filter(
+        wedding=request.user.wedding,
+        id__in=id_list
+    ).select_related(
+        'vendor_catalog', 'vendor_catalog__category', 'status', 'contract'
+    ).prefetch_related('quotes', 'milestones', 'expenses')
+
+    result = []
+    for v in vendors:
+        contract_data = None
+        if hasattr(v, 'contract') and v.contract:
+            contract_data = {
+                'id': v.contract.id,
+                'signed_date': v.contract.signed_date,
+                'expiry_date': v.contract.expiry_date,
+                'deposit_amount': float(v.contract.deposit_amount),
+                'deposit_paid': v.contract.deposit_paid,
+                'document_id': v.contract.document_id,
+            }
+
+        milestones = list(v.milestones.all())
+        milestones_paid = [m for m in milestones if m.paid]
+        milestone_total = sum(m.amount for m in milestones)
+        milestone_paid_total = sum(m.amount for m in milestones_paid)
+
+        quotes = list(v.quotes.all())
+        accepted_quote = next((q for q in quotes if q.status == 'accepted'), None)
+
+        expenses = list(v.expenses.all())
+        expense_total = sum(e.amount for e in expenses)
+        expense_paid = sum(e.paid_amount for e in expenses)
+
+        result.append({
+            'id': v.id,
+            'name': v.vendor_catalog.name if v.vendor_catalog else f'Vendor #{v.id}',
+            'category': v.vendor_catalog.category.name if (v.vendor_catalog and v.vendor_catalog.category) else '',
+            'contact': v.vendor_catalog.contact if v.vendor_catalog else '',
+            'price_range': v.vendor_catalog.price_range if v.vendor_catalog else '',
+            'rating': float(v.vendor_catalog.rating) if (v.vendor_catalog and v.vendor_catalog.rating) else None,
+            'status': v.status.name if v.status else '',
+            'cost_estimate': float(v.cost_estimate) if v.cost_estimate is not None else None,
+            'actual_cost': float(v.actual_cost) if v.actual_cost is not None else None,
+            'cost_variance': float(v.cost_variance) if v.cost_variance is not None else None,
+            'follow_up_date': v.follow_up_date,
+            'contract': contract_data,
+            'quotes': {
+                'total_count': len(quotes),
+                'has_accepted': accepted_quote is not None,
+                'accepted_amount': float(accepted_quote.amount) if accepted_quote else None,
+                'latest_status': quotes[0].status if quotes else None,
+            },
+            'milestones': {
+                'total_count': len(milestones),
+                'paid_count': len(milestones_paid),
+                'total_amount': float(milestone_total),
+                'paid_amount': float(milestone_paid_total),
+            },
+            'expenses': {
+                'total': float(expense_total),
+                'paid': float(expense_paid),
+            }
+        })
+
+    return Response({'vendors': result})
+
+
+class VendorQuoteViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorQuote model"""
+    serializer_class = VendorQuoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = VendorQuote.objects.filter(vendor__wedding=self.request.user.wedding)
+        vendor_id = self.request.query_params.get('vendor')
+        if vendor_id:
+            qs = qs.filter(vendor_id=vendor_id)
+        return qs
+
+
+class VendorContractViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorContract model"""
+    serializer_class = VendorContractSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = VendorContract.objects.filter(vendor__wedding=self.request.user.wedding)
+        vendor_id = self.request.query_params.get('vendor')
+        if vendor_id:
+            qs = qs.filter(vendor_id=vendor_id)
+        return qs
+
+
+class VendorMilestoneViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorMilestone model"""
+    serializer_class = VendorMilestoneSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = VendorMilestone.objects.filter(vendor__wedding=self.request.user.wedding)
+        vendor_id = self.request.query_params.get('vendor')
+        if vendor_id:
+            qs = qs.filter(vendor_id=vendor_id)
+        return qs
+
+
+class VendorCommunicationViewSet(viewsets.ModelViewSet):
+    """ViewSet for VendorCommunication model"""
+    serializer_class = VendorCommunicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = VendorCommunication.objects.filter(vendor__wedding=self.request.user.wedding)
+        vendor_id = self.request.query_params.get('vendor')
+        if vendor_id:
+            qs = qs.filter(vendor_id=vendor_id)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+

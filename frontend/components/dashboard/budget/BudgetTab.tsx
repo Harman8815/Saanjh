@@ -1,7 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, BarChart3 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from 'recharts';
 import { BudgetCategory, Expense } from './types';
 import SummaryCards from './SummaryCards';
 import CategoryCard from './CategoryCard';
@@ -34,6 +44,17 @@ export default function BudgetTab({
   onEditExpense,
   onDeleteExpense
 }: BudgetTabProps) {
+  const chartData = categories.map((cat) => {
+    const committed = cat.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const paid = cat.expenses.reduce((sum, exp) => sum + exp.paidAmount, 0);
+    return {
+      name: cat.name,
+      Allocated: cat.allocated,
+      Committed: committed,
+      Paid: paid,
+    };
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -48,6 +69,8 @@ export default function BudgetTab({
         totalSpent={totalSpent}
         totalPaid={totalPaid}
         totalRemaining={totalRemaining}
+        committed={totalSpent}
+        outstanding={Math.max(0, totalSpent - totalPaid)}
       />
 
       {/* Main Progress Bar */}
@@ -81,6 +104,39 @@ export default function BudgetTab({
           </div>
         )}
       </motion.div>
+
+      {/* Budget vs Actual Chart per Category */}
+      {categories.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="p-5"
+          style={getCardStyle()}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold text-text-primary">Budget vs. Actual by Category</h3>
+          </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#888' }} interval={0} angle={-15} textAnchor="end" />
+                <YAxis tick={{ fontSize: 11, fill: '#888' }} tickFormatter={(val) => `₹${val >= 1000 ? `${Math.round(val / 1000)}k` : val}`} />
+                <Tooltip
+                  formatter={(val: any) => formatCurrency(Number(val) || 0)}
+                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', fontSize: '12px', color: '#fff' }}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                <Bar dataKey="Allocated" fill="#71717a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Committed" fill="#d4a574" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Paid" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
 
       {/* Category Cards */}
       <motion.div

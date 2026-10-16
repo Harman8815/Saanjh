@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Task, TaskStatus, TaskPriority, TaskCategory
+from .models import (
+    Task, TaskStatus, TaskPriority, TaskCategory, TaskComment, TaskOccurrence,
+    TaskTemplate, TaskTemplateItem,
+)
 
 
 @admin.register(TaskStatus)
@@ -33,7 +36,7 @@ class TaskAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('wedding', 'title', 'description')
+            'fields': ('wedding', 'parent', 'title', 'description')
         }),
         ('Classification', {
             'fields': ('status', 'priority', 'category')
@@ -44,7 +47,38 @@ class TaskAdmin(admin.ModelAdmin):
         ('Progress & Dependencies', {
             'fields': ('progress', 'depends_on')
         }),
+        ('Recurrence', {
+            'fields': ('recurrence', 'recurrence_interval', 'recurrence_ends_on')
+        }),
         ('Tags & Metadata', {
             'fields': ('tags', 'created_by')
         }),
     )
+
+
+@admin.register(TaskComment)
+class TaskCommentAdmin(admin.ModelAdmin):
+    list_display = ['task', 'author', 'created_at']
+    search_fields = ['body', 'task__title', 'author__email']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(TaskOccurrence)
+class TaskOccurrenceAdmin(admin.ModelAdmin):
+    list_display = ['task', 'scheduled_for', 'outcome', 'recorded_at']
+    list_filter = ['outcome', 'scheduled_for']
+    readonly_fields = ['recorded_at']
+
+
+@admin.register(TaskTemplate)
+class TaskTemplateAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'created_at']
+    list_filter = ['is_active']
+    search_fields = ['name', 'description']
+
+
+@admin.register(TaskTemplateItem)
+class TaskTemplateItemAdmin(admin.ModelAdmin):
+    list_display = ['title', 'template', 'offset_days', 'priority', 'category']
+    list_filter = ['template', 'category']
+    search_fields = ['title', 'template__name']

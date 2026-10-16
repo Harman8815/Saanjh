@@ -12,6 +12,7 @@ interface Event {
   status: 'completed' | 'in-progress' | 'upcoming';
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
   color?: string;
+  has_conflict?: boolean;
 }
 
 // Get color classes based on event color or category
@@ -44,7 +45,6 @@ const getEventColorClasses = (event: Event): string => {
 interface DayViewProps {
   currentDate: Date;
   timeSlots: number[];
-  events: Event[];
   getEventsForDate: (date: Date) => Event[];
   getStatusColor: (status: string) => string;
   onEventClick?: (event: Event) => void;
@@ -53,7 +53,7 @@ interface DayViewProps {
   onEventDelete?: (event: Event) => void;
 }
 
-export default function DayView({ currentDate, timeSlots, events, getEventsForDate, getStatusColor, onEventClick, onEventView, onEventEdit, onEventDelete }: DayViewProps) {
+export default function DayView({ currentDate, timeSlots, getEventsForDate, getStatusColor, onEventClick, onEventView, onEventEdit, onEventDelete }: DayViewProps) {
   const handleEventClick = (event: Event) => {
     onEventClick?.(event);
   };
@@ -74,7 +74,7 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
   };
   const dayEvents = getEventsForDate(currentDate);
   const formatTime = (timeStr: string) => {
-    const [time, period] = timeStr.split(' ');
+    const [time] = timeStr.split(' ');
     return time;
   };
 
@@ -113,7 +113,7 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                       >
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-text-primary truncate flex-1">{event.title}</span>
+                            <span className="font-medium text-text-primary truncate flex-1">{event.title}{event.has_conflict ? ' · Conflict' : ''}</span>
                             <span className="text-xs text-text-secondary ml-2 flex-shrink-0">{event.time}</span>
                           </div>
                           <div className="text-sm text-text-secondary flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function DayView({ currentDate, timeSlots, events, getEventsForDa
                   className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <span className="font-medium text-text-primary text-sm">{event.title}</span>
+                    <span className="font-medium text-text-primary text-sm">{event.title}{event.has_conflict ? ' · Conflict' : ''}</span>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(event.status)}`}>
                         {event.status}

@@ -1,11 +1,49 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.db import connection
+from django.db.utils import OperationalError
 from .fixtures import generate_complete_fake_dataset, create_fake_user, create_fake_wedding, create_fake_guests, create_fake_vendors, create_fake_expenses, create_fake_wedding_card
 
 User = get_user_model()
+
+
+@api_view(['GET', 'HEAD'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    Liveness/readiness probe for load balancers and monitoring.
+
+    Returns 200 only when the process is serving and the database answers a
+    trivial query. Deliberately unauthenticated and free of side effects.
+    """
+    database_ok = False
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            database_ok = cursor.fetchone()[0] == 1
+    except (OperationalError, Exception):
+        database_ok = False
+
+    overall = 'ok' if database_ok else 'degraded'
+    http_status = (
+        status.HTTP_200_OK if database_ok
+        else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
+
+    from utils.api_response import APIResponse
+
+    return APIResponse.success(
+        {
+            'status': overall,
+            'database': 'connected' if database_ok else 'unavailable',
+            'service': 'wedding-proposal-backend',
+        },
+        'Health check completed',
+        status_code=http_status,
+    )
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])

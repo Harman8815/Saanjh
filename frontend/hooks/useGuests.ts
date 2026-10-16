@@ -182,3 +182,94 @@ export function useExportGuests() {
     },
   });
 }
+
+// Guest groups query
+export function useGuestGroups() {
+  const { data, error, isLoading, mutate } = useSWR(
+    'guest-groups',
+    () => GuestService.getGroups(),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+
+  return {
+    groups: data || [],
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Dietary options query
+export function useDietaryOptions() {
+  const { data, error, isLoading } = useSWR(
+    'dietary-options',
+    () => GuestService.getDietaryOptions(),
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
+  );
+
+  return {
+    dietaryOptions: data || [],
+    isLoading,
+    error,
+  };
+}
+
+// Duplicate guests query
+export function useDuplicateGuests() {
+  const { data, error, isLoading, mutate } = useSWR(
+    'duplicate-guests',
+    () => GuestService.getDuplicates(),
+    { revalidateOnFocus: false }
+  );
+
+  return {
+    clusters: data?.clusters || [],
+    clusterCount: data?.cluster_count || 0,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
+// Bulk update guests mutation
+export function useBulkUpdateGuests() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ updated_count: number }, Error, { guestIds: number[]; updates: Partial<Guest> }>({
+    mutationFn: ({ guestIds, updates }) => GuestService.bulkUpdate(guestIds, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['guest-statistics'] });
+    },
+  });
+}
+
+// Schedule reminders mutation
+export function useScheduleReminders() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { scheduled_count: number; reminder_ids: number[] },
+    Error,
+    { guestIds: number[]; scheduledFor: string; channel?: 'email' | 'in_app' }
+  >({
+    mutationFn: ({ guestIds, scheduledFor, channel }) =>
+      GuestService.scheduleReminders(guestIds, scheduledFor, channel),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+    },
+  });
+}
+
+// Auto-assign seating mutation
+export function useAutoAssignSeating() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ assigned: number; unassigned: number; unassignable: number[] }, Error, void>({
+    mutationFn: () => GuestService.autoAssignSeating(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guests'] });
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+  });
+}

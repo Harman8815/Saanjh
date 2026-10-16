@@ -7,24 +7,16 @@ import {
   ApiResponse 
 } from '../types/api';
 
+const USER_DATA_KEY = 'user_data';
+
 export class AuthService {
   // Login user
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('Attempting login with:', credentials.username);
+      // The server sets HttpOnly cookies holding the tokens; only user data
+      // and expiry metadata come back in the response.
       const response = await apiClient.post<AuthResponse>('auth/login/', credentials);
-      console.log('Login response after unwrapping:', response);
-      console.log('Has token?', !!response.token);
-      console.log('Has user?', !!response.user);
-      
-      // Store token and user data
-      if (response.token) {
-        apiClient.setAuthToken(response.token);
-        this.storeUser(response.user);
-      } else {
-        console.error('No token in response!', response);
-      }
-      
+      this.storeUser(response.user);
       return response;
     } catch (error) {
       console.error('Login error:', error);
@@ -36,13 +28,7 @@ export class AuthService {
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('auth/register/', userData);
-      
-      // Store token and user data
-      if (response.token) {
-        apiClient.setAuthToken(response.token);
-        this.storeUser(response.user);
-      }
-      
+      this.storeUser(response.user);
       return response;
     } catch (error) {
       console.error('Registration error:', error);
@@ -53,7 +39,9 @@ export class AuthService {
   // Logout user
   static async logout(): Promise<void> {
     try {
-      await apiClient.post('auth/logout/');
+      // The refresh token is read from the HttpOnly cookie server-side, so
+      // nothing token-related is sent from here.
+      await apiClient.post('auth/logout/', {});
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -99,7 +87,7 @@ export class AuthService {
   // Get user settings
   static async getUserSettings(): Promise<any> {
     try {
-      return await apiClient.get('auth/settings-detail/');
+      return await apiClient.get('auth/settings/');
     } catch (error) {
       console.error('Get user settings error:', error);
       throw error;
@@ -109,19 +97,59 @@ export class AuthService {
   // Update user settings
   static async updateUserSettings(settings: any): Promise<any> {
     try {
-      return await apiClient.post('auth/settings-detail/', settings);
+      return await apiClient.patch('auth/settings/', settings);
     } catch (error) {
       console.error('Update user settings error:', error);
       throw error;
     }
   }
 
-  // Check if user is authenticated
+  /**
+   * Rotate the access cookie using the refresh cookie.
+   *
+   * Both are HttpOnly, so the browser sends them automatically and nothing is
+   * read from or written to script-accessible storage.
+   */
+  static async refreshToken(): Promise<boolean> {
+    try {
+      await apiClient.post('auth/refresh/', {});
+      return true;
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      return false;
+    }
+  }
+
+  // Active sessions (devices) for the current user
+  static async getSessions(): Promise<any[]> {
+    try {
+      return await apiClient.get<any[]>('auth/sessions/');
+    } catch (error) {
+      console.error('Get sessions error:', error);
+      throw error;
+    }
+  }
+
+  // Revoke one session by id
+  static async revokeSession(sessionId: string): Promise<void> {
+    try {
+      await apiClient.post(`auth/sessions/${sessionId}/revoke/`, {});
+    } catch (error) {
+      console.error('Revoke session error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Whether a session is likely to exist.
+   *
+   * The tokens themselves are HttpOnly and invisible to JavaScript, so
+   * authentication is confirmed by the server on the first API call. This is
+   * only used to avoid a redirect loop on the initial render.
+   */
   static isAuthenticated(): boolean {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
-      const user = localStorage.getItem('user_data');
-      return !!(token && user);
+      return !!localStorage.getItem(USER_DATA_KEY);
     }
     return false;
   }
@@ -129,7 +157,7 @@ export class AuthService {
   // Get stored user data
   static getStoredUser(): User | null {
     if (typeof window !== 'undefined') {
-      const userData = localStorage.getItem('user_data');
+      const userData = localStorage.getItem(USER_DATA_KEY);
       return userData ? JSON.parse(userData) : null;
     }
     return null;
@@ -138,31 +166,21 @@ export class AuthService {
   // Store user data
   static storeUser(userData: User): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('user_data', JSON.stringify(userData));
-      console.log('User data stored:', userData);
+      localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
     }
   }
 
-  // Clear stored user data
+  // Clear stored user data (tokens live in HttpOnly cookies and are dropped by
+  // the server on logout).
   static clearStoredUser(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(USER_DATA_KEY);
     }
   }
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from storage
   static initializeAuth(): User | null {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
-      const user = this.getStoredUser();
-      
-      if (token && user) {
-        apiClient.setAuthToken(token);
-        return user;
-      }
-    }
-    return null;
+    return this.getStoredUser();
   }
 }
 

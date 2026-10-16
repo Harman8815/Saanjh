@@ -2,6 +2,8 @@ import { apiClient } from './api';
 import { 
   WeddingCard, 
   WeddingCardGuest,
+  WeddingCardGuestCreateRequest,
+  PublicRsvpRequest,
   WeddingCardAnalytics,
   WeddingCardCreateRequest,
   PaginatedResponse 
@@ -34,7 +36,7 @@ export class WeddingCardService {
     return apiClient.get<PaginatedResponse<WeddingCardGuest>>(`/wedding-cards/${cardId}/guests/?page=${page}&page_size=${pageSize}`);
   }
 
-  static async addGuestToWeddingCard(cardId: number, guestData: Omit<WeddingCardGuest, 'id' | 'created_at'>): Promise<WeddingCardGuest> {
+  static async addGuestToWeddingCard(cardId: number, guestData: WeddingCardGuestCreateRequest): Promise<WeddingCardGuest> {
     return apiClient.post<WeddingCardGuest>(`/wedding-cards/${cardId}/guests/`, guestData);
   }
 
@@ -79,15 +81,16 @@ export class WeddingCardService {
     return apiClient.get<WeddingCard>(`/public/cards/${shareableLink}/`);
   }
 
-  static async getPublicWeddingCardGuests(shareableLink: string): Promise<WeddingCardGuest[]> {
-    return apiClient.get<WeddingCardGuest[]>(`/public/cards/${shareableLink}/guests/`);
+  static async submitPublicRsvp(shareableLink: string, rsvpData: PublicRsvpRequest): Promise<WeddingCardGuest> {
+    return apiClient.post<WeddingCardGuest>(`/public/cards/${shareableLink}/rsvp/`, rsvpData);
   }
 
-  static async uploadPublicGuestPhoto(shareableLink: string, guestId: number, photoFile: File): Promise<WeddingCardGuest> {
+  static async uploadPublicGuestPhoto(shareableLink: string, email: string, photoFile: File): Promise<{ uploaded_photos: string[] }> {
     const formData = new FormData();
     formData.append('photo', photoFile);
+    formData.append('email', email);
     
-    return apiClient.post<WeddingCardGuest>(`/public/cards/${shareableLink}/guests/${guestId}/upload-photo/`, formData, {
+    return apiClient.post<{ uploaded_photos: string[] }>(`/public/cards/${shareableLink}/guests/upload-photo/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

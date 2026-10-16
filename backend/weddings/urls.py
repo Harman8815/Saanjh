@@ -15,5 +15,11 @@ urlpatterns = [
     path('dashboard/', views.wedding_dashboard, name='wedding-dashboard'),
     path('timeline/', views.wedding_timeline, name='wedding-timeline'),
     path('venue-search/', views.venue_search, name='venue-search'),
+    path(
+        'saved-venues/<int:venue_id>/toggle/',
+        views.wedding_toggle_saved_venue,
+        name='wedding-toggle-saved-venue'
+    ),
+    path('saved-venues/', views.wedding_saved_venues, name='wedding-saved-venues'),
     path('', include(router.urls)),
 ]

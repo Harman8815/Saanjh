@@ -142,6 +142,13 @@ export class ExpenseService {
       paid_amount: 0
     });
   }
+
+  // Export expenses as CSV or XLSX
+  static async exportExpenses(format = 'csv'): Promise<Blob> {
+    return apiClient.get(`/expenses/export/?format=${format}`, {
+      responseType: 'blob'
+    });
+  }
 }
 
 export default ExpenseService;

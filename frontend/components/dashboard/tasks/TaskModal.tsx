@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, User, Tag, Flag, CheckSquare } from 'lucide-react';
+import { X, Calendar, User, Tag, Flag, CheckSquare, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import useSWR from 'swr';
+import { TaskService } from '@/services/tasks';
 import type { TaskCreateRequest, TaskUpdateRequest, Task, TaskStatus, TaskPriority, TaskCategory } from '@/types/api';
 
 const taskSchema = z.object({
@@ -19,6 +21,11 @@ const taskSchema = z.object({
   due_date: z.string().optional(),
   progress: z.number().min(0).max(100).optional(),
   tags: z.array(z.string()).optional(),
+  parent: z.number().optional(),
+  depends_on: z.array(z.number()).optional(),
+  recurrence: z.enum(['none', 'daily', 'weekly', 'monthly']),
+  recurrence_interval: z.number().int().min(1),
+  recurrence_ends_on: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -32,6 +39,7 @@ interface TaskModalProps {
   priorities: TaskPriority[];
   categories: TaskCategory[];
   users: Array<{ id: number; first_name: string; last_name: string }>;
+  allTasks?: Task[];
   isLoading?: boolean;
 }
 
@@ -44,6 +52,7 @@ export function TaskModal({
   priorities,
   categories,
   users,
+  allTasks = [],
   isLoading = false
 }: TaskModalProps) {
   const [tagInput, setTagInput] = useState('');
@@ -68,10 +77,23 @@ export function TaskModal({
       due_date: '',
       progress: 0,
       tags: [],
+      parent: undefined,
+      depends_on: [],
+      recurrence: 'none',
+      recurrence_interval: 1,
+      recurrence_ends_on: '',
     }
   });
 
   const progress = watch('progress');
+  const recurrence = watch('recurrence');
+  const dependencies = watch('depends_on') || [];
+  const { data: comments = [], mutate: refreshComments } = useSWR(
+    isOpen && task ? `task-comments-${task.id}` : null,
+    () => TaskService.getTaskComments(task!.id),
+    { revalidateOnFocus: false }
+  );
+  const [commentDraft, setCommentDraft] = useState('');
 
   useEffect(() => {
     if (task) {
@@ -85,6 +107,16 @@ export function TaskModal({
         due_date: task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd\'T\'HH:mm') : '',
         progress: task.progress,
         tags: task.tags,
+        parent: task.parent || undefined,
+        depends_on: task.depends_on.map(dependency => typeof dependency === 'number' ? dependency : dependency.id),
+        recurrence: task.recurrence || 'none',
+        recurrence_interval: task.recurrence_interval || 1,
+        recurrence_ends_on: task.recurrence_ends_on || '',
+        parent: undefined,
+        depends_on: [],
+        recurrence: 'none',
+        recurrence_interval: 1,
+        recurrence_ends_on: '',
       });
       setSelectedTags(task.tags);
     } else {
@@ -115,6 +147,17 @@ export function TaskModal({
     };
     onSubmit(submitData);
   };
+
+  const handleAddComment = async () => {
+    if (!task || !commentDraft.trim()) return;
+    await TaskService.addTaskComment(task.id, commentDraft.trim());
+    setCommentDraft('');
+    await refreshComments();
+  };
+
+  const cycleRisk = task && allTasks.some(candidate =>
+    dependencies.includes(candidate.id) && candidate.dependent_tasks?.some(dependent => dependent.id === task.id)
+  );
 
   if (!isOpen) return null;
 
@@ -265,6 +308,52 @@ export function TaskModal({
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Parent task</label>
+                <select {...register('parent', { valueAsNumber: true })} className="w-full rounded-lg border border-gray-300 px-4 py-2">
+                  <option value="">No parent</option>
+                  {allTasks.filter(item => item.id !== task?.id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+                </select>
+                {task?.subtasks?.length ? <p className="mt-2 text-xs text-gray-500">Subtasks: {task.subtasks.map(item => item.title).join(', ')}</p> : null}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Dependencies</label>
+                <select
+                  multiple
+                  value={dependencies.map(String)}
+                  onChange={event => setValue('depends_on', Array.from(event.target.selectedOptions, option => Number(option.value)))}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                  aria-label="Task dependencies"
+                >
+                  {allTasks.filter(item => item.id !== task?.id).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+                </select>
+                {cycleRisk && <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-amber-700"><AlertTriangle className="h-3.5 w-3.5" />This selection may create a dependency cycle.</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Recurrence</label>
+                <select {...register('recurrence')} className="w-full rounded-lg border border-gray-300 px-4 py-2">
+                  <option value="none">Does not repeat</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              {recurrence !== 'none' && <>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Repeat every</label>
+                  <input type="number" min="1" {...register('recurrence_interval', { valueAsNumber: true })} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Ends on</label>
+                  <input type="date" {...register('recurrence_ends_on')} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+                </div>
+              </>}
+            </div>
+
             {/* Progress */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -331,6 +420,20 @@ export function TaskModal({
                 </div>
               )}
             </div>
+
+            {task && (
+              <section className="border-t border-gray-200 pt-4">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800"><MessageSquare className="h-4 w-4" />Comments</h3>
+                <div className="mb-3 max-h-36 space-y-2 overflow-y-auto">
+                  {comments.map(comment => <p key={comment.id} className="text-sm text-gray-600"><span className="font-medium text-gray-800">{comment.author_name || 'Planner'}:</span> {comment.body}</p>)}
+                  {comments.length === 0 && <p className="text-sm text-gray-500">No comments yet.</p>}
+                </div>
+                <div className="flex gap-2">
+                  <input value={commentDraft} onChange={event => setCommentDraft(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Write a comment" />
+                  <button type="button" onClick={handleAddComment} disabled={!commentDraft.trim()} className="rounded-lg bg-primary px-3 py-2 text-sm text-white disabled:opacity-40">Add</button>
+                </div>
+              </section>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

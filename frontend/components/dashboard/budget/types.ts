@@ -2,7 +2,7 @@ import { ReactNode, ComponentType } from 'react';
 import { LucideProps } from 'lucide-react';
 
 export type PaymentStatus = 'pending' | 'partial' | 'paid';
-export type TabType = 'budget' | 'demographics' | 'history';
+export type TabType = 'budget' | 'demographics' | 'history' | 'projection';
 export type SortField = 'date' | 'amount';
 export type SortOrder = 'asc' | 'desc';
 

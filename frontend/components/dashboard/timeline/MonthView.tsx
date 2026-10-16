@@ -7,6 +7,7 @@ interface Event {
   title: string;
   category: 'milestone' | 'planning' | 'ceremony' | 'reception';
   color?: string;
+  has_conflict?: boolean;
 }
 
 // Get color classes based on event color or category
@@ -46,11 +47,10 @@ interface DayData {
 
 interface MonthViewProps {
   days: DayData[];
-  selectedDate: Date;
   onSelectDate: (date: Date) => void;
 }
 
-export default function MonthView({ days, selectedDate, onSelectDate }: MonthViewProps) {
+export default function MonthView({ days, onSelectDate }: MonthViewProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -87,7 +87,8 @@ export default function MonthView({ days, selectedDate, onSelectDate }: MonthVie
               {day.events.slice(0, 2).map((event) => (
                 <div
                   key={event.id}
-                  className={`text-xs px-2 py-0.5 rounded truncate border ${getEventColorClasses(event)}`}
+                  title={event.has_conflict ? 'Scheduling conflict' : event.title}
+                  className={`text-xs px-2 py-0.5 rounded truncate border ${getEventColorClasses(event)} ${event.has_conflict ? 'ring-1 ring-amber-400' : ''}`}
                 >
                   {event.title}
                 </div>

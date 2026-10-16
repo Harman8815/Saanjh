@@ -38,6 +38,7 @@ class Album(models.Model):
     date = models.DateField(blank=True, null=True)
     cover_image = models.URLField(blank=True, null=True)
     featured = models.BooleanField(default=False)
+    tags = models.ManyToManyField('AlbumTag', blank=True, related_name='albums')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -61,6 +62,10 @@ class Album(models.Model):
     class Meta:
         db_table = 'media_album'
         ordering = ['-date', '-created_at']
+        indexes = [
+            # Albums are scoped by wedding and sorted by date.
+            models.Index(fields=['wedding', 'date']),
+        ]
 
 
 class MediaAlbum(models.Model):
@@ -87,13 +92,9 @@ class MediaAlbum(models.Model):
 
 
 class AlbumTag(models.Model):
-    """Tags for albums"""
-    
-    album = models.ForeignKey(
-        Album,
-        on_delete=models.CASCADE,
-        related_name='tags'
-    )
+    """Wedding-scoped tags shared across albums."""
+
+    wedding = models.ForeignKey('weddings.Wedding', on_delete=models.CASCADE, related_name='album_tags')
     name = models.CharField(max_length=50)
     
     def __str__(self):
@@ -101,6 +102,7 @@ class AlbumTag(models.Model):
     
     class Meta:
         db_table = 'media_album_tag'
+        constraints = [models.UniqueConstraint(fields=['wedding', 'name'], name='unique_album_tag_per_wedding')]
 
 
 class Media(models.Model):
@@ -117,9 +119,21 @@ class Media(models.Model):
         related_name='media_files'
     )
     title = models.CharField(max_length=200)
-    file_url = models.URLField()
+    file_url = models.URLField(blank=True)
     thumbnail_url = models.URLField(blank=True, null=True)
+    file = models.FileField(upload_to='media/%Y/%m/', blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='media/thumbnails/%Y/%m/', blank=True, null=True)
     file_size = models.BigIntegerField(blank=True, null=True)
+    width = models.PositiveIntegerField(blank=True, null=True)
+    height = models.PositiveIntegerField(blank=True, null=True)
+    is_guest_submission = models.BooleanField(default=False)
+    submitted_by_name = models.CharField(max_length=150, blank=True)
+    submitted_by_email = models.EmailField(blank=True)
+    submission_status = models.CharField(
+        max_length=10,
+        choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='approved',
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -128,3 +142,7 @@ class Media(models.Model):
     class Meta:
         db_table = 'media_media'
         ordering = ['-uploaded_at']
+        indexes = [
+            # Media is scoped by wedding and listed newest first.
+            models.Index(fields=['wedding', 'uploaded_at']),
+        ]

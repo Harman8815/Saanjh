@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Download, Share2, RotateCw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-// Hard coded values for development phase
-const hardCodedWedding = {
+// Default preview data - used when no card ID is provided
+const defaultWedding = {
   brideName: 'Sarah Johnson',
   groomName: 'Michael Smith',
   weddingDate: '2025-06-15',
@@ -16,8 +16,17 @@ const hardCodedWedding = {
 
 export default function InvitationPreviewPage() {
   const router = useRouter();
-  const [currentTemplate, setCurrentTemplate] = useState(hardCodedWedding.selectedTemplate);
+  const [cardId, setCardId] = useState<string | null>(null);
+  const [currentTemplate, setCurrentTemplate] = useState(defaultWedding.selectedTemplate);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('id');
+    setCardId(id);
+    if (id) {
+      router.replace(`/invitation-preview/${id}`);
+    }
+  }, [router]);
 
   const templates = [
     {
@@ -229,7 +238,7 @@ export default function InvitationPreviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Couple:</span>
-                  <span className="font-medium">{hardCodedWedding.brideName} & {hardCodedWedding.groomName}</span>
+                  <span className="font-medium">{defaultWedding.brideName} & {defaultWedding.groomName}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Date:</span>
@@ -237,7 +246,7 @@ export default function InvitationPreviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Venue:</span>
-                  <span className="font-medium">{hardCodedWedding.venue}</span>
+                  <span className="font-medium">{defaultWedding.venue}</span>
                 </div>
               </div>
             </div>

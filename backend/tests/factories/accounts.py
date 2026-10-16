@@ -14,11 +14,14 @@ User = get_user_model()
 
 class UserFactory(DjangoModelFactory):
     """Factory for creating User instances."""
-    
+
     class Meta:
         model = User
-    
-    email = factory.Faker('email')
+        django_get_or_create = ('username',)
+
+    # Sequence guarantees uniqueness, since username is UNIQUE.
+    username = factory.Sequence(lambda n: f'user{n}')
+    email = factory.LazyAttribute(lambda o: f'{o.username}@example.com')
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     password = factory.PostGenerationMethodCall('set_password', 'testpass123')
@@ -37,29 +40,42 @@ class UserFactory(DjangoModelFactory):
 
 
 class RoleFactory(DjangoModelFactory):
-    """Factory for creating Role instances."""
-    
+    """Factory for creating Role instances.
+
+    Role only has a unique, choice-constrained name; there are no description
+    or permissions columns.
+    """
+
     class Meta:
         model = Role
-    
-    name = factory.Faker('word')
-    description = factory.Faker('text', max_nb_chars=200)
-    permissions = factory.LazyFunction(lambda: {})
+        django_get_or_create = ('name',)
+
+    name = fuzzy.FuzzyChoice(['bride', 'groom', 'guardian', 'admin'])
 
 
 class SettingsFactory(DjangoModelFactory):
     """Factory for creating Settings instances."""
-    
+
     class Meta:
         model = Settings
-    
+
     user = factory.SubFactory(UserFactory)
     theme = fuzzy.FuzzyChoice(['light', 'dark', 'auto'])
     language = fuzzy.FuzzyChoice(['en', 'es', 'fr', 'de'])
-    timezone = factory.Faker('timezone')
-    email_notifications = True
-    push_notifications = True
-    sms_notifications = False
     currency = fuzzy.FuzzyChoice(['USD', 'EUR', 'GBP', 'CAD', 'AUD'])
-    date_format = fuzzy.FuzzyChoice(['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'])
-    time_format = fuzzy.FuzzyChoice(['12h', '24h'])
+    timezone = factory.Faker('timezone')
+    # Notification, privacy and display preferences are JSON columns.
+    notifications = factory.LazyFunction(lambda: {
+        'email': True, 'push': False, 'sms': False,
+        'reminders': True, 'rsvp_updates': True, 'vendor_updates': True,
+        'expense_updates': False, 'task_reminders': True,
+    })
+    privacy = factory.LazyFunction(lambda: {
+        'public_profile': False, 'show_guest_list': True,
+        'share_contact': False, 'allow_photos': True,
+        'search_visible': True,
+    })
+    preferences = factory.LazyFunction(lambda: {
+        'date_format': 'MM/DD/YYYY', 'time_format': '12h',
+        'start_of_week': 'monday', 'default_view': 'dashboard',
+    })

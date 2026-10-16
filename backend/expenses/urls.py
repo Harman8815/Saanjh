@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register(r'expenses', views.ExpenseViewSet)
 router.register(r'budget-categories', views.BudgetCategoryViewSet)
 router.register(r'expense-status', views.ExpenseStatusViewSet)
+router.register(r'payment-schedules', views.PaymentScheduleViewSet, basename='payment-schedule')
+router.register(r'expense-receipts', views.ExpenseReceiptViewSet, basename='expense-receipt')
 
 urlpatterns = [
     path('', views.ExpenseListCreateView.as_view(), name='expense-list-create'),
@@ -15,5 +17,6 @@ urlpatterns = [
     path('overdue/', views.expense_overdue, name='expense-overdue'),
     path('upcoming/', views.expense_upcoming, name='expense-upcoming'),
     path('summary/', views.expense_summary, name='expense-summary'),
+    path('export/', views.expense_export, name='expense-export'),
     path('', include(router.urls)),
 ]

@@ -8,10 +8,47 @@ import type {
   TaskCreateRequest,
   TaskUpdateRequest,
   TaskBulkUpdateRequest,
+  TaskBoard,
+  TaskTemplate,
   PaginatedResponse 
 } from '../types/api';
 
 export class TaskService {
+  static async getTaskBoard(categoryId?: number): Promise<TaskBoard> {
+    const query = categoryId ? `?category=${categoryId}` : '';
+    return apiClient.get<TaskBoard>(`/tasks/tasks/board/${query}`);
+  }
+
+  static async getTaskTemplates(): Promise<TaskTemplate[]> {
+    return apiClient.get<TaskTemplate[]>('/tasks/tasks/templates/');
+  }
+
+  static async createTasksFromTemplate(templateId: number, anchorDate?: string): Promise<Task[]> {
+    return apiClient.post<Task[]>('/tasks/tasks/from-template/', {
+      template_id: templateId,
+      ...(anchorDate ? { anchor_date: anchorDate } : {}),
+    });
+  }
+
+  static async recordOccurrence(taskId: number, outcome: 'skip' | 'complete'): Promise<void> {
+    const action = outcome === 'skip' ? 'recurrence/skip' : 'complete-occurrence';
+    return apiClient.post(`/tasks/tasks/${taskId}/${action}/`);
+  }
+
+  static async getTaskComments(taskId: number): Promise<Array<{ id: number; body: string; author_name: string; created_at: string }>> {
+    return apiClient.get(`/tasks/tasks/${taskId}/comments/`);
+  }
+
+  static async addTaskComment(taskId: number, body: string): Promise<void> {
+    return apiClient.post(`/tasks/tasks/${taskId}/comments/`, { body });
+  }
+
+  static async exportCalendar(includeTimeline = false): Promise<Blob> {
+    return apiClient.get(`/tasks/tasks/export/ical/${includeTimeline ? '?include_timeline=true' : ''}`, {
+      responseType: 'blob',
+    });
+  }
+
   // Task CRUD operations
   static async getTasks(page = 1, pageSize = 20, filters?: {
     status?: number;

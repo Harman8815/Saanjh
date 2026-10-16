@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Calendar as CalendarIcon, ListTodo, Plus } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, ListTodo, Plus, AlertTriangle, Download } from 'lucide-react';
 import TimelineView from '../../../components/dashboard/timeline/TimelineView';
 import CalendarView from '../../../components/dashboard/timeline/CalendarView';
 import ChecklistView from '../../../components/dashboard/timeline/ChecklistView';
@@ -10,8 +10,11 @@ import EventFormModal from '../../../components/dashboard/timeline/EventFormModa
 import ViewEventModal from '../../../components/dashboard/timeline/ViewEventModal';
 import DeleteConfirmModal from '../../../components/dashboard/timeline/DeleteConfirmModal';
 import DayEventModal from '../../../components/dashboard/timeline/DayEventModal';
-import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
+import { TimelineConflict, TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
 import { TimelineService } from '../../../services/timeline';
+import type { LocalEvent } from '../../../components/dashboard/timeline/CalendarView';
+
+const getErrorMessage = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 export default function TimelinePage() {
   const [activeTab, setActiveTab] = useState<'timeline' | 'calendar' | 'checklist'>('calendar');
@@ -29,6 +32,7 @@ export default function TimelinePage() {
   const [selectedEventData, setSelectedEventData] = useState<TimelineEvent | null>(null);
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [conflicts, setConflicts] = useState<TimelineConflict[]>([]);
   const [isCalendarLoading, setIsCalendarLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,11 +67,16 @@ export default function TimelinePage() {
           endDate = startDate;
         }
 
-        const response = await TimelineService.filterTimelineEventsByDateRange(startDate, endDate);
-        setEvents(response.results);
-      } catch (err: any) {
+        const [response, conflictData] = await Promise.all([
+          TimelineService.filterTimelineEventsByDateRange(startDate, endDate),
+          TimelineService.getConflicts(),
+        ]);
+        const conflictIds = new Set(conflictData.flatMap(conflict => conflict.events.map(event => event.id)));
+        setConflicts(conflictData);
+        setEvents(response.results.map(event => ({ ...event, has_conflict: conflictIds.has(event.id) })));
+      } catch (err: unknown) {
         console.error('Error fetching timeline events:', err);
-        setError(err.message || 'Failed to load timeline events');
+        setError(getErrorMessage(err, 'Failed to load timeline events'));
       } finally {
         setIsCalendarLoading(false);
       }
@@ -82,9 +91,9 @@ export default function TimelinePage() {
       const created = await TimelineService.createTimelineEvent(newEvent);
       setEvents(prev => [...prev, created]);
       setIsCreateModalOpen(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating event:', err);
-      alert(err.message || 'Failed to create event');
+      alert(getErrorMessage(err, 'Failed to create event'));
     }
   };
 
@@ -97,9 +106,9 @@ export default function TimelinePage() {
         setIsEditModalOpen(false);
         setSelectedEventData(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating event:', err);
-      alert(err.message || 'Failed to update event');
+      alert(getErrorMessage(err, 'Failed to update event'));
     }
   };
 
@@ -110,16 +119,11 @@ export default function TimelinePage() {
         setEvents(prev => prev.filter(e => e.id !== selectedEventData.id));
         setIsDeleteModalOpen(false);
         setSelectedEventData(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error deleting event:', err);
-        alert(err.message || 'Failed to delete event');
+        alert(getErrorMessage(err, 'Failed to delete event'));
       }
     }
-  };
-
-  const openViewModal = (event: TimelineEvent) => {
-    setSelectedEventData(event);
-    setIsViewModalOpen(true);
   };
 
   const openEditModal = (event: TimelineEvent) => {
@@ -138,10 +142,12 @@ export default function TimelinePage() {
     setIsDayModalOpen(true);
   };
 
-  const handleEventClick = (event: any) => {
-    setSelectedDate(currentDate);
+  const handleEventClick = (event: LocalEvent) => {
+    setSelectedDate(new Date(event.date));
     setIsDayModalOpen(true);
   };
+
+  const findEventForCalendar = (event: LocalEvent) => events.find(item => item.id === event.id);
 
   const handleDayModalCreate = () => {
     setIsDayModalOpen(false);
@@ -163,6 +169,20 @@ export default function TimelinePage() {
     setSelectedEventData(event);
     setIsDayModalOpen(false);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleCalendarExport = async () => {
+    try {
+      const file = await TimelineService.exportCalendarFile();
+      const url = URL.createObjectURL(file);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = 'wedding-timeline.ics';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to export timeline');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -218,16 +238,60 @@ export default function TimelinePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="flex justify-end mb-6"
+          className="flex flex-wrap items-center justify-between gap-4 mb-6"
         >
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
-          >
-            <Plus size={18} />
-            Add Event
-          </button>
+          <div role="tablist" aria-label="Timeline view" className="flex border border-white/15">
+            {[
+              { id: 'timeline', label: 'Timeline', icon: Clock },
+              { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
+              { id: 'checklist', label: 'Checklist', icon: ListTodo },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={activeTab === id}
+                onClick={() => setActiveTab(id as 'timeline' | 'calendar' | 'checklist')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm ${activeTab === id ? 'bg-primary text-white' : 'text-text-secondary hover:bg-white/10'}`}
+              >
+                <Icon size={16} />{label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCalendarExport}
+              aria-label="Export timeline calendar"
+              title="Export timeline calendar"
+              className="border border-white/15 px-3 py-2 text-text-primary hover:bg-white/10"
+            >
+              <Download size={18} />
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
+            >
+              <Plus size={18} />
+              Add Event
+            </button>
+          </div>
         </motion.div>
+
+        {conflicts.length > 0 && (
+          <section role="status" className="mb-6 border-l-2 border-amber-400 bg-amber-400/10 px-4 py-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-200">
+              <AlertTriangle className="h-4 w-4" />
+              {conflicts.length} timeline conflict{conflicts.length === 1 ? '' : 's'}
+            </h2>
+            <ul className="mt-2 space-y-1 text-sm text-text-secondary">
+              {conflicts.slice(0, 4).map((conflict, index) => (
+                <li key={`${conflict.date}-${index}`}>
+                  {conflict.events.map(event => event.title).join(' / ')} on {conflict.date} at {conflict.overlap_start}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <AnimatePresence mode="wait">
           {activeTab === 'timeline' && (
@@ -252,10 +316,10 @@ export default function TimelinePage() {
               getEventsForDate={getEventsForDate}
               isLoading={isCalendarLoading}
               onDayClick={handleDayClick}
-              onEventView={(event) => handleDayModalView(event as any)}
-              onEventEdit={(event) => handleDayModalEdit(event as any)}
-              onEventDelete={(event) => handleDayModalDelete(event as any)}
-              onEventClick={handleEventClick as any}
+              onEventView={(event) => { const actual = findEventForCalendar(event); if (actual) handleDayModalView(actual); }}
+              onEventEdit={(event) => { const actual = findEventForCalendar(event); if (actual) handleDayModalEdit(actual); }}
+              onEventDelete={(event) => { const actual = findEventForCalendar(event); if (actual) handleDayModalDelete(actual); }}
+              onEventClick={handleEventClick}
             />
           )}
 
@@ -270,6 +334,7 @@ export default function TimelinePage() {
 
       {/* CRUD Modals */}
       <EventFormModal
+        key={`create-${isCreateModalOpen}`}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateEvent}
@@ -277,6 +342,7 @@ export default function TimelinePage() {
       />
 
       <EventFormModal
+        key={`edit-${selectedEventData?.id || 'none'}-${isEditModalOpen}`}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleEditEvent}

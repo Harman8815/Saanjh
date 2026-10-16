@@ -11,6 +11,33 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _env(name, default=None):
+    """Read an environment variable, treating an empty string as unset."""
+    value = os.environ.get(name)
+    return default if value in (None, '') else value
+
+
+def _env_bool(name, default):
+    """Read a boolean environment variable."""
+    value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_list(name, default):
+    """Read a comma-separated list from the environment."""
+    value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +47,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qi@2=5zts-k4-3h04$&uwys#34immhb*v3@-bxwf#x0uk=a=tr'
+# The default is the development key; production must set DJANGO_SECRET_KEY.
+SECRET_KEY = _env('DJANGO_SECRET_KEY', 'django-insecure-qi@2=5zts-k4-3h04$&uwys#34immhb*v3@-bxwf#x0uk=a=tr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_bool('DJANGO_DEBUG', True)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'testserver'])
 
 
 # Application definition
@@ -40,6 +68,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
     'accounts',
@@ -53,6 +82,7 @@ INSTALLED_APPS = [
     'documents',
     'tasks',
     'internal_admin',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -88,13 +118,33 @@ WSGI_APPLICATION = 'wedding_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Set DJANGO_DB_ENGINE=postgresql (with the matching DJANGO_DB_* variables) to
+# move off SQLite. Anything else keeps the local SQLite file, which is the
+# development default.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_DB_ENGINE = _env('DJANGO_DB_ENGINE', 'sqlite3')
+
+if _DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _env('DJANGO_DB_NAME', 'wedding_db'),
+            'USER': _env('DJANGO_DB_USER', 'wedding'),
+            'PASSWORD': _env('DJANGO_DB_PASSWORD', ''),
+            'HOST': _env('DJANGO_DB_HOST', 'localhost'),
+            'PORT': _env('DJANGO_DB_PORT', '5432'),
+            # Persistent connections avoid a handshake per request.
+            'CONN_MAX_AGE': int(_env('DJANGO_DB_CONN_MAX_AGE', '60')),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -138,6 +188,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Upload ceilings. Applied at both the request level (Django rejects the whole
+# body before parsing) and the field level (utils.uploads), because a large
+# body should never be buffered just to be refused.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024   # covers the largest allowed file plus form fields
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024
+MAX_DOCUMENTS_UPLOAD_BYTES = 25 * 1024 * 1024
+MAX_IMAGES_UPLOAD_BYTES = 10 * 1024 * 1024
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -146,8 +204,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'accounts.authentication.SessionAwareJWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -159,7 +218,36 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'utils.api_exceptions.custom_exception_handler',
 }
+
+# SimpleJWT Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Short-lived access tokens: a stolen access token expires quickly.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    # Refresh tokens live longer and are rotated on every use.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    # Server-side invalidation: rotated/used refresh tokens are blacklisted
+    # so they can never be replayed after logout or refresh.
+    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_REFRESH': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+}
+
+# Authentication policy
+# Maximum number of concurrent JWT sessions (devices) a user may keep open.
+# Signing in on a new device revokes the oldest session once the limit is hit.
+MAX_CONCURRENT_SESSIONS = 3
 
 # Jazzmin Configuration
 JAZZMIN_SETTINGS = {
@@ -201,6 +289,9 @@ JAZZMIN_SETTINGS = {
             {'model': 'timeline.timeline', 'label': 'Timelines'},
             {'model': 'timeline.timelineevent', 'label': 'Timeline Events'},
             {'model': 'timeline.timestatus', 'label': 'Timeline Status'},
+        ]},
+        {'app': 'notifications', 'label': '🔔 Notifications', 'models': [
+            {'model': 'notifications.reminder', 'label': 'Reminders'},
         ]},
     ],
     'icons': {
@@ -261,14 +352,81 @@ SPECTACULAR_SETTINGS = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = _env_list('DJANGO_CORS_ORIGINS', [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-]
+])
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Cross-Site Request Forgery
+# Credentials are carried in HttpOnly cookies, so unsafe requests must prove
+# they came from our own frontend via the X-CSRFToken header.
+CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS', [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+])
+
+# Auth cookie transport (HttpOnly, so scripts cannot read the tokens)
+AUTH_COOKIE_ACCESS = 'access_token'
+AUTH_COOKIE_REFRESH = 'refresh_token'
+AUTH_COOKIE_CSRF = 'csrftoken'
+# Secure cookies require HTTPS; relaxed only when running with DEBUG on.
+AUTH_COOKIE_SECURE = not DEBUG
+# Lax blocks cookie attachment on cross-site POSTs (the classic CSRF vector)
+# while still allowing top-level navigation back from a third-party login.
+AUTH_COOKIE_SAMESITE = 'Lax'
+AUTH_COOKIE_DOMAIN = None
+
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
+
+
+# Email delivery
+# In development the console backend prints messages instead of sending them.
+# Production deployments should override these with real SMTP/API credentials.
+EMAIL_BACKEND = _env(
+    'DJANGO_EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = _env('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@weddingapp.local')
+EMAIL_HOST = _env('DJANGO_EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(_env('DJANGO_EMAIL_PORT', '587'))
+EMAIL_USE_TLS = _env_bool('DJANGO_EMAIL_USE_TLS', True)
+EMAIL_HOST_USER = _env('DJANGO_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = _env('DJANGO_EMAIL_HOST_PASSWORD', '')
+
+# Celery (background tasks)
+# Redis is the broker and result backend. Both default to localhost so the
+# reminder pipeline works out of the box in development; production should
+# point DJANGO_CELERY_BROKER_URL at a real Redis instance. The
+# send_due_reminders management command works without Redis for tests.
+CELERY_BROKER_URL = _env('DJANGO_CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = _env('DJANGO_CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TIME_LIMIT = 300
+# Reminders must never be dropped: a worker killed mid-task redelivers the
+# message instead of acknowledging it.
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_BEAT_SCHEDULE = {
+    'send-due-reminders': {
+        'task': 'notifications.tasks.send_due_reminders',
+        # Every 15 minutes. Latency between a reminder falling due and its
+        # delivery is at most one interval.
+        'schedule': timedelta(minutes=15),
+    },
+}
+
+# Run tasks inline (no broker) under pytest so reminder delivery is covered
+# by unit tests without a live Redis.
+import sys as _sys
+
+if 'pytest' in _sys.modules or 'test' in _sys.argv:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True

@@ -9,6 +9,7 @@ import { Users, Check, Clock, X, List, MapPin, Utensils, UserPlus } from 'lucide
 import Link from 'next/link';
 import GuestLayoutSkeleton from '../../../components/dashboard/GuestLayoutSkeleton';
 import { GuestService } from '../../../services/guests';
+import { EmptyState } from '../../../components/ui/loading-states';
 
 export default function GuestManagementDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -133,7 +134,7 @@ export default function GuestManagementDashboard() {
                   {card.description}
                 </p>
                 <div className="mt-4 flex items-center text-text-muted">
-                  <span className="text-xs">Click to manage →</span>
+                  <span className="text-xs">Click to manage ?</span>
                 </div>
               </motion.div>
             </Link>
@@ -147,23 +148,38 @@ export default function GuestManagementDashboard() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="glass-card p-6"
         >
-          <h2 className="heading-data text-data-2xl text-text-primary mb-6">Quick Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Invited', value: stats.total, icon: <UserPlus size={20} />, color: 'primary' },
-              { label: 'Confirmed', value: stats.confirmed, icon: <Check size={20} />, color: 'green' },
-              { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, color: 'yellow' },
-              { label: 'Declined', value: stats.declined, icon: <X size={20} />, color: 'red' }
-            ].map((stat, index) => (
-              <div key={stat.label} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
-                <div className="text-primary">{stat.icon}</div>
-                <div>
-                  <div className={`text-data-lg font-bold text-${stat.color}`}>{stat.value}</div>
-                  <div className="label-ui text-ui-xs text-text-muted">{stat.label}</div>
-                </div>
+          {stats.total === 0 ? (
+            <EmptyState
+              title="No guests yet"
+              description="Add your first guests to start tracking RSVPs, meals and seating."
+              icon={<Users size={24} />}
+              action={
+                <Link href="/dashboard/guests/list">
+                  <button className="btn-primary">Go to Guest List</button>
+                </Link>
+              }
+            />
+          ) : (
+            <>
+              <h2 className="heading-data text-data-2xl text-text-primary mb-6">Quick Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Invited', value: stats.total, icon: <UserPlus size={20} />, color: 'primary' },
+                  { label: 'Confirmed', value: stats.confirmed, icon: <Check size={20} />, color: 'green' },
+                  { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, color: 'yellow' },
+                  { label: 'Declined', value: stats.declined, icon: <X size={20} />, color: 'red' }
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
+                    <div className="text-primary">{stat.icon}</div>
+                    <div>
+                      <div className={`text-data-lg font-bold text-${stat.color}`}>{stat.value}</div>
+                      <div className="label-ui text-ui-xs text-text-muted">{stat.label}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </motion.div>
       </div>
         </div>

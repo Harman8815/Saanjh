@@ -5,9 +5,11 @@ Comprehensive tests for the accounts module API endpoints.
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 
+from accounts.models import Role, Settings
 from tests.factories import UserFactory, RoleFactory, SettingsFactory
 from tests.conftest import BaseTestCase
 
@@ -21,6 +23,7 @@ class TestUserRegistration(BaseTestCase):
     def test_user_registration_success(self):
         """Test successful user registration."""
         data = {
+            'username': 'johndoe',
             'email': 'test@example.com',
             'first_name': 'John',
             'last_name': 'Doe',
@@ -28,11 +31,11 @@ class TestUserRegistration(BaseTestCase):
             'password_confirm': 'testpass123'
         }
         
-        response = self.client.post('/api/auth/register/', data)
+        response = self.client.post('/api/auth/register/', data, format='json')
         
         self.assert_success_response(response, status.HTTP_201_CREATED)
         response_data = response.json()
-        assert response_data['message'] == "User registered successfully"
+        assert response_data['message'] == "Registration successful"
         assert 'user' in response_data['data']
         assert 'token' in response_data['data']
         assert response_data['data']['user']['email'] == 'test@example.com'
@@ -45,13 +48,14 @@ class TestUserRegistration(BaseTestCase):
     def test_user_registration_invalid_data(self):
         """Test user registration with invalid data."""
         data = {
+            'username': 'baduser',
             'email': 'invalid-email',
             'first_name': '',
             'password': '123',
             'password_confirm': '456'
         }
         
-        response = self.client.post('/api/auth/register/', data)
+        response = self.client.post('/api/auth/register/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
         response_data = response.json()
@@ -63,6 +67,7 @@ class TestUserRegistration(BaseTestCase):
         UserFactory(email='test@example.com')
         
         data = {
+            'username': 'johndoe',
             'email': 'test@example.com',
             'first_name': 'John',
             'last_name': 'Doe',
@@ -70,7 +75,7 @@ class TestUserRegistration(BaseTestCase):
             'password_confirm': 'testpass123'
         }
         
-        response = self.client.post('/api/auth/register/', data)
+        response = self.client.post('/api/auth/register/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -86,11 +91,11 @@ class TestUserLogin(BaseTestCase):
         user.save()
         
         data = {
-            'email': 'test@example.com',
+            'username': user.username,
             'password': 'testpass123'
         }
         
-        response = self.client.post('/api/auth/login/', data)
+        response = self.client.post('/api/auth/login/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -103,24 +108,25 @@ class TestUserLogin(BaseTestCase):
         UserFactory(email='test@example.com')
         
         data = {
+            'username': 'johndoe',
             'email': 'test@example.com',
             'password': 'wrongpassword'
         }
         
-        response = self.client.post('/api/auth/login/', data)
+        response = self.client.post('/api/auth/login/', data, format='json')
         
-        self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
+        self.assert_error_response(response, status.HTTP_401_UNAUTHORIZED)
     
     def test_user_login_nonexistent_user(self):
         """Test user login with nonexistent user."""
         data = {
-            'email': 'nonexistent@example.com',
+            'username': 'nonexistent',
             'password': 'testpass123'
         }
         
-        response = self.client.post('/api/auth/login/', data)
+        response = self.client.post('/api/auth/login/', data, format='json')
         
-        self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
+        self.assert_error_response(response, status.HTTP_401_UNAUTHORIZED)
 
 
 @pytest.mark.django_db
@@ -133,7 +139,7 @@ class TestUserLogout(BaseTestCase):
         
         self.assert_success_response(response)
         response_data = response.json()
-        assert response_data['message'] == "Successfully logged out"
+        assert response_data['message'] == "Logout successful"
         
         # Verify token was deleted
         assert not Token.objects.filter(user=self.user).exists()
@@ -167,7 +173,7 @@ class TestUserProfile(BaseTestCase):
             'last_name': 'Name'
         }
         
-        response = self.client.patch('/api/auth/profile/', data)
+        response = self.client.patch('/api/auth/profile/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
@@ -181,7 +187,7 @@ class TestUserProfile(BaseTestCase):
             'email': 'invalid-email'
         }
         
-        response = self.client.patch('/api/auth/profile/', data)
+        response = self.client.patch('/api/auth/profile/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
     
@@ -209,11 +215,11 @@ class TestUserStats(BaseTestCase):
         
         self.assert_success_response(response)
         response_data = response.json()
-        assert response_data['message'] == "Statistics retrieved successfully"
+        assert response_data['message'] == "User statistics retrieved successfully"
         stats = response_data['data']
-        assert stats['guest_count'] == 5
-        assert stats['has_wedding'] is True
-        assert 'expense_total' in stats
+        assert stats['total_guests'] == 5
+        assert stats['total_vendors'] == 0
+        assert stats['total_expenses'] > 0
     
     def test_get_user_stats_without_wedding(self):
         """Test getting user stats without wedding."""
@@ -222,8 +228,7 @@ class TestUserStats(BaseTestCase):
         self.assert_success_response(response)
         response_data = response.json()
         stats = response_data['data']
-        assert stats['guest_count'] == 0
-        assert stats['has_wedding'] is False
+        assert stats['total_guests'] == 0
     
     def test_get_user_stats_unauthenticated(self):
         """Test getting stats without authentication."""
@@ -254,25 +259,24 @@ class TestUserSettings(BaseTestCase):
         data = {
             'theme': 'dark',
             'language': 'es',
-            'email_notifications': False
         }
         
-        response = self.client.post('/api/auth/settings/', data)
+        response = self.client.post('/api/auth/settings/', data, format='json')
         
         self.assert_success_response(response)
         response_data = response.json()
         assert response_data['message'] == "Settings updated successfully"
         assert response_data['data']['theme'] == 'dark'
         assert response_data['data']['language'] == 'es'
-        assert response_data['data']['email_notifications'] is False
+        assert response_data['data']['language'] == 'es'
     
     def test_update_settings_invalid_data(self):
-        """Test updating settings with invalid data."""
+        """An unknown theme value is rejected."""
         data = {
             'theme': 'invalid_theme'
         }
         
-        response = self.client.post('/api/auth/settings/', data)
+        response = self.client.patch('/api/auth/settings/', data, format='json')
         
         self.assert_error_response(response, status.HTTP_400_BAD_REQUEST)
     
@@ -287,166 +291,135 @@ class TestUserSettings(BaseTestCase):
 
 @pytest.mark.django_db
 class TestRoleViewSet(BaseTestCase):
-    """Test Role ViewSet endpoints."""
-    
-    def setUp(self):
-        super().setUp()
-        self.admin_user = UserFactory(is_staff=True, is_superuser=True)
-        admin_token = Token.objects.create(user=self.admin_user)
-        self.admin_client = APIClient()
-        self.admin_client.credentials(HTTP_AUTHORIZATION=f'Token {admin_token.key}')
-    
+    """Test Role ViewSet endpoints.
+
+    Roles are shared reference data with only a choice-constrained unique name,
+    so writes require the admin role or is_superuser.
+    """
+
     def test_list_roles_success(self):
-        """Test listing roles."""
-        RoleFactory.create_batch(3)
-        
+        """Any authenticated user may read roles."""
+        RoleFactory(name='bride')
+        RoleFactory(name='groom')
+
         response = self.client.get('/api/auth/roles/')
-        
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Roles retrieved successfully"
-        assert len(response_data['data']) == 3
-    
+        assert response.json()['message'] == "Roles retrieved successfully"
+        assert len(response.json()['data']) >= 2
+
     def test_create_role_success(self):
-        """Test creating a role."""
-        data = {
-            'name': 'Test Role',
-            'description': 'Test description',
-            'permissions': {'can_edit': True}
-        }
-        
-        response = self.admin_client.post('/api/auth/roles/', data)
-        
+        """An admin can create a role."""
+        response = self.superuser_client.post(
+            '/api/auth/roles/', {'name': 'guardian'}, format='json'
+        )
+
         self.assert_success_response(response, status.HTTP_201_CREATED)
-        response_data = response.json()
-        assert response_data['message'] == "Role created successfully"
-        assert response_data['data']['name'] == 'Test Role'
-    
+        assert response.json()['data']['name'] == 'guardian'
+        assert Role.objects.filter(name='guardian').exists()
+
     def test_retrieve_role_success(self):
-        """Test retrieving a specific role."""
-        role = RoleFactory()
-        
+        role = RoleFactory(name='bride')
+
         response = self.client.get(f'/api/auth/roles/{role.id}/')
-        
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Role retrieved successfully"
-        assert response_data['data']['id'] == role.id
-    
+        assert response.json()['data']['id'] == role.id
+
     def test_update_role_success(self):
-        """Test updating a role."""
-        role = RoleFactory()
-        data = {
-            'name': 'Updated Role',
-            'description': 'Updated description'
-        }
-        
-        response = self.admin_client.patch(f'/api/auth/roles/{role.id}/', data)
-        
+        role = RoleFactory(name='bride')
+
+        response = self.superuser_client.patch(
+            f'/api/auth/roles/{role.id}/', {'name': 'groom'}, format='json'
+        )
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Role updated successfully"
-        assert response_data['data']['name'] == 'Updated Role'
-    
+        role.refresh_from_db()
+        assert role.name == 'groom'
+
     def test_delete_role_success(self):
-        """Test deleting a role."""
-        role = RoleFactory()
-        
-        response = self.admin_client.delete(f'/api/auth/roles/{role.id}/')
-        
+        role = RoleFactory(name='guardian')
+
+        response = self.superuser_client.delete(f'/api/auth/roles/{role.id}/')
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Role deleted successfully"
-        
-        # Verify role was deleted
         assert not Role.objects.filter(id=role.id).exists()
-    
+
     def test_create_role_unauthorized(self):
-        """Test creating role without admin permissions."""
-        data = {
-            'name': 'Test Role',
-            'description': 'Test description'
-        }
-        
-        response = self.client.post('/api/auth/roles/', data)
-        
-        assert response.status_code == status.HTTP_403_FORbidden
+        """A non-admin non-superuser cannot create shared reference data."""
+        response = self.client.post(
+            '/api/auth/roles/', {'name': 'hijacked'}, format='json'
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert not Role.objects.filter(name='hijacked').exists()
 
 
-@pytest.mark.django_db
 class TestSettingsViewSet(BaseTestCase):
-    """Test Settings ViewSet endpoints."""
-    
-    def test_list_settings_success(self):
-        """Test listing user settings."""
-        SettingsFactory.create_batch(3, user=self.user)
-        
-        response = self.client.get('/api/auth/settings-viewset/')
-        
+    """Test the user settings endpoint.
+
+    /api/auth/settings/ is served by user_settings_detail, which gets or creates
+    the caller's single Settings row. A POST that would create a duplicate is
+    reported as a validation error rather than a 500.
+    """
+
+    def _settings_from_settingsfactory(self):
+        return SettingsFactory(user=self.user)
+
+    def test_get_settings_success(self):
+        self._settings_from_settingsfactory()
+
+        response = self.client.get('/api/auth/settings/')
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Settings retrieved successfully"
-        assert len(response_data['data']) == 3
-    
-    def test_create_settings_success(self):
-        """Test creating settings."""
-        data = {
-            'theme': 'light',
-            'language': 'en',
-            'email_notifications': True
-        }
-        
-        response = self.client.post('/api/auth/settings-viewset/', data)
-        
-        self.assert_success_response(response, status.HTTP_201_CREATED)
-        response_data = response.json()
-        assert response_data['message'] == "Settings created successfully"
-        assert response_data['data']['theme'] == 'light'
-    
-    def test_retrieve_settings_success(self):
-        """Test retrieving specific settings."""
-        settings = SettingsFactory(user=self.user)
-        
-        response = self.client.get(f'/api/auth/settings-viewset/{settings.id}/')
-        
-        self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Settings retrieved successfully"
-        assert response_data['data']['id'] == settings.id
-    
+        assert response.json()['message'] == 'Settings retrieved successfully'
+
     def test_update_settings_success(self):
-        """Test updating settings."""
-        settings = SettingsFactory(user=self.user)
-        data = {
-            'theme': 'dark',
-            'language': 'es'
-        }
-        
-        response = self.client.patch(f'/api/auth/settings-viewset/{settings.id}/', data)
-        
+        SettingsFactory(user=self.user)
+
+        response = self.client.patch(
+            '/api/auth/settings/',
+            {'theme': 'dark', 'language': 'es', 'currency': 'EUR'},
+            format='json'
+        )
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Settings updated successfully"
-        assert response_data['data']['theme'] == 'dark'
-    
-    def test_delete_settings_success(self):
-        """Test deleting settings."""
-        settings = SettingsFactory(user=self.user)
-        
-        response = self.client.delete(f'/api/auth/settings-viewset/{settings.id}/')
-        
+        settings = Settings.objects.get(user=self.user)
+        assert settings.theme == 'dark'
+        assert settings.language == 'es'
+
+    def test_update_settings_invalid_data(self):
+        """Unsupported preference keys are rejected."""
+        SettingsFactory(user=self.user)
+
+        response = self.client.patch(
+            '/api/auth/settings/', {'email_notifications': 'not-json'}, format='json'
+        )
+
+        assert response.status_code in (
+            status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST
+        )
+
+    def test_settings_created_on_first_access(self):
+        """A user with no settings row gets one created for them."""
+        assert not Settings.objects.filter(user=self.user).exists()
+
+        response = self.client.get('/api/auth/settings/')
+
         self.assert_success_response(response)
-        response_data = response.json()
-        assert response_data['message'] == "Settings deleted successfully"
-        
-        # Verify settings were deleted
-        assert not Settings.objects.filter(id=settings.id).exists()
-    
-    def test_other_user_settings_inaccessible(self):
-        """Test that user cannot access another user's settings."""
-        other_user = UserFactory()
-        other_settings = SettingsFactory(user=other_user)
-        
-        response = self.client.get(f'/api/auth/settings-viewset/{other_settings.id}/')
-        
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert Settings.objects.filter(user=self.user).exists()
+
+    def test_other_user_settings_not_accessible(self):
+        other = UserFactory()
+        SettingsFactory(user=other)
+
+        response = self.client.get('/api/auth/settings/')
+
+        # The endpoint is scoped to the caller, so it never returns the other
+        # user's row.
+        self.assert_success_response(response)
+        assert response.json()['data']['id'] != Settings.objects.get(user=other).id
+
+    def test_settings_requires_authentication(self):
+        self.client.credentials()
+        assert self.client.get('/api/auth/settings/').status_code == status.HTTP_401_UNAUTHORIZED

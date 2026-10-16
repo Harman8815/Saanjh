@@ -24,6 +24,8 @@ from . import views
 from internal_admin.views import home, api_docs, table_schemas_data
 
 urlpatterns = [
+    # Health check for load balancers: unauthenticated, no database writes.
+    path('health/', views.health_check, name='health-check'),
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     # API documentation
@@ -43,6 +45,7 @@ urlpatterns = [
     path('api/media/', include('media.urls')),
     path('api/documents/', include('documents.urls')),
     path('api/tasks/', include('tasks.urls')),
+    path('api/notifications/', include('notifications.urls')),
     path('api/public/cards/<str:shareable_link>/', include('wedding_cards.public_urls')),
     # Fake data generation endpoints (admin only)
     path('api/admin/generate-fake-data/', views.generate_fake_data, name='generate-fake-data'),

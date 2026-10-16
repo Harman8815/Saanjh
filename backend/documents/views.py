@@ -1,22 +1,25 @@
 from rest_framework import generics, permissions, status, viewsets, parsers
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, throttle_classes
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Count, Q
-from .models import Document, DocumentCategory, DocumentTag
+from .models import Document, DocumentCategory, DocumentTag, DocumentVersion, DocumentAccess
 from .serializers import (
     DocumentSerializer, DocumentCreateSerializer, DocumentUpdateSerializer,
-    DocumentListSerializer, DocumentCategorySerializer, DocumentTagSerializer
+    DocumentListSerializer, DocumentCategorySerializer, DocumentTagSerializer,
+    _create_document_version,
 )
 from utils.api_response import APIResponse
+from accounts.permissions import IsAdminOrReadOnly
 
 
 class DocumentCategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for DocumentCategory model"""
     queryset = DocumentCategory.objects.all()
     serializer_class = DocumentCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -52,7 +55,7 @@ class DocumentTagViewSet(viewsets.ModelViewSet):
     """ViewSet for DocumentTag model"""
     queryset = DocumentTag.objects.all()
     serializer_class = DocumentTagSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name']
@@ -269,6 +272,45 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return APIResponse.success({
             'updated_count': documents.count()
         }, f"Updated tags for {documents.count()} documents successfully")
+
+    @action(detail=True, methods=['get'], url_path='versions')
+    def versions(self, request, pk=None):
+        document = self.get_object()
+        versions = document.versions.select_related('uploaded_by').all()
+        data = [{
+            'id': version.pk,
+            'version_number': version.version_number,
+            'file_url': request.build_absolute_uri(version.file.url),
+            'note': version.note,
+            'uploaded_by': version.uploaded_by_id,
+            'uploaded_by_name': version.uploaded_by.get_full_name() if version.uploaded_by else '',
+            'uploaded_at': version.uploaded_at,
+        } for version in versions]
+        return APIResponse.success(data, 'Document versions retrieved successfully')
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path=r'versions/(?P<version_id>[^/.]+)/restore',
+    )
+    def restore_version(self, request, pk=None, version_id=None):
+        document = self.get_object()
+        version = document.versions.filter(pk=version_id).first()
+        if not version:
+            return APIResponse.error('Document version not found', ['The requested version does not exist'], status.HTTP_404_NOT_FOUND)
+        from django.core.files.base import ContentFile
+        import os
+        with version.file.open('rb') as source:
+            restored_file = ContentFile(source.read(), name=os.path.basename(version.file.name))
+        document.file.save(restored_file.name, restored_file, save=False)
+        document.file_type = os.path.splitext(document.file.name)[1].lstrip('.').lower()
+        document.file_size = document.file.size
+        document.save()
+        _create_document_version(document, uploaded_by=request.user, note=f'Restored version {version.version_number}')
+        return APIResponse.success(
+            DocumentSerializer(document, context={'request': request}).data,
+            'Document version restored successfully',
+        )
     
     def _format_file_size(self, size):
         """Format file size for display"""
@@ -388,8 +430,13 @@ def document_statistics(request):
     }, "Document statistics retrieved successfully")
 
 
+class DocumentDownloadThrottle(UserRateThrottle):
+    rate = '60/hour'
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@throttle_classes([DocumentDownloadThrottle])
 def document_download(request, pk):
     """Download a document"""
     try:
@@ -403,6 +450,7 @@ def document_download(request, pk):
             )
         
         from django.http import FileResponse
+        DocumentAccess.objects.create(document=document, user=request.user, action='download')
         return FileResponse(
             document.file.open(),
             as_attachment=True,

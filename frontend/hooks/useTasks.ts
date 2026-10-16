@@ -3,7 +3,17 @@
 import useSWR from 'swr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { TaskService } from '../services';
-import type { Task, TaskStatistics, PaginatedResponse, TaskCreateRequest, TaskUpdateRequest, TaskBulkUpdateRequest } from '../types/api';
+import type { Task, TaskStatistics, PaginatedResponse, TaskCreateRequest, TaskUpdateRequest, TaskBulkUpdateRequest, TaskBoard } from '../types/api';
+
+export function useTaskBoard(categoryId?: number) {
+  const { data, error, isLoading, mutate } = useSWR<TaskBoard>(
+    categoryId ? `task-board-${categoryId}` : 'task-board-categories',
+    () => TaskService.getTaskBoard(categoryId),
+    { revalidateOnFocus: false }
+  );
+
+  return { board: data, error, isLoading, mutate };
+}
 
 // Fetch tasks with pagination and filters
 export function useTasks(page = 1, pageSize = 20, filters?: {

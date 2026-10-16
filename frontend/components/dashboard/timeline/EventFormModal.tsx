@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Modal from '../../../components/common/Modal';
 import { Calendar, Clock, MapPin, FileText, Tag, AlertCircle } from 'lucide-react';
 import { TimelineEvent, TimelineEventCreateRequest } from '../../../types/api';
@@ -19,6 +19,7 @@ const initialFormData: FormData = {
   title: '',
   date: new Date().toISOString().split('T')[0],
   time: '09:00',
+  end_time: '10:00',
   type: 'event',
   priority: 'medium',
   location: '',
@@ -27,35 +28,33 @@ const initialFormData: FormData = {
   attendees: []
 };
 
-export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode }: EventFormModalProps) {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+const getEventFormData = (event?: TimelineEvent | null, mode?: 'create' | 'edit'): FormData => {
+  if (!event || mode !== 'edit') return initialFormData;
+  return {
+    id: event.id,
+    title: event.title,
+    date: event.date,
+    time: event.time || '09:00',
+    end_time: event.end_time || '',
+    type: event.type,
+    priority: event.priority || 'medium',
+    location: event.location || '',
+    description: event.description || '',
+    notes: event.notes || '',
+    attendees: event.attendees || [],
+  };
+};
 
-  useEffect(() => {
-    if (event && mode === 'edit') {
-      setFormData({
-        id: event.id,
-        title: event.title,
-        date: event.date,
-        time: event.time || '09:00',
-        type: event.type,
-        priority: event.priority || 'medium',
-        location: event.location || '',
-        description: event.description || '',
-        notes: event.notes || '',
-        attendees: event.attendees || []
-      });
-    } else {
-      setFormData(initialFormData);
-    }
-    setErrors({});
-  }, [event, mode, isOpen]);
+export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode }: EventFormModalProps) {
+  const [formData, setFormData] = useState<FormData>(() => getEventFormData(event, mode));
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.time) newErrors.time = 'Time is required';
+    if (formData.end_time && formData.time && formData.end_time <= formData.time) newErrors.end_time = 'End time must be later than start time';
     if (!formData.location?.trim()) newErrors.location = 'Location is required';
     
     setErrors(newErrors);
@@ -142,6 +141,20 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
           )}
         </div>
 
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-1.5">
+            <Clock size={16} />
+            End time
+          </label>
+          <input
+            type="time"
+            value={formData.end_time || ''}
+            onChange={(e) => handleChange('end_time', e.target.value)}
+            className={inputClasses('end_time')}
+          />
+          {errors.end_time && <p className="mt-1 text-xs text-red-400">{errors.end_time}</p>}
+        </div>
+
         {/* Date & Time Row */}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -189,7 +202,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
             </label>
             <select
               value={formData.type}
-              onChange={(e) => handleChange('type', e.target.value as any)}
+              onChange={(e) => handleChange('type', e.target.value as 'meeting' | 'payment' | 'deadline' | 'event' | 'task' | 'reminder')}
               className={inputClasses('type')}
             >
               <option value="event">Event</option>
@@ -207,7 +220,7 @@ export default function EventFormModal({ isOpen, onClose, onSubmit, event, mode 
             </label>
             <select
               value={formData.priority}
-              onChange={(e) => handleChange('priority', e.target.value as any)}
+              onChange={(e) => handleChange('priority', e.target.value as 'low' | 'medium' | 'high')}
               className={inputClasses('priority')}
             >
               <option value="low">Low</option>

@@ -108,16 +108,19 @@ export function useRequireAuth() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check authentication status from localStorage
+    // Check session status from local storage.
+    //
+    // The tokens are HttpOnly and invisible to JavaScript, so a cached profile
+    // is only a hint that a session might still be valid. The server is the
+    // authority: if the cookies are gone, the first API request fails and the
+    // API client redirects to login.
     const checkAuth = () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const user = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
-      const authStatus = !!(token && user);
 
-      setIsAuthenticated(authStatus);
+      setIsAuthenticated(!!user);
       setIsChecking(false);
 
-      if (!authStatus) {
+      if (!user) {
         router.push('/login');
       }
     };

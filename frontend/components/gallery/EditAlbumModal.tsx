@@ -50,7 +50,27 @@ export default function EditAlbumModal({ album, isOpen, onClose, onSave }: EditA
     if (album) {
       setFormData({ ...album });
     }
-  }, [album]);
+    return () => {
+      if (!isOpen) {
+        setFormData({
+          id: 0,
+          title: '',
+          description: '',
+          date: '',
+          cover_image: '',
+          image_count: 0,
+          video_count: 0,
+          tags: [],
+          featured: false,
+          event_type: 'other',
+          event_type_display: '',
+          media_items: [],
+          created_at: '',
+          updated_at: ''
+        });
+      }
+    };
+  }, [album, isOpen]);
 
   const handleInputChange = (field: keyof Album, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));

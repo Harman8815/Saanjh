@@ -79,6 +79,12 @@ export default function DayEventModal({
       setSelectedEvent(null);
       setShowDetails(false);
     }
+    return () => {
+      if (!isOpen) {
+        setSelectedEvent(null);
+        setShowDetails(false);
+      }
+    };
   }, [isOpen, selectedDate]);
 
   // Preserve scroll position when switching views
@@ -275,7 +281,7 @@ export default function DayEventModal({
                       <div className="flex flex-col items-center justify-center h-full text-center p-8">
                         <Calendar size={48} className="text-text-muted mb-4" />
                         <p className="text-text-muted mb-2">No events for this day</p>
-                        <p className="text-sm text-text-secondary">Click "Add Event" to create one</p>
+                        <p className="text-sm text-text-secondary">Click &ldquo;Add Event&rdquo; to create one</p>
                       </div>
                     )}
                   </div>
