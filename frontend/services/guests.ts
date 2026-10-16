@@ -95,7 +95,7 @@ export class GuestService {
     return apiClient.get<Table[]>('/guests/seating-chart/');
   }
 
-  static async createTable(tableData: Omit<Table, 'id'>): Promise<Table> {
+  static async createTable(tableData: Omit<Table, 'id' | 'wedding'>): Promise<Table> {
     return apiClient.post<Table>('/guests/tables/', tableData);
   }
 

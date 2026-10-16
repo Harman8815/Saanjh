@@ -395,6 +395,7 @@ export interface Table {
   wedding: number;
   table_number: number;
   capacity: number;
+  assigned_guests?: number;
 }
 
 export interface Meal {

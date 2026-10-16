@@ -18,7 +18,7 @@ export function TaskBoard({ board, isLoading, onStatusChange }: TaskBoardProps) 
     columns: TaskBoardData['columns'];
   } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const columns = optimisticBoard?.source === board?.columns
+  const columns = optimisticBoard?.source === board?.columns && optimisticBoard
     ? optimisticBoard.columns
     : board?.columns || [];
 
@@ -38,7 +38,7 @@ export function TaskBoard({ board, isLoading, onStatusChange }: TaskBoardProps) 
         return { ...column, count: column.count - 1, tasks: column.tasks.filter(item => item.id !== task.id) };
       }
       if (index === destinationIndex) {
-        const moved = { ...task, status: destinationStatus.id, status_name: destinationStatus.name };
+        const moved = { ...task, status: destinationStatus, status_name: destinationStatus.name };
         const tasks = [...column.tasks];
         tasks.splice(result.destination!.index, 0, moved);
         return { ...column, count: column.count + 1, tasks };

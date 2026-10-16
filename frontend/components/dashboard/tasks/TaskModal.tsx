@@ -112,11 +112,6 @@ export function TaskModal({
         recurrence: task.recurrence || 'none',
         recurrence_interval: task.recurrence_interval || 1,
         recurrence_ends_on: task.recurrence_ends_on || '',
-        parent: undefined,
-        depends_on: [],
-        recurrence: 'none',
-        recurrence_interval: 1,
-        recurrence_ends_on: '',
       });
       setSelectedTags(task.tags);
     } else {

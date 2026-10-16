@@ -149,7 +149,7 @@ export default function QuotesTab({ vendorId }: QuotesTabProps) {
                 </div>
 
                 <div className="text-2xl font-bold text-primary">
-                  {formatCurrency(quote.amount)}
+                  {formatCurrency(Number(quote.amount))}
                 </div>
 
                 {quote.notes && (

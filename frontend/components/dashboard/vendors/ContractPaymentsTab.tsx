@@ -282,7 +282,7 @@ export default function ContractPaymentsTab({ vendorId }: ContractPaymentsTabPro
 
                 <div className="flex items-center gap-4">
                   <span className="text-base font-bold text-primary">
-                    {formatCurrency(m.amount)}
+                    {formatCurrency(Number(m.amount))}
                   </span>
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${m.paid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                     {m.paid ? 'Paid' : 'Pending'}
